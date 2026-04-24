@@ -125,7 +125,7 @@ const LeaderMembersPage = () => {
           <h1 className="page-title">Manage Members</h1>
           <p className="page-subtitle">Register new members or update existing profiles</p>
         </div>
-        <button className="btn btn-primary" onClick={() => handleOpenModal()} disabled={!hasAccess && !isSuperAdmin}>
+        <button className="btn btn-primary" onClick={() => handleOpenModal()}>
           <Plus size={18} /> Add Member
         </button>
       </div>

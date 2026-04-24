@@ -158,7 +158,7 @@ const LeaderClaimsPage = () => {
     <div className="animate-fadein">
       <div className="page-header flex items-center justify-between">
         <div><h1 className="page-title">Manage Claims</h1></div>
-        <button className="btn btn-primary" onClick={handleOpenCreateModal} disabled={!hasAccess && !isSuperAdmin}><Plus size={18} /> Record Claim</button>
+        <button className="btn btn-primary" onClick={handleOpenCreateModal}><Plus size={18} /> Record Claim</button>
       </div>
 
       <div className="card" style={{ padding: 0 }}>
