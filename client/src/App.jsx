@@ -9,6 +9,7 @@ import { ProtectedRoute, LeaderRoute } from './components/common/ProtectedRoute'
 // Auth
 import MemberLoginPage from './pages/auth/MemberLoginPage';
 import LeaderLoginPage from './pages/auth/LeaderLoginPage';
+import SuperAdminLoginPage from './pages/auth/SuperAdminLoginPage';
 
 // Member Pages
 import MemberDashboard from './pages/member/MemberDashboard';
@@ -42,6 +43,7 @@ function App() {
           {/* Public Routes */}
           <Route path="/login" element={<MemberLoginPage />} />
           <Route path="/leader/login" element={<LeaderLoginPage />} />
+          <Route path="/superadmin/login" element={<SuperAdminLoginPage />} />
           <Route path="/" element={<Navigate to="/login" replace />} />
 
           {/* Member Protected Routes */}

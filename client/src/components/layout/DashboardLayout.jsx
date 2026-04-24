@@ -21,6 +21,7 @@ const PAGE_TITLES = {
 
 const DashboardLayout = () => {
   const [sidebarW, setSidebarW] = useState(260);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
   const location = useLocation();
 
   const title = PAGE_TITLES[location.pathname] || 'Evergreen Community';
@@ -40,10 +41,20 @@ const DashboardLayout = () => {
   }, []);
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <Sidebar />
-      <div style={{ flex: 1, marginLeft: sidebarW, display: 'flex', flexDirection: 'column', minHeight: '100vh', transition: 'margin-left 0.25s ease' }}>
-        <TopBar title={title} />
+    <div style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
+      {/* Mobile Backdrop */}
+      <div 
+        className={`sidebar-backdrop ${isMobileOpen ? 'open' : ''}`} 
+        onClick={() => setIsMobileOpen(false)}
+      />
+
+      {/* Sidebar Container */}
+      <div className={`sidebar-container ${isMobileOpen ? 'open' : ''} desktop-sidebar`}>
+        <Sidebar onClose={() => setIsMobileOpen(false)} />
+      </div>
+
+      <div className="desktop-layout" style={{ flex: 1, marginLeft: sidebarW, display: 'flex', flexDirection: 'column', minHeight: '100vh', transition: 'margin-left 0.25s ease' }}>
+        <TopBar title={title} onMenuClick={() => setIsMobileOpen(true)} />
         <main style={{ flex: 1, padding: '28px', background: 'var(--bg)' }}>
           <Outlet />
         </main>

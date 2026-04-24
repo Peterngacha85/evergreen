@@ -38,7 +38,7 @@ const SUPERADMIN_NAV = [
   { to: '/leader/manage-leaders', icon: Shield,              label: 'Manage Leaders'   },
 ];
 
-const Sidebar = () => {
+const Sidebar = ({ onClose }) => {
   const { user, logout, isMember, isSuperAdmin } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
@@ -103,6 +103,7 @@ const Sidebar = () => {
             key={to}
             to={to}
             end={to.endsWith('dashboard')}
+            onClick={() => { if (onClose) onClose(); }}
             style={({ isActive }) => ({
               display: 'flex',
               alignItems: 'center',
