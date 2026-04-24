@@ -86,19 +86,19 @@ const Sidebar = ({ onClose }) => {
     navigate(isMember ? '/login' : '/leader/login');
   };
 
+  useEffect(() => {
+    document.documentElement.style.setProperty('--sidebar-width', collapsed ? '80px' : '280px');
+  }, [collapsed]);
+
   return (
-    <aside
+    <aside className="sidebar-container"
       style={{
-        width: collapsed ? 72 : 260,
+        width: 'var(--sidebar-width)',
         minHeight: '100vh',
         background: 'var(--sidebar-bg)',
         display: 'flex',
         flexDirection: 'column',
-        transition: 'width 0.25s ease',
-        position: 'fixed',
-        top: 0, left: 0,
-        zIndex: 100,
-        overflow: 'hidden',
+        zIndex: 1000,
       }}
     >
       {/* Logo */}

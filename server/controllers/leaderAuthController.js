@@ -1,5 +1,6 @@
+const jwt = require('jsonwebtoken');
 const Leader = require('../models/Leader');
-const generateToken = require('../utils/generateToken');
+const { generateToken } = require('../utils/generateToken');
 
 // @desc  Leader login (ID Number + Phone + Password)
 // @route POST /api/auth/leader/login
@@ -52,11 +53,26 @@ const superAdminLogin = async (req, res) => {
 
     const token = generateToken('superadmin', 'superadmin');
 
+    // Ensure superadmin exists in DB for profile photo updates
+    let superAdminRecord = await Leader.findOne({ email: process.env.SUPER_ADMIN_EMAIL });
+    if (!superAdminRecord) {
+      superAdminRecord = await Leader.create({
+        name: 'Super Admin',
+        email: process.env.SUPER_ADMIN_EMAIL,
+        password: process.env.SUPER_ADMIN_PASSWORD, // Not really used for login but needed by schema
+        phone: '0000000000',
+        idNumber: '00000000',
+        memberId: 'SA-001'
+      });
+    }
+
     res.json({
       token,
       user: {
-        id: 'superadmin',
-        email: process.env.SUPER_ADMIN_EMAIL,
+        id: superAdminRecord._id,
+        name: superAdminRecord.name,
+        email: superAdminRecord.email,
+        profilePhoto: superAdminRecord.profilePhoto,
         role: 'superadmin',
       },
     });
@@ -65,4 +81,34 @@ const superAdminLogin = async (req, res) => {
   }
 };
 
-module.exports = { leaderLogin, superAdminLogin };
+// @desc  Update leader profile (photo only for now)
+// @route PUT /api/auth/leader/profile
+// @access Private
+const updateLeaderProfile = async (req, res) => {
+  try {
+    const leaderId = req.user._id;
+    
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    const leader = await Leader.findById(leaderId);
+    if (!leader) return res.status(404).json({ message: 'Leader not found' });
+
+    leader.profilePhoto = {
+      url: req.file.path,
+      publicId: req.file.filename
+    };
+
+    await leader.save();
+
+    res.json({
+      message: 'Profile updated successfully',
+      profilePhoto: leader.profilePhoto
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+module.exports = { leaderLogin, superAdminLogin, updateLeaderProfile };

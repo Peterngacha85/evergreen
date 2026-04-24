@@ -18,7 +18,8 @@ const protect = async (req, res, next) => {
         req.user = await Leader.findById(decoded.id).select('-password');
         req.role = 'leader';
       } else if (decoded.role === 'superadmin') {
-        req.user = { id: 'superadmin', email: process.env.SUPER_ADMIN_EMAIL };
+        const superAdmin = await Leader.findOne({ email: process.env.SUPER_ADMIN_EMAIL }).select('-password');
+        req.user = superAdmin || { id: 'superadmin', email: process.env.SUPER_ADMIN_EMAIL };
         req.role = 'superadmin';
       }
 
