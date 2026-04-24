@@ -6,6 +6,7 @@ const LEADER_ROLES = ['Chairman', 'Vice Chairman', 'Secretary', 'Treasurer', 'Or
 const leaderSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
+    email: { type: String, trim: true, lowercase: true },
     idNumber: { type: String, required: true, unique: true, trim: true },
     phoneNumber: { type: String, required: true, trim: true },
     password: { type: String, required: true },

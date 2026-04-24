@@ -51,20 +51,20 @@ const superAdminLogin = async (req, res) => {
       return res.status(401).json({ message: 'Invalid superadmin credentials' });
     }
 
-    const token = generateToken('superadmin', 'superadmin');
-
     // Ensure superadmin exists in DB for profile photo updates
     let superAdminRecord = await Leader.findOne({ email: process.env.SUPER_ADMIN_EMAIL });
     if (!superAdminRecord) {
       superAdminRecord = await Leader.create({
         name: 'Super Admin',
         email: process.env.SUPER_ADMIN_EMAIL,
-        password: process.env.SUPER_ADMIN_PASSWORD, // Not really used for login but needed by schema
-        phone: '0000000000',
+        password: process.env.SUPER_ADMIN_PASSWORD,
+        phoneNumber: '0000000000',
         idNumber: '00000000',
-        memberId: 'SA-001'
+        leaderRole: 'Chairman' // Default role for superadmin
       });
     }
+
+    const token = generateToken(superAdminRecord._id, 'superadmin');
 
     res.json({
       token,
