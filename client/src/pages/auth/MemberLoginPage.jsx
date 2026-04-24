@@ -30,15 +30,9 @@ const MemberLoginPage = () => {
   };
 
   return (
-    <div style={{
-      minHeight: '100vh', display: 'flex',
-      background: 'linear-gradient(135deg, #0f3d22 0%, #1a5c2a 50%, #2d7a3c 100%)',
-    }}>
+    <div className="login-container">
       {/* Left branding panel */}
-      <div style={{
-        flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', padding: 48, color: 'white',
-      }} className="hidden-mobile">
+      <div className="login-branding">
         <img src="/logo.png" alt="Evergreen" style={{ width: 120, marginBottom: 24, borderRadius: 16 }} />
         <h1 style={{ fontSize: '2.2rem', fontWeight: 800, fontFamily: "'Plus Jakarta Sans', sans-serif", marginBottom: 12 }}>
           Evergreen Community
@@ -46,7 +40,7 @@ const MemberLoginPage = () => {
         <p style={{ fontSize: '1rem', opacity: 0.75, maxWidth: 320, textAlign: 'center', lineHeight: 1.7 }}>
           Your community welfare portal — contributions, events, and more, all in one place.
         </p>
-        <div style={{ marginTop: 48, display: 'flex', gap: 16 }}>
+        <div className="login-tags" style={{ marginTop: 48, display: 'flex', gap: 16 }}>
           {['Contributions', 'Events', 'Claims', 'Officials'].map(item => (
             <div key={item} style={{
               background: 'rgba(255,255,255,0.12)', borderRadius: 10, padding: '8px 16px',
@@ -57,11 +51,7 @@ const MemberLoginPage = () => {
       </div>
 
       {/* Right form panel */}
-      <div style={{
-        width: '100%', maxWidth: 480,
-        background: 'white', display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center', padding: '48px 40px',
-      }}>
+      <div className="login-form-panel">
         <div style={{ width: '100%', maxWidth: 380 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 32 }}>
             <div style={{ width: 40, height: 40, background: '#dcfce7', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

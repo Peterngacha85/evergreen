@@ -30,18 +30,15 @@ const LeaderLoginPage = () => {
   };
 
   return (
-    <div style={{
-      minHeight: '100vh', display: 'flex',
-      background: 'linear-gradient(135deg, #0f3d22 0%, #1a5c2a 50%, #2d7a3c 100%)',
-    }}>
+    <div className="login-container">
       {/* Branding */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 48, color: 'white' }} className="hidden-mobile">
+      <div className="login-branding">
         <img src="/logo.png" alt="Evergreen" style={{ width: 120, marginBottom: 24, borderRadius: 16 }} />
         <h1 style={{ fontSize: '2.2rem', fontWeight: 800, fontFamily: "'Plus Jakarta Sans', sans-serif", marginBottom: 12 }}>Leaders Portal</h1>
         <p style={{ fontSize: '1rem', opacity: 0.75, maxWidth: 320, textAlign: 'center', lineHeight: 1.7 }}>
           Manage members, record contributions, handle claims, and approve change requests.
         </p>
-        <div style={{ marginTop: 32, background: 'rgba(255,255,255,0.1)', borderRadius: 14, padding: '16px 24px', backdropFilter: 'blur(10px)' }}>
+        <div className="login-tags" style={{ marginTop: 32, background: 'rgba(255,255,255,0.1)', borderRadius: 14, padding: '16px 24px', backdropFilter: 'blur(10px)' }}>
           <div style={{ fontSize: '0.8rem', opacity: 0.8, marginBottom: 8 }}>🔒 Secure Leader Access Only</div>
           <div style={{ fontSize: '0.75rem', opacity: 0.65, lineHeight: 1.6 }}>
             All write operations require<br />approval from all other leaders.
@@ -50,7 +47,7 @@ const LeaderLoginPage = () => {
       </div>
 
       {/* Form */}
-      <div style={{ width: '100%', maxWidth: 480, background: 'white', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 40px' }}>
+      <div className="login-form-panel">
         <div style={{ width: '100%', maxWidth: 380 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 28 }}>
             <div style={{ width: 40, height: 40, background: '#dcfce7', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
