@@ -34,7 +34,7 @@ const MemberLoginPage = () => {
       {/* Left branding panel */}
       <div className="login-branding">
         <img src="/logo.png" alt="Evergreen" style={{ width: 120, marginBottom: 24, borderRadius: 16 }} />
-        <h1 style={{ fontSize: '2.2rem', fontWeight: 800, fontFamily: "'Plus Jakarta Sans', sans-serif", marginBottom: 12 }}>
+        <h1 style={{ textAlign: 'center', fontSize: '2.2rem', fontWeight: 800, fontFamily: "'Plus Jakarta Sans', sans-serif", marginBottom: 12 }}>
           Evergreen Community
         </h1>
         <p style={{ fontSize: '1rem', opacity: 0.75, maxWidth: 320, textAlign: 'center', lineHeight: 1.7 }}>
