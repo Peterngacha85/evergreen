@@ -100,7 +100,7 @@ const LeaderEventsPage = () => {
     <div className="animate-fadein">
       <div className="page-header flex items-center justify-between">
         <div><h1 className="page-title">Manage Events</h1></div>
-        <button className="btn btn-primary" onClick={() => handleOpenModal()} disabled={!hasAccess && !isSuperAdmin}><Plus size={18} /> Create Event</button>
+        <button className="btn btn-primary" onClick={() => handleOpenModal()}><Plus size={18} /> Create Event</button>
       </div>
 
       <div className="card" style={{ padding: 0 }}>
