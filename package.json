@@ -1,0 +1,14 @@
+{
+  "name": "evergreen-community",
+  "version": "1.0.0",
+  "description": "Evergreen Welfare Community System",
+  "scripts": {
+    "install-all": "npm install --prefix server && npm install --prefix client",
+    "build": "npm install --prefix client && npm run build --prefix client",
+    "start": "npm start --prefix server",
+    "dev": "npm run dev --prefix server & npm run dev --prefix client"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
