@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const Leader = require('../models/Leader');
-const { generateToken } = require('../utils/generateToken');
+const generateToken = require('../utils/generateToken');
 
 // @desc  Leader login (ID Number + Phone + Password)
 // @route POST /api/auth/leader/login
