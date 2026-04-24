@@ -1,4 +1,4 @@
-﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 /* â”€â”€â”€ Evergreen Community Design System â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 :root {
@@ -431,7 +431,23 @@ tbody tr:hover { background: var(--green-50); }
   .login-tags { display: none !important; }
 }
 
-.mobile-menu-btn { display: none; }
+.mobile-menu-btn { 
+  display: flex; 
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: var(--gray-50);
+  border: 1px solid var(--border);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mobile-menu-btn:hover {
+  background: var(--gray-100);
+}
 .login-container {
   min-height: 100vh;
   display: flex;
@@ -501,6 +517,18 @@ tbody tr:hover { background: var(--green-50); }
 .table-wrapper {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  width: 100%;
+  display: block;
+}
+
+.table-wrapper table {
+  min-width: 700px; /* Force scroll on small devices */
+}
+
+@media (min-width: 769px) {
+  .table-wrapper table {
+    min-width: 100%;
+  }
 }
 
 .hidden-mobile {
