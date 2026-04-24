@@ -138,7 +138,7 @@ const LeaderRulesPage = () => {
               <label className="form-label">Display Order</label>
               <input 
                 type="number" className="form-input" value={formData.order} 
-                onChange={e => setFormData({...formData, order: parseInt(e.target.value)})} 
+                onChange={e => setFormData({...formData, order: parseInt(e.target.value) || 0})} 
               />
             </div>
           </div>
