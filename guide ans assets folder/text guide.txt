@@ -1,0 +1,7 @@
+1.  *Membership:* We can see membership numbers, names, and dates of joining.
+2.  *Upcoming Events*
+3.  *Contribution History*
+4.  *Ledger:* Showing available funds and expenditure.
+5.  *Office* (Official)
+6.  *Security Features:* Only officials can edit information; members can only view but not edit.
+7.  *Member-Exclusive 

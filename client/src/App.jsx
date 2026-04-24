@@ -1,0 +1,79 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+import { AuthProvider } from './context/AuthContext';
+
+// Layouts & Guards
+import DashboardLayout from './components/layout/DashboardLayout';
+import { ProtectedRoute, LeaderRoute } from './components/common/ProtectedRoute';
+
+// Auth
+import MemberLoginPage from './pages/auth/MemberLoginPage';
+import LeaderLoginPage from './pages/auth/LeaderLoginPage';
+
+// Member Pages
+import MemberDashboard from './pages/member/MemberDashboard';
+import MemberContributions from './pages/member/MemberContributions';
+import EventsPage from './pages/member/EventsPage';
+import OfficialsPage from './pages/member/OfficialsPage';
+import MemberClaimsPage from './pages/member/MemberClaimsPage';
+
+// Leader Pages
+import LeaderDashboard from './pages/leader/LeaderDashboard';
+import ChangeRequestsPage from './pages/leader/ChangeRequestsPage';
+import LeaderMembersPage from './pages/leader/LeaderMembersPage';
+import LeaderContributionsPage from './pages/leader/LeaderContributionsPage';
+import LeaderEventsPage from './pages/leader/LeaderEventsPage';
+import LeaderClaimsPage from './pages/leader/LeaderClaimsPage';
+
+// Placeholder for Super Admin leader management
+const PlaceholderPage = ({ title }) => (
+  <div className="card text-center" style={{ padding: 60 }}>
+    <h2>{title} Management</h2>
+    <p>This section is under construction.</p>
+  </div>
+);
+
+function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <Toaster position="top-right" toastOptions={{ duration: 4000, style: { background: '#111827', color: '#fff' } }} />
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/login" element={<MemberLoginPage />} />
+          <Route path="/leader/login" element={<LeaderLoginPage />} />
+          <Route path="/" element={<Navigate to="/login" replace />} />
+
+          {/* Member Protected Routes */}
+          <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+            <Route path="/dashboard" element={<MemberDashboard />} />
+            <Route path="/contributions" element={<MemberContributions />} />
+            <Route path="/events" element={<EventsPage />} />
+            <Route path="/officials" element={<OfficialsPage />} />
+            <Route path="/claims" element={<MemberClaimsPage />} />
+          </Route>
+
+          {/* Leader/SuperAdmin Protected Routes */}
+          <Route element={<LeaderRoute><DashboardLayout /></LeaderRoute>}>
+            <Route path="/leader/dashboard" element={<LeaderDashboard />} />
+            <Route path="/leader/change-requests" element={<ChangeRequestsPage />} />
+            
+            {/* Full CRUD Leader Pages */}
+            <Route path="/leader/members" element={<LeaderMembersPage />} />
+            <Route path="/leader/contributions" element={<LeaderContributionsPage />} />
+            <Route path="/leader/events" element={<LeaderEventsPage />} />
+            <Route path="/leader/claims" element={<LeaderClaimsPage />} />
+            
+            {/* Officials view and Super Admin management */}
+            <Route path="/leader/officials" element={<OfficialsPage />} />
+            <Route path="/leader/manage-leaders" element={<PlaceholderPage title="Super Admin: Leaders" />} />
+          </Route>
+          
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
+  );
+}
+
+export default App;
