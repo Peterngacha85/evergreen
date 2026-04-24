@@ -16,6 +16,8 @@ const eventRoutes = require('./routes/eventRoutes');
 const claimRoutes = require('./routes/claimRoutes');
 const changeRequestRoutes = require('./routes/changeRequestRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
+const ruleRoutes = require('./routes/ruleRoutes');
+const statsRoutes = require('./routes/statsRoutes');
 
 // Connect to MongoDB
 connectDB();
@@ -71,6 +73,8 @@ app.use('/api/events', eventRoutes);
 app.use('/api/claims', claimRoutes);
 app.use('/api/change-requests', changeRequestRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/rules', ruleRoutes);
+app.use('/api/stats', statsRoutes);
 
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {

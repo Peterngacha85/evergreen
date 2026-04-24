@@ -17,6 +17,10 @@ const PAGE_TITLES = {
   '/leader/officials':        'Officials',
   '/leader/change-requests':  'Change Requests',
   '/leader/manage-leaders':   'Manage Leaders',
+  '/rules':                   'Welfare Rules',
+  '/leader/rules':            'Rules Management',
+  '/leader/defaulters':       'Defaulters List',
+  '/leader/funds':            'Funds Available',
 };
 
 const DashboardLayout = () => {
@@ -39,9 +43,7 @@ const DashboardLayout = () => {
       />
 
       {/* Sidebar with mobile state toggle */}
-      <div className={`sidebar-container ${isMobileOpen ? 'open' : ''}`}>
-        <Sidebar onClose={() => setIsMobileOpen(false)} />
-      </div>
+      <Sidebar isOpen={isMobileOpen} onClose={() => setIsMobileOpen(false)} />
 
       <div className="desktop-layout">
         <TopBar title={title} onMenuClick={() => setIsMobileOpen(true)} />

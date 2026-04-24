@@ -55,11 +55,7 @@ const TopBar = ({ title, onMenuClick }) => {
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button 
-          className="mobile-menu-btn" 
-          onClick={onMenuClick}
-          style={{ background: 'none', border: 'none', color: 'var(--green-700)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-        >
+        <button className="mobile-menu-btn" onClick={onMenuClick}>
           <Menu size={24} />
         </button>
         <h1 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--green-600)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>

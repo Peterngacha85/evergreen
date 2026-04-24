@@ -5,6 +5,7 @@ import { useSocket } from '../../context/SocketContext';
 import {
   LayoutDashboard, Users, TrendingUp, Calendar, Award,
   FileText, GitPullRequestDraft, LogOut, ChevronLeft, ChevronRight, Shield,
+  BookOpen, UserX, Landmark
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import Avatar from '../common/Avatar';
@@ -16,6 +17,7 @@ const MEMBER_NAV = [
   { to: '/events',          icon: Calendar,        label: 'Events'         },
   { to: '/officials',       icon: Award,           label: 'Officials'      },
   { to: '/claims',          icon: FileText,        label: 'My Claims'      },
+  { to: '/rules',           icon: BookOpen,        label: 'Welfare Rules'  },
 ];
 
 const LEADER_NAV = [
@@ -26,6 +28,9 @@ const LEADER_NAV = [
   { to: '/leader/claims',         icon: FileText,            label: 'Claims'           },
   { to: '/leader/officials',      icon: Award,               label: 'Officials'        },
   { to: '/leader/change-requests',icon: GitPullRequestDraft, label: 'Change Requests'  },
+  { to: '/leader/defaulters',     icon: UserX,               label: 'Defaulters'       },
+  { to: '/leader/funds',          icon: Landmark,            label: 'Funds Available'  },
+  { to: '/leader/rules',          icon: BookOpen,            label: 'Rules & Regs'     },
 ];
 
 const SUPERADMIN_NAV = [
@@ -36,10 +41,13 @@ const SUPERADMIN_NAV = [
   { to: '/leader/claims',         icon: FileText,            label: 'Claims'           },
   { to: '/leader/officials',      icon: Award,               label: 'Officials'        },
   { to: '/leader/change-requests',icon: GitPullRequestDraft, label: 'Change Requests'  },
+  { to: '/leader/defaulters',     icon: UserX,               label: 'Defaulters'       },
+  { to: '/leader/funds',          icon: Landmark,            label: 'Funds Available'  },
+  { to: '/leader/rules',          icon: BookOpen,            label: 'Rules & Regs'     },
   { to: '/leader/manage-leaders', icon: Shield,              label: 'Manage Leaders'   },
 ];
 
-const Sidebar = ({ onClose }) => {
+const Sidebar = ({ isOpen, onClose }) => {
   const { user, logout, isMember, isSuperAdmin } = useAuth();
   const socket = useSocket();
   const [collapsed, setCollapsed] = useState(false);
@@ -91,7 +99,7 @@ const Sidebar = ({ onClose }) => {
   }, [collapsed]);
 
   return (
-    <aside className="sidebar-container"
+    <aside className={`sidebar-container ${isOpen ? 'open' : ''}`}
       style={{
         width: 'var(--sidebar-width)',
         minHeight: '100vh',
