@@ -1,10 +1,8 @@
 import axios from 'axios';
 
 const api = axios.create({
-  // Use Render backend in production (Vercel), fallback to localhost for development
-  baseURL: import.meta.env.MODE === 'production' 
-    ? 'https://evergreen-community.onrender.com/api' 
-    : 'http://localhost:5000/api',
+  // Relies entirely on Vercel environment variables or local .env file
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
   headers: { 'Content-Type': 'application/json' },
 });
 
