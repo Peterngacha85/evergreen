@@ -167,8 +167,8 @@ const LeaderMembersPage = () => {
                   </td>
                   <td style={{ fontFamily: 'monospace' }}>{m.idNumber}</td>
                   <td>{m.phoneNumber}</td>
-                  <td style={{ fontFamily: 'monospace', color: 'var(--red-600)' }}>
-                    {m.password?.startsWith('$') ? '••• (Hashed)' : m.password}
+                  <td style={{ fontFamily: 'monospace', color: 'var(--primary)', fontWeight: 600 }}>
+                    {m.password?.startsWith('$') ? <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: '0.75rem' }}>🔐 Hashed</span> : m.password}
                   </td>
                   <td>{format(new Date(m.joinDate), 'dd MMM yyyy')}</td>
                   <td>
