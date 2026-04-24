@@ -53,15 +53,26 @@ const superAdminLogin = async (req, res) => {
 
     // Ensure superadmin exists in DB for profile photo updates
     let superAdminRecord = await Leader.findOne({ email: process.env.SUPER_ADMIN_EMAIL });
+    
     if (!superAdminRecord) {
-      superAdminRecord = await Leader.create({
-        name: 'Super Admin',
-        email: process.env.SUPER_ADMIN_EMAIL,
-        password: process.env.SUPER_ADMIN_PASSWORD,
-        phoneNumber: '0000000000',
-        idNumber: '00000000',
-        leaderRole: 'Chairman' // Default role for superadmin
-      });
+      // Fallback: search by idNumber in case it was created without an email field previously
+      superAdminRecord = await Leader.findOne({ idNumber: '00000000' });
+      
+      if (superAdminRecord) {
+        // Update existing record with the email
+        superAdminRecord.email = process.env.SUPER_ADMIN_EMAIL;
+        await superAdminRecord.save();
+      } else {
+        // Create new record
+        superAdminRecord = await Leader.create({
+          name: 'Super Admin',
+          email: process.env.SUPER_ADMIN_EMAIL,
+          password: process.env.SUPER_ADMIN_PASSWORD,
+          phoneNumber: '0000000000',
+          idNumber: '00000000',
+          leaderRole: 'Chairman'
+        });
+      }
     }
 
     const token = generateToken(superAdminRecord._id, 'superadmin');
