@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getRules } from '../../api/rules';
+import { getRules } from '../../api/welfareRules';
 import { Book, ChevronRight, Info } from 'lucide-react';
 
 const MemberRulesPage = () => {

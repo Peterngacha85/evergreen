@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getRules, createRule, updateRule, deleteRule } from '../../api/rules';
+import { getRules, createRule, updateRule, deleteRule } from '../../api/welfareRules';
 import Modal from '../../components/common/Modal';
 import { Plus, Edit2, Trash2, GripVertical, Info } from 'lucide-react';
 import toast from 'react-hot-toast';
