@@ -1,5 +1,7 @@
-import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { getChangeRequests } from '../../api/changeRequests';
+import { useSocket } from '../../context/SocketContext';
 import {
   LayoutDashboard, Users, TrendingUp, Calendar, Award,
   FileText, GitPullRequestDraft, LogOut, ChevronLeft, ChevronRight, Shield,
@@ -39,8 +41,42 @@ const SUPERADMIN_NAV = [
 
 const Sidebar = ({ onClose }) => {
   const { user, logout, isMember, isSuperAdmin } = useAuth();
+  const socket = useSocket();
   const [collapsed, setCollapsed] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
   const navigate = useNavigate();
+
+  const fetchPendingCount = async () => {
+    if (isMember) return;
+    try {
+      const res = await getChangeRequests();
+      const pending = res.data.filter(r => 
+        r.status === 'pending' && 
+        r.requestedBy?._id !== user?._id && 
+        !r.votes.some(v => v.leader?._id === user?._id)
+      );
+      setPendingCount(pending.length);
+    } catch (err) {
+      console.error('Failed to fetch pending requests count');
+    }
+  };
+
+  useEffect(() => {
+    fetchPendingCount();
+  }, [user?._id]);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('newChangeRequest', () => fetchPendingCount());
+      socket.on('changeRequestUpdated', () => fetchPendingCount());
+    }
+    return () => {
+      if (socket) {
+        socket.off('newChangeRequest');
+        socket.off('changeRequestUpdated');
+      }
+    };
+  }, [socket]);
 
   const navItems = isMember ? MEMBER_NAV : isSuperAdmin ? SUPERADMIN_NAV : LEADER_NAV;
 
@@ -118,11 +154,27 @@ const Sidebar = ({ onClose }) => {
               textDecoration: 'none',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
+              position: 'relative'
             })}
             title={collapsed ? label : undefined}
           >
             <Icon size={18} style={{ flexShrink: 0 }} />
-            {!collapsed && <span>{label}</span>}
+            {!collapsed && <span style={{ flex: 1 }}>{label}</span>}
+            {label === 'Change Requests' && pendingCount > 0 && (
+              <span style={{ 
+                background: '#ef4444', 
+                color: '#fff', 
+                fontSize: '0.65rem', 
+                fontWeight: 800,
+                padding: '2px 6px',
+                borderRadius: 10,
+                minWidth: 18,
+                textAlign: 'center',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+              }}>
+                {pendingCount}
+              </span>
+            )}
           </NavLink>
         ))}
       </nav>
