@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getMembers, createMember, updateMember, deleteMember } from '../../api/members';
+import { getMembers, createMember, updateMember, updateMemberPhoto, deleteMember } from '../../api/members';
 import { validateSession } from '../../api/changeRequests';
 import Avatar from '../../components/common/Avatar';
 import Modal from '../../components/common/Modal';
@@ -18,7 +18,7 @@ const LeaderMembersPage = () => {
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [formData, setFormData] = useState({ id: '', name: '', idNumber: '', phoneNumber: '', password: '' });
+  const [formData, setFormData] = useState({ id: '', name: '', idNumber: '', phoneNumber: '', password: '', profilePhoto: null });
   const [submitting, setSubmitting] = useState(false);
 
   const fetchMembers = async () => {
@@ -47,12 +47,16 @@ const LeaderMembersPage = () => {
     }
     if (member) {
       setIsEditMode(true);
-      setFormData({ id: member._id, name: member.name, idNumber: member.idNumber, phoneNumber: member.phoneNumber, password: '' });
+      setFormData({ id: member._id, name: member.name, idNumber: member.idNumber, phoneNumber: member.phoneNumber, password: '', profilePhoto: null });
     } else {
       setIsEditMode(false);
-      setFormData({ id: '', name: '', idNumber: '', phoneNumber: '', password: '' });
+      setFormData({ id: '', name: '', idNumber: '', phoneNumber: '', password: '', profilePhoto: null });
     }
     setIsModalOpen(true);
+  };
+
+  const handleFileChange = (e) => {
+    setFormData({ ...formData, profilePhoto: e.target.files[0] });
   };
 
   const handleSubmit = async (e) => {
@@ -60,10 +64,24 @@ const LeaderMembersPage = () => {
     setSubmitting(true);
     try {
       if (isEditMode) {
+        // Update details first
         await updateMember(formData.id, { name: formData.name, phoneNumber: formData.phoneNumber, ...(formData.password && { password: formData.password }) });
+        // Update photo if provided
+        if (formData.profilePhoto) {
+          const photoData = new FormData();
+          photoData.append('profilePhoto', formData.profilePhoto);
+          await updateMemberPhoto(formData.id, photoData);
+        }
         toast.success('Member updated successfully');
       } else {
-        await createMember(formData);
+        const data = new FormData();
+        data.append('name', formData.name);
+        data.append('idNumber', formData.idNumber);
+        data.append('phoneNumber', formData.phoneNumber);
+        if (formData.password) data.append('password', formData.password);
+        if (formData.profilePhoto) data.append('profilePhoto', formData.profilePhoto);
+        
+        await createMember(data);
         toast.success('Member added successfully');
       }
       setIsModalOpen(false);
@@ -176,6 +194,10 @@ const LeaderMembersPage = () => {
           <div className="form-group">
             <label className="form-label">{isEditMode ? 'New Password (leave blank to keep current)' : 'Password'}</label>
             <input type="password" className="form-input" required={!isEditMode} value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Profile Photo (Optional)</label>
+            <input type="file" accept="image/*" className="form-input" style={{ padding: '8px 12px' }} onChange={handleFileChange} />
           </div>
           
           <div className="flex justify-between" style={{ marginTop: 24 }}>
