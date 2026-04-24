@@ -47,7 +47,7 @@ const DashboardLayout = () => {
 
       <div className="desktop-layout">
         <TopBar title={title} onMenuClick={() => setIsMobileOpen(true)} />
-        <main style={{ padding: '24px', background: 'var(--bg)' }}>
+        <main style={{ padding: '32px', background: 'var(--bg)', minHeight: 'calc(100vh - 70px)' }}>
           <Outlet />
         </main>
       </div>
