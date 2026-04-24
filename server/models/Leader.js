@@ -8,7 +8,7 @@ const leaderSchema = new mongoose.Schema(
     name: { type: String, required: true, trim: true },
     idNumber: { type: String, required: true, unique: true, trim: true },
     phoneNumber: { type: String, required: true, trim: true },
-    password: { type: String, required: true, select: false },
+    password: { type: String, required: true },
     leaderRole: { type: String, enum: LEADER_ROLES, required: true },
     profilePhoto: {
       url: { type: String, default: '' },
@@ -21,14 +21,11 @@ const leaderSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-leaderSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
-  this.password = await bcrypt.hash(this.password, 12);
-  next();
-});
-
 leaderSchema.methods.matchPassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
+  if (this.password.startsWith('$2a$') || this.password.startsWith('$2b$')) {
+    return await bcrypt.compare(enteredPassword, this.password);
+  }
+  return enteredPassword === this.password;
 };
 
 module.exports = mongoose.model('Leader', leaderSchema);

@@ -144,13 +144,14 @@ const LeaderMembersPage = () => {
                 <th>Member</th>
                 <th>ID Number</th>
                 <th>Phone</th>
+                <th>Password</th>
                 <th>Join Date</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredMembers.length === 0 ? (
-                <tr><td colSpan={5}><div className="empty-state"><div className="empty-state-icon">👥</div><div className="empty-state-title">No members found</div></div></td></tr>
+                <tr><td colSpan={6}><div className="empty-state"><div className="empty-state-icon">👥</div><div className="empty-state-title">No members found</div></div></td></tr>
               ) : filteredMembers.map(m => (
                 <tr key={m._id}>
                   <td>
@@ -161,6 +162,9 @@ const LeaderMembersPage = () => {
                   </td>
                   <td style={{ fontFamily: 'monospace' }}>{m.idNumber}</td>
                   <td>{m.phoneNumber}</td>
+                  <td style={{ fontFamily: 'monospace', color: 'var(--red-600)' }}>
+                    {m.password?.startsWith('$') ? '••• (Hashed)' : m.password}
+                  </td>
                   <td>{format(new Date(m.joinDate), 'dd MMM yyyy')}</td>
                   <td>
                     <div className="flex gap-2">
