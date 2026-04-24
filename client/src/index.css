@@ -1,8 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-/* ─── Evergreen Community Design System ─────────────────────────────────────── */
+/* â”€â”€â”€ Evergreen Community Design System â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 :root {
-  /* Brand Colors — extracted from logo */
+  /* Brand Colors â€” extracted from logo */
   --green-50:  #f0fdf0;
   --green-100: #dcfce7;
   --green-200: #bbf7d0;
@@ -65,7 +65,7 @@
   --sidebar-width: 280px;
 }
 
-/* ─── Reset ──────────────────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Reset â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
@@ -83,12 +83,12 @@ button { cursor: pointer; font-family: inherit; }
 a { text-decoration: none; color: inherit; }
 input, textarea, select { font-family: inherit; }
 
-/* ─── Scrollbar ──────────────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Scrollbar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--gray-100); }
 ::-webkit-scrollbar-thumb { background: var(--green-400); border-radius: var(--radius-full); }
 
-/* ─── Utility classes ────────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Utility classes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .flex         { display: flex; }
 .flex-col     { flex-direction: column; }
 .items-center { align-items: center; }
@@ -104,7 +104,7 @@ input, textarea, select { font-family: inherit; }
 .text-sm   { font-size: 0.875rem; }
 .text-xs   { font-size: 0.75rem; }
 
-/* ─── Card ───────────────────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .card {
   background: var(--surface);
   border-radius: var(--radius-lg);
@@ -115,7 +115,7 @@ input, textarea, select { font-family: inherit; }
 }
 .card:hover { box-shadow: var(--shadow-md); }
 
-/* ─── Buttons ────────────────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Buttons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -166,7 +166,7 @@ input, textarea, select { font-family: inherit; }
 .btn-lg { padding: 14px 28px; font-size: 1rem; }
 .btn-icon { padding: 8px; border-radius: var(--radius-sm); }
 
-/* ─── Form elements ──────────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Form elements â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .form-group { display: flex; flex-direction: column; gap: 6px; }
 .form-label { font-size: 0.85rem; font-weight: 600; color: var(--gray-700); }
 
@@ -216,7 +216,7 @@ input, textarea, select { font-family: inherit; }
 }
 .form-textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(45,122,60,0.12); }
 
-/* ─── Badges / Status ────────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Badges / Status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -235,7 +235,7 @@ input, textarea, select { font-family: inherit; }
 .badge-gray     { background: #f3f4f6; color: #374151; }
 .badge-lime     { background: #ecfccb; color: #4d7c0f; }
 
-/* ─── Table ──────────────────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .table-wrapper { overflow-x: auto; border-radius: var(--radius-lg); border: 1px solid var(--border); }
 
 table { width: 100%; border-collapse: collapse; }
@@ -258,7 +258,7 @@ td {
 tbody tr { transition: background 0.15s; }
 tbody tr:hover { background: var(--green-50); }
 
-/* ─── Avatar ─────────────────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Avatar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .avatar {
   border-radius: 50%;
   object-fit: cover;
@@ -272,7 +272,7 @@ tbody tr:hover { background: var(--green-50); }
 .avatar-xl  { width: 100px; height: 100px; }
 .avatar-2xl { width: 140px; height: 140px; }
 
-/* ─── Page Header ────────────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Page Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .page-header {
   margin-bottom: 28px;
 }
@@ -284,7 +284,7 @@ tbody tr:hover { background: var(--green-50); }
 }
 .page-subtitle { font-size: 0.9rem; color: var(--text-muted); margin-top: 4px; }
 
-/* ─── Stat card ──────────────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Stat card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .stat-card {
   background: var(--surface);
   border-radius: var(--radius-lg);
@@ -312,10 +312,10 @@ tbody tr:hover { background: var(--green-50); }
 .stat-value { font-size: 1.8rem; font-weight: 800; color: var(--text); line-height: 1; }
 .stat-label { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; margin-top: 4px; }
 
-/* ─── Divider ────────────────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Divider â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .divider { height: 1px; background: var(--border); margin: 16px 0; }
 
-/* ─── Modal ──────────────────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .modal-overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.45);
@@ -344,7 +344,7 @@ tbody tr:hover { background: var(--green-50); }
   font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
-/* ─── Animations ─────────────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Animations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 @keyframes spin    { to { transform: rotate(360deg); } }
@@ -354,7 +354,7 @@ tbody tr:hover { background: var(--green-50); }
 .animate-pulse { animation: pulse 1.5s ease infinite; }
 .animate-fadein { animation: fadeIn 0.3s ease; }
 
-/* ─── Loading spinner ────────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Loading spinner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .spinner {
   width: 24px; height: 24px;
   border: 3px solid var(--border);
@@ -363,7 +363,7 @@ tbody tr:hover { background: var(--green-50); }
   animation: spin 0.7s linear infinite;
 }
 
-/* ─── Empty state ────────────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Empty state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .empty-state {
   text-align: center;
   padding: 60px 20px;
@@ -373,7 +373,7 @@ tbody tr:hover { background: var(--green-50); }
 .empty-state-title { font-weight: 700; font-size: 1.1rem; color: var(--gray-600); }
 .empty-state-text  { font-size: 0.875rem; margin-top: 6px; }
 
-/* ─── Responsive ─────────────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Responsive â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media (max-width: 768px) {
   .hidden-mobile { display: none !important; }
   .modal { padding: 24px; }
@@ -457,72 +457,72 @@ tbody tr:hover { background: var(--green-50); }
   padding: 48px 40px;
 }
 
- / *    % % %  R e s p o n s i v e   L a y o u t s    % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %  * / 
- 
- / *   M o b i l e   F i r s t   ( D e f a u l t )   * / 
- . s i d e b a r - c o n t a i n e r   { 
-     p o s i t i o n :   f i x e d ; 
-     t o p :   0 ; 
-     l e f t :   - 2 8 0 p x ;   / *   H i d d e n   b y   d e f a u l t   o n   m o b i l e   * / 
-     b o t t o m :   0 ; 
-     w i d t h :   2 8 0 p x ; 
-     z - i n d e x :   1 0 0 0 ; 
-     t r a n s i t i o n :   l e f t   0 . 3 s   c u b i c - b e z i e r ( 0 . 4 ,   0 ,   0 . 2 ,   1 ) ; 
- } 
- 
- . s i d e b a r - c o n t a i n e r . o p e n   { 
-     l e f t :   0 ; 
- } 
- 
- . d e s k t o p - l a y o u t   { 
-     m a r g i n - l e f t :   0   ! i m p o r t a n t ; 
-     w i d t h :   1 0 0 %   ! i m p o r t a n t ; 
-     m i n - h e i g h t :   1 0 0 v h ; 
-     t r a n s i t i o n :   a l l   0 . 3 s   e a s e ; 
- } 
- 
- . m o b i l e - o v e r l a y   { 
-     p o s i t i o n :   f i x e d ; 
-     i n s e t :   0 ; 
-     b a c k g r o u n d :   r g b a ( 0 , 0 , 0 , 0 . 5 ) ; 
-     b a c k d r o p - f i l t e r :   b l u r ( 4 p x ) ; 
-     z - i n d e x :   9 9 9 ; 
-     o p a c i t y :   0 ; 
-     v i s i b i l i t y :   h i d d e n ; 
-     t r a n s i t i o n :   a l l   0 . 3 s   e a s e ; 
- } 
- 
- . m o b i l e - o v e r l a y . a c t i v e   { 
-     o p a c i t y :   1 ; 
-     v i s i b i l i t y :   v i s i b l e ; 
- } 
- 
- . t a b l e - w r a p p e r   { 
-     o v e r f l o w - x :   a u t o ; 
-     - w e b k i t - o v e r f l o w - s c r o l l i n g :   t o u c h ; 
- } 
- 
- . h i d d e n - m o b i l e   { 
-     d i s p l a y :   n o n e   ! i m p o r t a n t ; 
- } 
- 
- / *   D e s k t o p   S t y l e s   * / 
- @ m e d i a   ( m i n - w i d t h :   7 6 9 p x )   { 
-     . s i d e b a r - c o n t a i n e r   {   
-         w i d t h :   v a r ( - - s i d e b a r - w i d t h ) ;   
-         p o s i t i o n :   f i x e d ; 
-         t o p :   0 ;   l e f t :   0 ;   b o t t o m :   0 ; 
-         t r a n s i t i o n :   w i d t h   0 . 3 s   e a s e ; 
-         l e f t :   0   ! i m p o r t a n t ; 
-     } 
-     . d e s k t o p - l a y o u t   {   
-         m a r g i n - l e f t :   v a r ( - - s i d e b a r - w i d t h )   ! i m p o r t a n t ; 
-         w i d t h :   c a l c ( 1 0 0 %   -   v a r ( - - s i d e b a r - w i d t h ) )   ! i m p o r t a n t ;   
-         t r a n s i t i o n :   m a r g i n - l e f t   0 . 3 s   e a s e ,   w i d t h   0 . 3 s   e a s e ; 
-     } 
-     . m o b i l e - m e n u - b t n   {   d i s p l a y :   n o n e   ! i m p o r t a n t ;   } 
-     . h i d d e n - m o b i l e   {   d i s p l a y :   b l o c k   ! i m p o r t a n t ;   } 
-     . m o b i l e - o v e r l a y   {   d i s p l a y :   n o n e   ! i m p o r t a n t ;   } 
- } 
-  
- 
+
+/* ─── Responsive Layouts ─────────────────────────────────────────────────────── */
+
+/* Mobile First (Default) */
+.sidebar-container {
+  position: fixed;
+  top: 0;
+  left: -280px; /* Hidden by default on mobile */
+  bottom: 0;
+  width: 280px;
+  z-index: 1000;
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-container.open {
+  left: 0;
+}
+
+.desktop-layout {
+  margin-left: 0 !important;
+  width: 100% !important;
+  min-height: 100vh;
+  transition: all 0.3s ease;
+}
+
+.mobile-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.mobile-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.hidden-mobile {
+  display: none !important;
+}
+
+/* Desktop Styles */
+@media (min-width: 769px) {
+  .sidebar-container { 
+    width: var(--sidebar-width); 
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    transition: width 0.3s ease;
+    left: 0 !important;
+  }
+  .desktop-layout { 
+    margin-left: var(--sidebar-width) !important;
+    width: calc(100% - var(--sidebar-width)) !important; 
+    transition: margin-left 0.3s ease, width 0.3s ease;
+  }
+  .mobile-menu-btn { display: none !important; }
+  .hidden-mobile { display: block !important; }
+  .mobile-overlay { display: none !important; }
+}
+
