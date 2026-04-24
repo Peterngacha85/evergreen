@@ -21,6 +21,12 @@ const leaderSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+leaderSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+});
+
 leaderSchema.methods.matchPassword = async function (enteredPassword) {
   if (this.password.startsWith('$2a$') || this.password.startsWith('$2b$')) {
     return await bcrypt.compare(enteredPassword, this.password);

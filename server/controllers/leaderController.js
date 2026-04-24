@@ -7,7 +7,9 @@ const cloudinary = require('../config/cloudinary');
 const getAllLeaders = async (req, res) => {
   try {
     const ROLE_ORDER = ['Chairman', 'Vice Chairman', 'Secretary', 'Treasurer', 'Organizer'];
-    const leaders = await Leader.find({ isActive: true }).select('-password');
+    const query = Leader.find({ isActive: true });
+    if (req.role !== 'superadmin') query.select('-password');
+    const leaders = await query;
     leaders.sort((a, b) => ROLE_ORDER.indexOf(a.leaderRole) - ROLE_ORDER.indexOf(b.leaderRole));
     res.json(leaders);
   } catch (err) {
@@ -20,7 +22,9 @@ const getAllLeaders = async (req, res) => {
 // @access Leader + SuperAdmin
 const getLeaderById = async (req, res) => {
   try {
-    const leader = await Leader.findById(req.params.id).select('-password');
+    const query = Leader.findById(req.params.id);
+    if (req.role !== 'superadmin') query.select('-password');
+    const leader = await query;
     if (!leader) return res.status(404).json({ message: 'Leader not found' });
     res.json(leader);
   } catch (err) {
