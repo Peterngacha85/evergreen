@@ -1,9 +1,9 @@
 import { useState, useRef } from 'react';
-import { Bell } from 'lucide-react';
+import { Menu, Bell } from 'lucide-react';
 import Avatar from '../common/Avatar';
 import { useAuth } from '../../context/AuthContext';
 
-const TopBar = ({ title }) => {
+const TopBar = ({ title, onMenuClick }) => {
   const { user } = useAuth();
 
   return (
@@ -21,9 +21,18 @@ const TopBar = ({ title }) => {
         zIndex: 50,
       }}
     >
-      <h1 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--green-600)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-        {title}
-      </h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button 
+          className="mobile-menu-btn" 
+          onClick={onMenuClick}
+          style={{ background: 'none', border: 'none', color: 'var(--green-700)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+        >
+          <Menu size={24} />
+        </button>
+        <h1 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--green-600)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          {title}
+        </h1>
+      </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
         <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'right' }}>

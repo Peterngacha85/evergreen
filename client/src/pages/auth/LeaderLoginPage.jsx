@@ -2,12 +2,11 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, LogIn, Shield } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { leaderLogin, superAdminLogin } from '../../api/auth';
+import { leaderLogin } from '../../api/auth';
 import { useAuth } from '../../context/AuthContext';
 
 const LeaderLoginPage = () => {
-  const [mode, setMode] = useState('leader'); // 'leader' | 'superadmin'
-  const [form, setForm] = useState({ idNumber: '', phoneNumber: '', password: '', email: '' });
+  const [form, setForm] = useState({ idNumber: '', phoneNumber: '', password: '' });
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
   const { login }   = useAuth();
@@ -19,16 +18,9 @@ const LeaderLoginPage = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      let data;
-      if (mode === 'superadmin') {
-        const res = await superAdminLogin({ email: form.email, password: form.password });
-        data = res.data;
-      } else {
-        const res = await leaderLogin({ idNumber: form.idNumber, phoneNumber: form.phoneNumber, password: form.password });
-        data = res.data;
-      }
+      const { data } = await leaderLogin(form);
       login(data.user, data.token);
-      toast.success(`Welcome, ${data.user.name || data.user.email}!`);
+      toast.success(`Welcome, ${data.user.name}!`);
       navigate('/leader/dashboard');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Login failed');
@@ -70,40 +62,15 @@ const LeaderLoginPage = () => {
             </div>
           </div>
 
-          {/* Mode toggle */}
-          <div style={{ display: 'flex', background: 'var(--gray-100)', borderRadius: 10, padding: 4, marginBottom: 24 }}>
-            {['leader', 'superadmin'].map((m) => (
-              <button key={m} onClick={() => setMode(m)} type="button"
-                style={{
-                  flex: 1, padding: '8px 0', borderRadius: 8, border: 'none',
-                  background: mode === m ? 'var(--primary)' : 'transparent',
-                  color: mode === m ? 'white' : 'var(--text-muted)',
-                  fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer', transition: 'all 0.2s',
-                  textTransform: 'capitalize',
-                }}>
-                {m === 'superadmin' ? 'Super Admin' : 'Leader'}
-              </button>
-            ))}
-          </div>
-
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {mode === 'leader' ? (
-              <>
-                <div className="form-group">
-                  <label className="form-label">National ID Number</label>
-                  <input name="idNumber" value={form.idNumber} onChange={handleChange} className="form-input" placeholder="ID number" required />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Phone Number</label>
-                  <input name="phoneNumber" value={form.phoneNumber} onChange={handleChange} className="form-input" placeholder="e.g. 0712345678" required />
-                </div>
-              </>
-            ) : (
-              <div className="form-group">
-                <label className="form-label">Admin Email</label>
-                <input name="email" type="email" value={form.email} onChange={handleChange} className="form-input" placeholder="admin@email.com" required />
-              </div>
-            )}
+            <div className="form-group">
+              <label className="form-label">National ID Number</label>
+              <input name="idNumber" value={form.idNumber} onChange={handleChange} className="form-input" placeholder="ID number" required />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Phone Number</label>
+              <input name="phoneNumber" value={form.phoneNumber} onChange={handleChange} className="form-input" placeholder="e.g. 0712345678" required />
+            </div>
 
             <div className="form-group">
               <label className="form-label">Password</label>
