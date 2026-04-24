@@ -24,7 +24,6 @@ const LEADER_NAV = [
   { to: '/leader/claims',         icon: FileText,            label: 'Claims'           },
   { to: '/leader/officials',      icon: Award,               label: 'Officials'        },
   { to: '/leader/change-requests',icon: GitPullRequestDraft, label: 'Change Requests'  },
-  { to: '/leader/manage-leaders', icon: Shield,              label: 'Manage Leaders'   },
 ];
 
 const SUPERADMIN_NAV = [

@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { getClaims, createClaim, updateClaimStatus, deleteClaim } from '../../api/claims';
 import { getMembers } from '../../api/members';
+import { getCategories, createCategory } from '../../api/categories';
 import { validateSession } from '../../api/changeRequests';
+import { useSocket } from '../../context/SocketContext';
 import Modal from '../../components/common/Modal';
 import StatusBadge from '../../components/common/StatusBadge';
 import { Plus, CheckCircle, XCircle, DollarSign, Trash2 } from 'lucide-react';
@@ -9,18 +11,20 @@ import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { useAuth } from '../../context/AuthContext';
 
-const CLAIM_TYPES = ['Medical', 'Bereavement', 'Emergency', 'Education', 'Other'];
-
 const LeaderClaimsPage = () => {
+  const socket = useSocket();
   const { isSuperAdmin } = useAuth();
   const [claims, setClaims] = useState([]);
   const [members, setMembers] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hasAccess, setHasAccess] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
 
   // New Claim Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({ memberId: '', title: '', description: '', amount: '', claimType: CLAIM_TYPES[0], notes: '' });
+  const [formData, setFormData] = useState({ memberId: '', title: '', description: '', amount: '', claimType: '', notes: '' });
   const [submitting, setSubmitting] = useState(false);
 
   // Status Update Modal
@@ -30,14 +34,20 @@ const LeaderClaimsPage = () => {
 
   const fetchData = async () => {
     try {
-      const [c, m, s] = await Promise.all([
+      const [c, m, s, cat] = await Promise.all([
         getClaims(),
         getMembers(),
-        !isSuperAdmin ? validateSession().catch(() => ({ data: { hasSession: false } })) : Promise.resolve({ data: { hasSession: true } })
+        !isSuperAdmin ? validateSession().catch(() => ({ data: { hasSession: false } })) : Promise.resolve({ data: { hasSession: true } }),
+        getCategories()
       ]);
       setClaims(c.data);
       setMembers(m.data);
       setHasAccess(s.data.hasSession);
+      const filteredCats = cat.data.filter(ct => ct.type === 'claim' || ct.type === 'both');
+      setCategories(filteredCats);
+      if (filteredCats.length > 0) {
+        setFormData(prev => ({ ...prev, claimType: filteredCats[0].name }));
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -47,10 +57,39 @@ const LeaderClaimsPage = () => {
 
   useEffect(() => { fetchData(); }, []);
 
+  useEffect(() => {
+    if (socket) {
+      socket.on('categoryAdded', (newCat) => {
+        if (newCat.type === 'claim' || newCat.type === 'both') {
+          setCategories(prev => {
+            if (prev.find(c => c._id === newCat._id)) return prev;
+            return [...prev, newCat].sort((a, b) => a.name.localeCompare(b.name));
+          });
+        }
+      });
+    }
+    return () => {
+      if (socket) socket.off('categoryAdded');
+    };
+  }, [socket]);
+
   const handleOpenCreateModal = () => {
     if (!hasAccess && !isSuperAdmin) return toast.error('You need an approved change request session.');
-    setFormData({ memberId: '', title: '', description: '', amount: '', claimType: CLAIM_TYPES[0], notes: '' });
+    setFormData({ memberId: '', title: '', description: '', amount: '', claimType: categories.length > 0 ? categories[0].name : '', notes: '' });
     setIsModalOpen(true);
+  };
+
+  const handleAddCategory = async (e) => {
+    e.preventDefault();
+    if (!newCategoryName.trim()) return;
+    try {
+      await createCategory({ name: newCategoryName, type: 'claim' });
+      toast.success('Category added');
+      setNewCategoryName('');
+      setIsCategoryModalOpen(false);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to add category');
+    }
   };
 
   const handleCreateSubmit = async (e) => {
@@ -166,9 +205,13 @@ const LeaderClaimsPage = () => {
             <input type="text" className="form-input" required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
           </div>
           <div className="form-group">
-            <label className="form-label">Claim Type</label>
+            <div className="flex items-center justify-between">
+              <label className="form-label">Claim Type</label>
+              <button type="button" onClick={() => setIsCategoryModalOpen(true)} style={{ fontSize: '0.75rem', color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>+ Add New</button>
+            </div>
             <select className="form-select" required value={formData.claimType} onChange={e => setFormData({...formData, claimType: e.target.value})}>
-              {CLAIM_TYPES.map(c => <option key={c} value={c}>{c}</option>)}
+              <option value="">-- Choose Category --</option>
+              {categories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
             </select>
           </div>
           <div className="form-group">
@@ -212,6 +255,23 @@ const LeaderClaimsPage = () => {
           <div className="flex justify-between" style={{ marginTop: 24 }}>
             <button type="button" className="btn btn-ghost" onClick={() => setIsStatusModalOpen(false)}>Cancel</button>
             <button type="submit" className="btn btn-primary" disabled={submitting}>{submitting ? 'Updating...' : 'Update Status'}</button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Add Category Modal */}
+      <Modal isOpen={isCategoryModalOpen} onClose={() => setIsCategoryModalOpen(false)} title="Add New Claim Category">
+        <form onSubmit={handleAddCategory} className="flex-col gap-4">
+          <div className="form-group">
+            <label className="form-label">Category Name</label>
+            <input 
+              type="text" className="form-input" required placeholder="e.g. Special Medical Fund" 
+              value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} 
+            />
+          </div>
+          <div className="flex justify-between" style={{ marginTop: 12 }}>
+            <button type="button" className="btn btn-ghost" onClick={() => setIsCategoryModalOpen(false)}>Cancel</button>
+            <button type="submit" className="btn btn-primary">Add Category</button>
           </div>
         </form>
       </Modal>

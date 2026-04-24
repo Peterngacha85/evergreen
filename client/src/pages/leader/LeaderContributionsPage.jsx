@@ -1,38 +1,47 @@
 import { useEffect, useState } from 'react';
 import { getContributions, addContribution, updateContribution, deleteContribution } from '../../api/contributions';
 import { getMembers } from '../../api/members';
+import { getCategories, createCategory } from '../../api/categories';
 import { validateSession } from '../../api/changeRequests';
+import { useSocket } from '../../context/SocketContext';
 import Modal from '../../components/common/Modal';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { useAuth } from '../../context/AuthContext';
 
-const DEFAULT_CATEGORIES = ['Monthly Dues', 'Medical Fund', 'Bereavement', 'Development Fund', 'Emergency'];
-
 const LeaderContributionsPage = () => {
+  const socket = useSocket();
   const { isSuperAdmin } = useAuth();
   const [contributions, setContributions] = useState([]);
   const [members, setMembers] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hasAccess, setHasAccess] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
 
   // Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [formData, setFormData] = useState({ id: '', memberId: '', amount: '', category: DEFAULT_CATEGORIES[0], description: '', datePaid: '' });
+  const [formData, setFormData] = useState({ id: '', memberId: '', amount: '', category: '', description: '', datePaid: '' });
   const [submitting, setSubmitting] = useState(false);
 
   const fetchData = async () => {
     try {
-      const [c, m, s] = await Promise.all([
+      const [c, m, s, cat] = await Promise.all([
         getContributions(),
         getMembers(),
-        !isSuperAdmin ? validateSession().catch(() => ({ data: { hasSession: false } })) : Promise.resolve({ data: { hasSession: true } })
+        !isSuperAdmin ? validateSession().catch(() => ({ data: { hasSession: false } })) : Promise.resolve({ data: { hasSession: true } }),
+        getCategories()
       ]);
       setContributions(c.data);
       setMembers(m.data);
       setHasAccess(s.data.hasSession);
+      setCategories(cat.data);
+      if (cat.data.length > 0 && !formData.category) {
+        setFormData(prev => ({ ...prev, category: cat.data[0].name }));
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -40,7 +49,23 @@ const LeaderContributionsPage = () => {
     }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { 
+    fetchData(); 
+  }, []);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('categoryAdded', (newCat) => {
+        setCategories(prev => {
+          if (prev.find(c => c._id === newCat._id)) return prev;
+          return [...prev, newCat].sort((a, b) => a.name.localeCompare(b.name));
+        });
+      });
+    }
+    return () => {
+      if (socket) socket.off('categoryAdded');
+    };
+  }, [socket]);
 
   const handleOpenModal = (contrib = null) => {
     if (!hasAccess && !isSuperAdmin) return toast.error('You need an approved change request session.');
@@ -56,7 +81,14 @@ const LeaderContributionsPage = () => {
       });
     } else {
       setIsEditMode(false);
-      setFormData({ id: '', memberId: '', amount: '', category: DEFAULT_CATEGORIES[0], description: '', datePaid: new Date().toISOString().split('T')[0] });
+      setFormData({ 
+        id: '', 
+        memberId: '', 
+        amount: '', 
+        category: categories.length > 0 ? categories[0].name : '', 
+        description: '', 
+        datePaid: new Date().toISOString().split('T')[0] 
+      });
     }
     setIsModalOpen(true);
   };
@@ -79,6 +111,20 @@ const LeaderContributionsPage = () => {
       toast.error(err.response?.data?.message || 'Operation failed');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleAddCategory = async (e) => {
+    e.preventDefault();
+    if (!newCategoryName.trim()) return;
+    try {
+      const res = await createCategory({ name: newCategoryName, type: 'contribution' });
+      toast.success('Category added');
+      setNewCategoryName('');
+      setIsCategoryModalOpen(false);
+      // Socket will update the list for everyone
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to add category');
     }
   };
 
@@ -154,9 +200,13 @@ const LeaderContributionsPage = () => {
             </div>
           )}
           <div className="form-group">
-            <label className="form-label">Category</label>
+            <div className="flex items-center justify-between">
+              <label className="form-label">Category</label>
+              <button type="button" onClick={() => setIsCategoryModalOpen(true)} style={{ fontSize: '0.75rem', color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>+ Add New</button>
+            </div>
             <select className="form-select" required value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
-              {DEFAULT_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              <option value="">-- Choose Category --</option>
+              {categories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
             </select>
           </div>
           <div className="form-group">
@@ -169,11 +219,34 @@ const LeaderContributionsPage = () => {
           </div>
           <div className="form-group">
             <label className="form-label">Description / Notes (Optional)</label>
-            <input type="text" className="form-input" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
+            <textarea 
+              className="form-input" 
+              rows="3"
+              style={{ resize: 'none', height: 'auto' }}
+              value={formData.description} 
+              onChange={e => setFormData({...formData, description: e.target.value})} 
+            />
           </div>
           <div className="flex justify-between" style={{ marginTop: 24 }}>
             <button type="button" className="btn btn-ghost" onClick={() => setIsModalOpen(false)}>Cancel</button>
             <button type="submit" className="btn btn-primary" disabled={submitting}>{submitting ? 'Saving...' : 'Save Record'}</button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Add Category Modal */}
+      <Modal isOpen={isCategoryModalOpen} onClose={() => setIsCategoryModalOpen(false)} title="Add New Category">
+        <form onSubmit={handleAddCategory} className="flex-col gap-4">
+          <div className="form-group">
+            <label className="form-label">Category Name</label>
+            <input 
+              type="text" className="form-input" required placeholder="e.g. Test Firmanty" 
+              value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} 
+            />
+          </div>
+          <div className="flex justify-between" style={{ marginTop: 12 }}>
+            <button type="button" className="btn btn-ghost" onClick={() => setIsCategoryModalOpen(false)}>Cancel</button>
+            <button type="submit" className="btn btn-primary">Add Category</button>
           </div>
         </form>
       </Modal>

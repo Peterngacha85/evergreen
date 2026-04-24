@@ -1,10 +1,11 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
+import { SocketProvider } from './context/SocketContext';
 
 // Layouts & Guards
 import DashboardLayout from './components/layout/DashboardLayout';
-import { ProtectedRoute, LeaderRoute } from './components/common/ProtectedRoute';
+import { ProtectedRoute, LeaderRoute, SuperAdminRoute } from './components/common/ProtectedRoute';
 
 // Auth
 import MemberLoginPage from './pages/auth/MemberLoginPage';
@@ -30,7 +31,8 @@ import ManageLeadersPage from './pages/leader/ManageLeadersPage';
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <SocketProvider>
+        <BrowserRouter>
         <Toaster position="top-right" toastOptions={{ duration: 4000, style: { background: '#111827', color: '#fff' } }} />
         <Routes>
           {/* Public Routes */}
@@ -61,12 +63,13 @@ function App() {
             
             {/* Officials view and Super Admin management */}
             <Route path="/leader/officials" element={<OfficialsPage />} />
-            <Route path="/leader/manage-leaders" element={<ManageLeadersPage />} />
+            <Route path="/leader/manage-leaders" element={<SuperAdminRoute><ManageLeadersPage /></SuperAdminRoute>} />
           </Route>
           
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>
+      </SocketProvider>
     </AuthProvider>
   );
 }
