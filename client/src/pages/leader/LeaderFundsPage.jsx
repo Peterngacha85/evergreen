@@ -169,7 +169,6 @@ const LeaderFundsPage = () => {
         </div>
       </div>
     </div>
-    </div>
   );
 };
 
