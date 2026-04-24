@@ -5,7 +5,7 @@ import { validateSession } from '../../api/changeRequests';
 import { useSocket } from '../../context/SocketContext';
 import Modal from '../../components/common/Modal';
 import AccessRequiredModal from '../../components/common/AccessRequiredModal';
-import { Plus, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Search, Filter } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { useAuth } from '../../context/AuthContext';
@@ -26,6 +26,10 @@ const LeaderEventsPage = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState({ id: '', title: '', description: '', date: '', location: '', category: '' });
   const [submitting, setSubmitting] = useState(false);
+
+  // Search & Filter state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterCategory, setFilterCategory] = useState('');
 
   const fetchData = async () => {
     try {
@@ -136,13 +140,58 @@ const LeaderEventsPage = () => {
     }
   };
 
+  const filteredEvents = events.filter(ev => {
+    const matchesSearch = ev.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         ev.location?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = filterCategory === '' || ev.category === filterCategory;
+
+    return matchesSearch && matchesCategory;
+  });
+
   if (loading) return <div className="flex justify-center" style={{ paddingTop: 80 }}><div className="spinner" /></div>;
 
   return (
     <div className="animate-fadein">
-      <div className="page-header flex items-center justify-between">
-        <div><h1 className="page-title">Manage Events</h1></div>
+      <div className="page-header flex items-center justify-between" style={{ flexWrap: 'wrap', gap: 16 }}>
+        <div>
+          <h1 className="page-title">Manage Events</h1>
+          <p className="page-subtitle">Schedule and organize community gatherings</p>
+        </div>
         <button className="btn btn-primary" onClick={() => handleOpenModal()}><Plus size={18} /> Create Event</button>
+      </div>
+
+      <div className="card" style={{ padding: '20px', marginBottom: 24, background: '#fff', border: '1px solid var(--border)' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center' }}>
+          <div style={{ position: 'relative', flex: 1, minWidth: 300 }}>
+            <Search size={20} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: 'var(--gray-400)' }} />
+            <input 
+              type="text" className="form-input" placeholder="Search event title or location..." 
+              value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+              style={{ paddingLeft: 48, height: 48, background: '#fff', borderRadius: 12, border: '1px solid var(--border)' }}
+            />
+          </div>
+          
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <select 
+              className="form-select" 
+              style={{ width: 'auto', minWidth: 180, height: 48, borderRadius: 12 }}
+              value={filterCategory} 
+              onChange={e => setFilterCategory(e.target.value)}
+            >
+              <option value="">All Categories</option>
+              {categories.map(cat => <option key={cat._id} value={cat.name}>{cat.name}</option>)}
+            </select>
+            {(filterCategory || searchTerm) && (
+              <button 
+                className="btn btn-ghost" 
+                onClick={() => { setSearchTerm(''); setFilterCategory(''); }}
+                style={{ color: '#dc2626', fontWeight: 600, height: 48 }}
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="card" style={{ padding: 0 }}>
@@ -158,28 +207,30 @@ const LeaderEventsPage = () => {
               </tr>
             </thead>
             <tbody>
-              {events.length === 0 ? (
-                <tr><td colSpan={5}><div className="empty-state">No events scheduled.</div></td></tr>
-              ) : events.map(ev => (
-                <tr key={ev._id}>
-                  <td>
-                    <div style={{ fontWeight: 600 }}>{ev.title}</div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{ev.description?.substring(0, 50) || '—'}</div>
-                  </td>
-                  <td>
-                    <div style={{ fontWeight: 600 }}>{format(new Date(ev.date), 'dd MMM yyyy')}</div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{format(new Date(ev.date), 'HH:mm')}</div>
-                  </td>
-                  <td><span className="badge badge-lime">{ev.category}</span></td>
-                  <td>{ev.location || '—'}</td>
-                  <td>
-                    <div className="flex gap-2">
-                      <button onClick={() => handleOpenModal(ev)} className="btn btn-sm btn-ghost btn-icon"><Edit2 size={16} /></button>
-                      <button onClick={() => handleDelete(ev._id)} className="btn btn-sm btn-ghost btn-icon" style={{ color: '#dc2626' }}><Trash2 size={16} /></button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {filteredEvents.length === 0 ? (
+                <tr><td colSpan={5}><div className="empty-state">No matching events found.</div></td></tr>
+              ) : (
+                filteredEvents.map(ev => (
+                  <tr key={ev._id}>
+                    <td>
+                      <div style={{ fontWeight: 600 }}>{ev.title}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{ev.description?.substring(0, 50) || '—'}</div>
+                    </td>
+                    <td>
+                      <div style={{ fontWeight: 600 }}>{format(new Date(ev.date), 'dd MMM yyyy')}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{format(new Date(ev.date), 'HH:mm')}</div>
+                    </td>
+                    <td><span className="badge badge-lime">{ev.category}</span></td>
+                    <td>{ev.location || '—'}</td>
+                    <td>
+                      <div className="flex gap-2">
+                        <button onClick={() => handleOpenModal(ev)} className="btn btn-sm btn-ghost btn-icon"><Edit2 size={16} /></button>
+                        <button onClick={() => handleDelete(ev._id)} className="btn btn-sm btn-ghost btn-icon" style={{ color: '#dc2626' }}><Trash2 size={16} /></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

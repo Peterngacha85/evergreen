@@ -20,42 +20,32 @@ const PAGE_TITLES = {
 };
 
 const DashboardLayout = () => {
-  const [sidebarW, setSidebarW] = useState(260);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const location = useLocation();
 
   const title = PAGE_TITLES[location.pathname] || 'Evergreen Community';
 
-  // Listen to sidebar width changes via CSS variable
+  // Close mobile sidebar on route change
   useEffect(() => {
-    const observer = new MutationObserver(() => {
-      const sidebar = document.querySelector('aside');
-      if (sidebar) setSidebarW(sidebar.offsetWidth);
-    });
-    const sidebar = document.querySelector('aside');
-    if (sidebar) {
-      observer.observe(sidebar, { attributes: true, attributeFilter: ['style'] });
-      setSidebarW(sidebar.offsetWidth);
-    }
-    return () => observer.disconnect();
-  }, []);
+    setIsMobileOpen(false);
+  }, [location.pathname]);
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
-      {/* Mobile Backdrop */}
+      {/* Mobile Overlay */}
       <div 
-        className={`sidebar-backdrop ${isMobileOpen ? 'open' : ''}`} 
+        className={`mobile-overlay ${isMobileOpen ? 'active' : ''}`} 
         onClick={() => setIsMobileOpen(false)}
       />
 
-      {/* Sidebar Container */}
-      <div className={`sidebar-container ${isMobileOpen ? 'open' : ''} desktop-sidebar`}>
+      {/* Sidebar with mobile state toggle */}
+      <div className={`sidebar-container ${isMobileOpen ? 'open' : ''}`}>
         <Sidebar onClose={() => setIsMobileOpen(false)} />
       </div>
 
-      <div className="desktop-layout" style={{ flex: 1, marginLeft: sidebarW, display: 'flex', flexDirection: 'column', minHeight: '100vh', transition: 'margin-left 0.25s ease' }}>
+      <div className="desktop-layout">
         <TopBar title={title} onMenuClick={() => setIsMobileOpen(true)} />
-        <main style={{ flex: 1, padding: '28px', background: 'var(--bg)' }}>
+        <main style={{ padding: '24px', background: 'var(--bg)' }}>
           <Outlet />
         </main>
       </div>

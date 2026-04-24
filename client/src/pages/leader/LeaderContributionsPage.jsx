@@ -6,7 +6,7 @@ import { validateSession } from '../../api/changeRequests';
 import { useSocket } from '../../context/SocketContext';
 import Modal from '../../components/common/Modal';
 import AccessRequiredModal from '../../components/common/AccessRequiredModal';
-import { Plus, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Search, Filter } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { useAuth } from '../../context/AuthContext';
@@ -28,6 +28,12 @@ const LeaderContributionsPage = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState({ id: '', memberId: '', amount: '', category: '', description: '', datePaid: '' });
   const [submitting, setSubmitting] = useState(false);
+
+  // Search & Filter state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterCategory, setFilterCategory] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   const fetchData = async () => {
     try {
@@ -148,13 +154,75 @@ const LeaderContributionsPage = () => {
     }
   };
 
+  const filteredContributions = contributions.filter(c => {
+    const matchesSearch = c.member?.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         c.member?.idNumber.includes(searchTerm);
+    const matchesCategory = filterCategory === '' || c.category === filterCategory;
+    
+    const cDate = new Date(c.datePaid).toISOString().split('T')[0];
+    const matchesDateFrom = !dateFrom || cDate >= dateFrom;
+    const matchesDateTo = !dateTo || cDate <= dateTo;
+
+    return matchesSearch && matchesCategory && matchesDateFrom && matchesDateTo;
+  });
+
   if (loading) return <div className="flex justify-center" style={{ paddingTop: 80 }}><div className="spinner" /></div>;
 
   return (
     <div className="animate-fadein">
-      <div className="page-header flex items-center justify-between">
-        <div><h1 className="page-title">Manage Contributions</h1></div>
+      <div className="page-header flex items-center justify-between" style={{ flexWrap: 'wrap', gap: 16 }}>
+        <div>
+          <h1 className="page-title">Manage Contributions</h1>
+          <p className="page-subtitle">Search and manage member financial records</p>
+        </div>
         <button className="btn btn-primary" onClick={() => handleOpenModal()}><Plus size={18} /> Record Contribution</button>
+      </div>
+
+      <div className="card" style={{ padding: '20px', marginBottom: 24, background: '#fff', border: '1px solid var(--border)' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center' }}>
+          <div style={{ position: 'relative', flex: 1, minWidth: 300 }}>
+            <Search size={20} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: 'var(--gray-400)' }} />
+            <input 
+              type="text" className="form-input" placeholder="Search by member name or ID number..." 
+              value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+              style={{ paddingLeft: 48, height: 48, background: '#fff', borderRadius: 12, border: '1px solid var(--border)' }}
+            />
+          </div>
+          
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <select 
+              className="form-select" 
+              style={{ width: 'auto', minWidth: 180, height: 48, borderRadius: 12 }}
+              value={filterCategory} 
+              onChange={e => setFilterCategory(e.target.value)}
+            >
+              <option value="">All Categories</option>
+              {categories.map(cat => <option key={cat._id} value={cat.name}>{cat.name}</option>)}
+            </select>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--gray-50)', padding: '4px 12px', borderRadius: 12, border: '1px solid var(--border)', height: 48 }}>
+              <input 
+                type="date" className="form-input" style={{ border: 'none', background: 'transparent', width: 130, padding: 0 }}
+                value={dateFrom} onChange={e => setDateFrom(e.target.value)}
+              />
+              <span style={{ color: 'var(--gray-400)', fontWeight: 600 }}>→</span>
+              <input 
+                type="date" className="form-input" style={{ border: 'none', background: 'transparent', width: 130, padding: 0 }}
+                value={dateTo} onChange={e => setDateTo(e.target.value)}
+              />
+            </div>
+
+            {(dateFrom || dateTo || filterCategory || searchTerm) && (
+              <button 
+                className="btn btn-ghost" 
+                onClick={() => { setSearchTerm(''); setFilterCategory(''); setDateFrom(''); setDateTo(''); }}
+                style={{ color: '#dc2626', fontWeight: 600, height: 48 }}
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="card" style={{ padding: 0 }}>
@@ -171,9 +239,9 @@ const LeaderContributionsPage = () => {
               </tr>
             </thead>
             <tbody>
-              {contributions.length === 0 ? (
-                <tr><td colSpan={6}><div className="empty-state">No contributions recorded yet.</div></td></tr>
-              ) : contributions.map(c => (
+              {filteredContributions.length === 0 ? (
+                <tr><td colSpan={6}><div className="empty-state">No matching contributions found.</div></td></tr>
+              ) : filteredContributions.map(c => (
                 <tr key={c._id}>
                   <td>
                     <div style={{ fontWeight: 600 }}>{c.member?.name}</div>

@@ -7,7 +7,7 @@ import { useSocket } from '../../context/SocketContext';
 import Modal from '../../components/common/Modal';
 import AccessRequiredModal from '../../components/common/AccessRequiredModal';
 import StatusBadge from '../../components/common/StatusBadge';
-import { Plus, CheckCircle, XCircle, DollarSign, Trash2 } from 'lucide-react';
+import { Plus, CheckCircle, XCircle, DollarSign, Trash2, Search, Filter } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { useAuth } from '../../context/AuthContext';
@@ -28,6 +28,11 @@ const LeaderClaimsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({ memberId: '', title: '', description: '', amount: '', claimType: '', notes: '' });
   const [submitting, setSubmitting] = useState(false);
+
+  // Search & Filter state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
 
   // Status Update Modal
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
@@ -152,13 +157,74 @@ const LeaderClaimsPage = () => {
     }
   };
 
+  const filteredClaims = claims.filter(c => {
+    const matchesSearch = c.member?.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         c.member?.idNumber.includes(searchTerm) ||
+                         c.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = filterType === '' || c.claimType === filterType;
+    const matchesStatus = filterStatus === '' || c.status === filterStatus;
+
+    return matchesSearch && matchesType && matchesStatus;
+  });
+
   if (loading) return <div className="flex justify-center" style={{ paddingTop: 80 }}><div className="spinner" /></div>;
 
   return (
     <div className="animate-fadein">
-      <div className="page-header flex items-center justify-between">
-        <div><h1 className="page-title">Manage Claims</h1></div>
+      <div className="page-header flex items-center justify-between" style={{ flexWrap: 'wrap', gap: 16 }}>
+        <div>
+          <h1 className="page-title">Manage Claims</h1>
+          <p className="page-subtitle">Track and process welfare benefit requests</p>
+        </div>
         <button className="btn btn-primary" onClick={handleOpenCreateModal}><Plus size={18} /> Record Claim</button>
+      </div>
+
+      <div className="card" style={{ padding: '20px', marginBottom: 24, background: '#fff', border: '1px solid var(--border)' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center' }}>
+          <div style={{ position: 'relative', flex: 1, minWidth: 300 }}>
+            <Search size={20} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: 'var(--gray-400)' }} />
+            <input 
+              type="text" className="form-input" placeholder="Search member, ID or claim title..." 
+              value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+              style={{ paddingLeft: 48, height: 48, background: '#fff', borderRadius: 12, border: '1px solid var(--border)' }}
+            />
+          </div>
+          
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <select 
+              className="form-select" 
+              style={{ width: 'auto', minWidth: 160, height: 48, borderRadius: 12 }}
+              value={filterType} 
+              onChange={e => setFilterType(e.target.value)}
+            >
+              <option value="">All Types</option>
+              {categories.map(cat => <option key={cat._id} value={cat.name}>{cat.name}</option>)}
+            </select>
+
+            <select 
+              className="form-select" 
+              style={{ width: 'auto', minWidth: 160, height: 48, borderRadius: 12 }}
+              value={filterStatus} 
+              onChange={e => setFilterStatus(e.target.value)}
+            >
+              <option value="">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="paid">Paid</option>
+              <option value="rejected">Rejected</option>
+            </select>
+
+            {(filterType || filterStatus || searchTerm) && (
+              <button 
+                className="btn btn-ghost" 
+                onClick={() => { setSearchTerm(''); setFilterType(''); setFilterStatus(''); }}
+                style={{ color: '#dc2626', fontWeight: 600, height: 48 }}
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="card" style={{ padding: 0 }}>
@@ -174,9 +240,9 @@ const LeaderClaimsPage = () => {
               </tr>
             </thead>
             <tbody>
-              {claims.length === 0 ? (
-                <tr><td colSpan={5}><div className="empty-state">No claims recorded.</div></td></tr>
-              ) : claims.map(c => (
+              {filteredClaims.length === 0 ? (
+                <tr><td colSpan={5}><div className="empty-state">No matching claims found.</div></td></tr>
+              ) : filteredClaims.map(c => (
                 <tr key={c._id}>
                   <td>
                     <div style={{ fontWeight: 600 }}>{c.member?.name}</div>

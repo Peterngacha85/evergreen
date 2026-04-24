@@ -130,19 +130,30 @@ const LeaderMembersPage = () => {
         </button>
       </div>
 
-      <div className="card" style={{ padding: 0 }}>
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', gap: 16, alignItems: 'center' }}>
-          <div style={{ position: 'relative', flex: 1, maxWidth: 400 }}>
-            <Search size={18} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--gray-400)' }} />
+      <div className="card" style={{ padding: '20px', marginBottom: 24, background: '#fff', border: '1px solid var(--border)' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center' }}>
+          <div style={{ position: 'relative', flex: 1, minWidth: 300 }}>
+            <Search size={20} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: 'var(--gray-400)' }} />
             <input 
               type="text" className="form-input" placeholder="Search by name, ID or phone..." 
               value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-              style={{ paddingLeft: 40 }}
+              style={{ paddingLeft: 48, height: 48, background: '#fff', borderRadius: 12, border: '1px solid var(--border)' }}
             />
           </div>
+          {searchTerm && (
+            <button 
+              className="btn btn-ghost" 
+              onClick={() => setSearchTerm('')}
+              style={{ color: '#dc2626', fontWeight: 600, height: 48 }}
+            >
+              Clear
+            </button>
+          )}
         </div>
+      </div>
 
-        <div className="table-wrapper" style={{ border: 'none', borderRadius: '0 0 var(--radius-lg) var(--radius-lg)' }}>
+      <div className="card" style={{ padding: 0 }}>
+        <div className="table-wrapper" style={{ border: 'none' }}>
           <table>
             <thead>
               <tr>
