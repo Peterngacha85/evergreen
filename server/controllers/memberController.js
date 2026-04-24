@@ -7,7 +7,6 @@ const cloudinary = require('../config/cloudinary');
 const getAllMembers = async (req, res) => {
   try {
     const members = await Member.find({ isActive: true })
-      .select('-password')
       .populate('addedBy', 'name leaderRole')
       .sort({ createdAt: -1 });
     res.json(members);
@@ -21,7 +20,7 @@ const getAllMembers = async (req, res) => {
 // @access Leader + Member (self)
 const getMemberById = async (req, res) => {
   try {
-    const member = await Member.findById(req.params.id).select('-password').populate('addedBy', 'name leaderRole');
+    const member = await Member.findById(req.params.id).populate('addedBy', 'name leaderRole');
     if (!member) return res.status(404).json({ message: 'Member not found' });
 
     // Members can only see themselves
