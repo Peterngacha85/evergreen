@@ -5,6 +5,7 @@ import { getCategories, createCategory } from '../../api/categories';
 import { validateSession } from '../../api/changeRequests';
 import { useSocket } from '../../context/SocketContext';
 import Modal from '../../components/common/Modal';
+import AccessRequiredModal from '../../components/common/AccessRequiredModal';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
@@ -18,6 +19,7 @@ const LeaderContributionsPage = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hasAccess, setHasAccess] = useState(false);
+  const [isAccessModalOpen, setIsAccessModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
 
@@ -68,7 +70,10 @@ const LeaderContributionsPage = () => {
   }, [socket]);
 
   const handleOpenModal = (contrib = null) => {
-    if (!hasAccess && !isSuperAdmin) return toast.error('You need an approved change request session.');
+    if (!hasAccess && !isSuperAdmin) {
+      setIsAccessModalOpen(true);
+      return;
+    }
     if (contrib) {
       setIsEditMode(true);
       setFormData({ 
@@ -129,7 +134,10 @@ const LeaderContributionsPage = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!hasAccess && !isSuperAdmin) return toast.error('You need an approved change request session.');
+    if (!hasAccess && !isSuperAdmin) {
+      setIsAccessModalOpen(true);
+      return;
+    }
     if (!window.confirm('Delete this contribution record?')) return;
     try {
       await deleteContribution(id);
@@ -250,6 +258,11 @@ const LeaderContributionsPage = () => {
           </div>
         </form>
       </Modal>
+
+      <AccessRequiredModal 
+        isOpen={isAccessModalOpen} 
+        onClose={() => setIsAccessModalOpen(false)} 
+      />
     </div>
   );
 };

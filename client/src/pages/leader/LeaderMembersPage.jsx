@@ -3,6 +3,7 @@ import { getMembers, createMember, updateMember, updateMemberPhoto, deleteMember
 import { validateSession } from '../../api/changeRequests';
 import Avatar from '../../components/common/Avatar';
 import Modal from '../../components/common/Modal';
+import AccessRequiredModal from '../../components/common/AccessRequiredModal';
 import { Plus, Edit2, Trash2, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
@@ -14,6 +15,7 @@ const LeaderMembersPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [hasAccess, setHasAccess] = useState(false);
+  const [isAccessModalOpen, setIsAccessModalOpen] = useState(false);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -42,7 +44,7 @@ const LeaderMembersPage = () => {
 
   const handleOpenModal = (member = null) => {
     if (!hasAccess && !isSuperAdmin) {
-      toast.error('You need an approved change request session to manage members.');
+      setIsAccessModalOpen(true);
       return;
     }
     if (member) {
@@ -94,7 +96,10 @@ const LeaderMembersPage = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!hasAccess && !isSuperAdmin) return toast.error('You need an approved change request session to deactivate members.');
+    if (!hasAccess && !isSuperAdmin) {
+      setIsAccessModalOpen(true);
+      return;
+    }
     if (!window.confirm('Are you sure you want to deactivate this member?')) return;
     try {
       await deleteMember(id);
@@ -210,6 +215,11 @@ const LeaderMembersPage = () => {
           </div>
         </form>
       </Modal>
+
+      <AccessRequiredModal 
+        isOpen={isAccessModalOpen} 
+        onClose={() => setIsAccessModalOpen(false)} 
+      />
     </div>
   );
 };

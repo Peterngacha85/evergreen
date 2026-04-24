@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { getEvents, createEvent, updateEvent, deleteEvent } from '../../api/events';
 import { validateSession } from '../../api/changeRequests';
 import Modal from '../../components/common/Modal';
+import AccessRequiredModal from '../../components/common/AccessRequiredModal';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
@@ -14,6 +15,7 @@ const LeaderEventsPage = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hasAccess, setHasAccess] = useState(false);
+  const [isAccessModalOpen, setIsAccessModalOpen] = useState(false);
 
   // Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -39,7 +41,10 @@ const LeaderEventsPage = () => {
   useEffect(() => { fetchData(); }, []);
 
   const handleOpenModal = (ev = null) => {
-    if (!hasAccess && !isSuperAdmin) return toast.error('You need an approved change request session.');
+    if (!hasAccess && !isSuperAdmin) {
+      setIsAccessModalOpen(true);
+      return;
+    }
     if (ev) {
       setIsEditMode(true);
       setFormData({ 
@@ -75,7 +80,10 @@ const LeaderEventsPage = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!hasAccess && !isSuperAdmin) return toast.error('You need an approved change request session.');
+    if (!hasAccess && !isSuperAdmin) {
+      setIsAccessModalOpen(true);
+      return;
+    }
     if (!window.confirm('Delete this event?')) return;
     try {
       await deleteEvent(id);
@@ -165,6 +173,11 @@ const LeaderEventsPage = () => {
           </div>
         </form>
       </Modal>
+
+      <AccessRequiredModal 
+        isOpen={isAccessModalOpen} 
+        onClose={() => setIsAccessModalOpen(false)} 
+      />
     </div>
   );
 };

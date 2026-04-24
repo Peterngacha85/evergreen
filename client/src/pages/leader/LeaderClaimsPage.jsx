@@ -5,6 +5,7 @@ import { getCategories, createCategory } from '../../api/categories';
 import { validateSession } from '../../api/changeRequests';
 import { useSocket } from '../../context/SocketContext';
 import Modal from '../../components/common/Modal';
+import AccessRequiredModal from '../../components/common/AccessRequiredModal';
 import StatusBadge from '../../components/common/StatusBadge';
 import { Plus, CheckCircle, XCircle, DollarSign, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -19,6 +20,7 @@ const LeaderClaimsPage = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hasAccess, setHasAccess] = useState(false);
+  const [isAccessModalOpen, setIsAccessModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
 
@@ -74,7 +76,10 @@ const LeaderClaimsPage = () => {
   }, [socket]);
 
   const handleOpenCreateModal = () => {
-    if (!hasAccess && !isSuperAdmin) return toast.error('You need an approved change request session.');
+    if (!hasAccess && !isSuperAdmin) {
+      setIsAccessModalOpen(true);
+      return;
+    }
     setFormData({ memberId: '', title: '', description: '', amount: '', claimType: categories.length > 0 ? categories[0].name : '', notes: '' });
     setIsModalOpen(true);
   };
@@ -108,7 +113,10 @@ const LeaderClaimsPage = () => {
   };
 
   const handleOpenStatusModal = (claim) => {
-    if (!hasAccess && !isSuperAdmin) return toast.error('You need an approved change request session.');
+    if (!hasAccess && !isSuperAdmin) {
+      setIsAccessModalOpen(true);
+      return;
+    }
     setActiveClaim(claim);
     setStatusUpdate({ status: claim.status === 'pending' ? 'approved' : 'paid', notes: claim.notes || '' });
     setIsStatusModalOpen(true);
@@ -130,7 +138,10 @@ const LeaderClaimsPage = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!hasAccess && !isSuperAdmin) return toast.error('You need an approved change request session.');
+    if (!hasAccess && !isSuperAdmin) {
+      setIsAccessModalOpen(true);
+      return;
+    }
     if (!window.confirm('Delete this claim record?')) return;
     try {
       await deleteClaim(id);
@@ -275,6 +286,11 @@ const LeaderClaimsPage = () => {
           </div>
         </form>
       </Modal>
+
+      <AccessRequiredModal 
+        isOpen={isAccessModalOpen} 
+        onClose={() => setIsAccessModalOpen(false)} 
+      />
     </div>
   );
 };
