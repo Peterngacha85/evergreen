@@ -18,6 +18,7 @@ const MEMBER_NAV = [
   { to: '/officials',       icon: Award,           label: 'Officials'      },
   { to: '/claims',          icon: FileText,        label: 'My Claims'      },
   { to: '/rules',           icon: BookOpen,        label: 'Welfare Rules'  },
+  { to: '/funds',           icon: Landmark,        label: 'Funds Available' },
 ];
 
 const LEADER_NAV = [

@@ -21,6 +21,7 @@ const PAGE_TITLES = {
   '/leader/rules':            'Rules Management',
   '/leader/defaulters':       'Defaulters List',
   '/leader/funds':            'Funds Available',
+  '/funds':                   'Funds Available',
 };
 
 const DashboardLayout = () => {

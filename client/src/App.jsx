@@ -30,7 +30,7 @@ import LeaderClaimsPage from './pages/leader/LeaderClaimsPage';
 import ManageLeadersPage from './pages/leader/ManageLeadersPage';
 import LeaderRulesPage from './pages/leader/LeaderRulesPage';
 import LeaderDefaultersPage from './pages/leader/LeaderDefaultersPage';
-import LeaderFundsPage from './pages/leader/LeaderFundsPage';
+import FundsAvailablePage from './pages/common/FundsAvailablePage';
 
 function App() {
   return (
@@ -53,6 +53,7 @@ function App() {
             <Route path="/officials" element={<OfficialsPage />} />
             <Route path="/claims" element={<MemberClaimsPage />} />
             <Route path="/rules" element={<MemberRulesPage />} />
+            <Route path="/funds" element={<FundsAvailablePage />} />
           </Route>
 
           {/* Leader/SuperAdmin Protected Routes */}
@@ -70,7 +71,7 @@ function App() {
             <Route path="/leader/officials" element={<OfficialsPage />} />
             <Route path="/leader/rules" element={<LeaderRulesPage />} />
             <Route path="/leader/defaulters" element={<LeaderDefaultersPage />} />
-            <Route path="/leader/funds" element={<LeaderFundsPage />} />
+            <Route path="/leader/funds" element={<FundsAvailablePage />} />
             <Route path="/leader/manage-leaders" element={<SuperAdminRoute><ManageLeadersPage /></SuperAdminRoute>} />
           </Route>
           

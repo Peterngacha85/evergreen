@@ -4,7 +4,7 @@ const { getFundsOverview, getDefaulters } = require('../controllers/statsControl
 const { protect } = require('../middleware/authMiddleware');
 const { leaderOrSuperAdmin } = require('../middleware/roleMiddleware');
 
-router.get('/funds', protect, leaderOrSuperAdmin, getFundsOverview);
+router.get('/funds', protect, getFundsOverview);
 router.get('/defaulters', protect, leaderOrSuperAdmin, getDefaulters);
 
 module.exports = router;
