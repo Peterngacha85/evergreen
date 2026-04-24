@@ -21,9 +21,10 @@ const app = express();
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? true // or specify production origins if strictly needed, true allows reflect
-    : ['http://localhost:5173', 'http://localhost:3000'],
+  origin: function (origin, callback) {
+    // Allow all origins in production for simplicity, or add specific ones
+    callback(null, true);
+  },
   credentials: true,
 }));
 app.use(express.json());
