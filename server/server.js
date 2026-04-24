@@ -44,6 +44,11 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Evergreen Welfare API is running', timestamp: new Date() });
 });
 
+// Root route (for users visiting the backend URL directly)
+app.get('/', (req, res) => {
+  res.send('<h2>Evergreen Community Backend API is live! 🚀</h2><p>Your frontend should connect to <code>/api</code>.</p>');
+});
+
 // ─── Serve Frontend in Production ──────────────────────────────────────────────
 if (process.env.NODE_ENV === 'production') {
   const clientBuildPath = path.join(__dirname, '../client/dist');
