@@ -2,6 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
+const http = require('http');
+const { Server } = require('socket.io');
 const path = require('path');
 const connectDB = require('./config/db');
 
@@ -13,11 +15,13 @@ const contributionRoutes = require('./routes/contributionRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const claimRoutes = require('./routes/claimRoutes');
 const changeRequestRoutes = require('./routes/changeRequestRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
 
 // Connect to MongoDB
 connectDB();
 
 const app = express();
+const server = http.createServer(app);
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 const ALLOWED_ORIGINS = [
@@ -25,6 +29,23 @@ const ALLOWED_ORIGINS = [
   'http://localhost:5173',
   'http://localhost:3000'
 ];
+
+const io = new Server(server, {
+  cors: {
+    origin: ALLOWED_ORIGINS,
+    credentials: true
+  }
+});
+
+// Make io accessible globally via app
+app.set('socketio', io);
+
+io.on('connection', (socket) => {
+  console.log('📡 Socket connected:', socket.id);
+  socket.on('disconnect', () => {
+    console.log('🔌 Socket disconnected');
+  });
+});
 
 app.use(cors({
   origin: function (origin, callback) {
@@ -49,6 +70,7 @@ app.use('/api/contributions', contributionRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/claims', claimRoutes);
 app.use('/api/change-requests', changeRequestRoutes);
+app.use('/api/categories', categoryRoutes);
 
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
@@ -84,6 +106,6 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`🚀 Evergreen API running on http://localhost:${PORT}`);
 });

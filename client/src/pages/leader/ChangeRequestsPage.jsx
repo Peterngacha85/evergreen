@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getChangeRequests, createChangeRequest, voteOnChangeRequest, validateSession } from '../../api/changeRequests';
 import { useAuth } from '../../context/AuthContext';
+import { useSocket } from '../../context/SocketContext';
 import { format } from 'date-fns';
 import { Check, X, ShieldAlert, Plus, Info } from 'lucide-react';
 import Modal from '../../components/common/Modal';
@@ -8,6 +9,7 @@ import StatusBadge from '../../components/common/StatusBadge';
 import toast from 'react-hot-toast';
 
 const ChangeRequestsPage = () => {
+  const socket = useSocket();
   const { user, isSuperAdmin } = useAuth();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -36,6 +38,33 @@ const ChangeRequestsPage = () => {
   useEffect(() => {
     fetchRequests();
   }, []);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('newChangeRequest', (newReq) => {
+        setRequests(prev => {
+          if (prev.find(r => r._id === newReq._id)) return prev;
+          return [newReq, ...prev];
+        });
+      });
+
+      socket.on('changeRequestUpdated', (updatedReq) => {
+        setRequests(prev => prev.map(r => r._id === updatedReq._id ? updatedReq : r));
+        
+        // If it's my request and it was approved, refresh my session status
+        if (updatedReq.requestedBy?._id === user?._id && updatedReq.status === 'approved') {
+          fetchRequests();
+        }
+      });
+    }
+
+    return () => {
+      if (socket) {
+        socket.off('newChangeRequest');
+        socket.off('changeRequestUpdated');
+      }
+    };
+  }, [socket, user?._id]);
 
   const handleCreateRequest = async (e) => {
     e.preventDefault();

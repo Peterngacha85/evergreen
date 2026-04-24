@@ -32,6 +32,13 @@ const createChangeRequest = async (req, res) => {
     });
 
     const populated = await changeRequest.populate('requestedBy', 'name leaderRole');
+
+    // Notify all leaders about the new request
+    const io = req.app.get('socketio');
+    if (io) {
+      io.emit('newChangeRequest', populated);
+    }
+
     res.status(201).json(populated);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -95,6 +102,12 @@ const voteOnChangeRequest = async (req, res) => {
     ]);
 
     res.json({ message: `Vote recorded. Status: ${changeRequest.status}`, changeRequest: populated });
+
+    // Notify all leaders about the update
+    const io = req.app.get('socketio');
+    if (io) {
+      io.emit('changeRequestUpdated', populated);
+    }
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
