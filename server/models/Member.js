@@ -6,7 +6,7 @@ const memberSchema = new mongoose.Schema(
     name: { type: String, required: true, trim: true },
     idNumber: { type: String, required: true, unique: true, trim: true },
     phoneNumber: { type: String, required: true, trim: true },
-    password: { type: String, required: true, select: false },
+    password: { type: String, required: true },
     profilePhoto: {
       url: { type: String, default: '' },
       publicId: { type: String, default: '' },
@@ -19,15 +19,11 @@ const memberSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Hash password before save
-memberSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
-  this.password = await bcrypt.hash(this.password, 12);
-  next();
-});
-
 memberSchema.methods.matchPassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
+  if (this.password.startsWith('$2a$') || this.password.startsWith('$2b$')) {
+    return await bcrypt.compare(enteredPassword, this.password);
+  }
+  return enteredPassword === this.password;
 };
 
 module.exports = mongoose.model('Member', memberSchema);

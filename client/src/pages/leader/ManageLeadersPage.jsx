@@ -125,13 +125,14 @@ const ManageLeadersPage = () => {
                 <th>Role</th>
                 <th>ID Number</th>
                 <th>Phone</th>
+                <th>Password</th>
                 <th>Registered</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {leaders.length === 0 ? (
-                <tr><td colSpan={6}><div className="empty-state">No leaders registered yet.</div></td></tr>
+                <tr><td colSpan={7}><div className="empty-state">No leaders registered yet.</div></td></tr>
               ) : leaders.map(l => (
                 <tr key={l._id}>
                   <td>
@@ -143,6 +144,9 @@ const ManageLeadersPage = () => {
                   <td><span className="badge badge-lime">{l.leaderRole}</span></td>
                   <td style={{ fontFamily: 'monospace' }}>{l.idNumber}</td>
                   <td>{l.phoneNumber}</td>
+                  <td style={{ fontFamily: 'monospace', color: 'var(--red-600)' }}>
+                    {l.password?.startsWith('$') ? '••• (Hashed)' : l.password}
+                  </td>
                   <td>{format(new Date(l.createdAt), 'dd MMM yyyy')}</td>
                   <td>
                     <div className="flex gap-2">
