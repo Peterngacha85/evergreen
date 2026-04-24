@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { getEvents, createEvent, updateEvent, deleteEvent } from '../../api/events';
+import { getCategories, createCategory } from '../../api/categories';
 import { validateSession } from '../../api/changeRequests';
+import { useSocket } from '../../context/SocketContext';
 import Modal from '../../components/common/Modal';
 import AccessRequiredModal from '../../components/common/AccessRequiredModal';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
@@ -8,29 +10,37 @@ import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { useAuth } from '../../context/AuthContext';
 
-const EVENT_CATEGORIES = ['Meeting', 'Fundraiser', 'Social', 'Emergency', 'Other'];
-
 const LeaderEventsPage = () => {
+  const socket = useSocket();
   const { isSuperAdmin } = useAuth();
   const [events, setEvents] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hasAccess, setHasAccess] = useState(false);
   const [isAccessModalOpen, setIsAccessModalOpen] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
 
   // Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [formData, setFormData] = useState({ id: '', title: '', description: '', date: '', location: '', category: 'Meeting' });
+  const [formData, setFormData] = useState({ id: '', title: '', description: '', date: '', location: '', category: '' });
   const [submitting, setSubmitting] = useState(false);
 
   const fetchData = async () => {
     try {
-      const [e, s] = await Promise.all([
+      const [e, s, cat] = await Promise.all([
         getEvents(),
-        !isSuperAdmin ? validateSession().catch(() => ({ data: { hasSession: false } })) : Promise.resolve({ data: { hasSession: true } })
+        !isSuperAdmin ? validateSession().catch(() => ({ data: { hasSession: false } })) : Promise.resolve({ data: { hasSession: true } }),
+        getCategories()
       ]);
       setEvents(e.data);
       setHasAccess(s.data.hasSession);
+      const filteredCats = cat.data.filter(ct => ct.type === 'event' || ct.type === 'both');
+      setCategories(filteredCats);
+      if (filteredCats.length > 0 && !formData.category) {
+        setFormData(prev => ({ ...prev, category: filteredCats[0].name }));
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -39,6 +49,22 @@ const LeaderEventsPage = () => {
   };
 
   useEffect(() => { fetchData(); }, []);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('categoryAdded', (newCat) => {
+        if (newCat.type === 'event' || newCat.type === 'both') {
+          setCategories(prev => {
+            if (prev.find(c => c._id === newCat._id)) return prev;
+            return [...prev, newCat].sort((a, b) => a.name.localeCompare(b.name));
+          });
+        }
+      });
+    }
+    return () => {
+      if (socket) socket.off('categoryAdded');
+    };
+  }, [socket]);
 
   const handleOpenModal = (ev = null) => {
     if (!hasAccess && !isSuperAdmin) {
@@ -54,7 +80,10 @@ const LeaderEventsPage = () => {
       });
     } else {
       setIsEditMode(false);
-      setFormData({ id: '', title: '', description: '', date: '', location: '', category: 'Meeting' });
+      setFormData({ 
+        id: '', title: '', description: '', date: '', location: '', 
+        category: categories.length > 0 ? categories[0].name : '' 
+      });
     }
     setIsModalOpen(true);
   };
@@ -76,6 +105,19 @@ const LeaderEventsPage = () => {
       toast.error(err.response?.data?.message || 'Operation failed');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleAddCategory = async (e) => {
+    e.preventDefault();
+    if (!newCategoryName.trim()) return;
+    try {
+      await createCategory({ name: newCategoryName, type: 'event' });
+      toast.success('Category added');
+      setNewCategoryName('');
+      setIsCategoryModalOpen(false);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to add category');
     }
   };
 
@@ -150,9 +192,13 @@ const LeaderEventsPage = () => {
             <input type="text" className="form-input" required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
           </div>
           <div className="form-group">
-            <label className="form-label">Category</label>
+            <div className="flex items-center justify-between">
+              <label className="form-label">Category</label>
+              <button type="button" onClick={() => setIsCategoryModalOpen(true)} style={{ fontSize: '0.75rem', color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>+ Add New</button>
+            </div>
             <select className="form-select" required value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
-              {EVENT_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              <option value="">-- Choose Category --</option>
+              {categories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
             </select>
           </div>
           <div className="form-group">
@@ -178,6 +224,27 @@ const LeaderEventsPage = () => {
         isOpen={isAccessModalOpen} 
         onClose={() => setIsAccessModalOpen(false)} 
       />
+      <AccessRequiredModal 
+        isOpen={isAccessModalOpen} 
+        onClose={() => setIsAccessModalOpen(false)} 
+      />
+
+      {/* Add Category Modal */}
+      <Modal isOpen={isCategoryModalOpen} onClose={() => setIsCategoryModalOpen(false)} title="Add New Event Category">
+        <form onSubmit={handleAddCategory} className="flex-col gap-4">
+          <div className="form-group">
+            <label className="form-label">Category Name</label>
+            <input 
+              type="text" className="form-input" required placeholder="e.g. Wedding Ceremony" 
+              value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} 
+            />
+          </div>
+          <div className="flex justify-between" style={{ marginTop: 12 }}>
+            <button type="button" className="btn btn-ghost" onClick={() => setIsCategoryModalOpen(false)}>Cancel</button>
+            <button type="submit" className="btn btn-primary">Add Category</button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };
