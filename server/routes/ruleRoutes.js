@@ -1,14 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const { getRules, createRule, updateRule, deleteRule } = require('../controllers/ruleController');
-const { protect, leaderOnly } = require('../middleware/authMiddleware');
+const { protect } = require('../middleware/authMiddleware');
+const { leaderOrSuperAdmin } = require('../middleware/roleMiddleware');
 
 router.route('/')
   .get(protect, getRules)
-  .post(protect, leaderOnly, createRule);
+  .post(protect, leaderOrSuperAdmin, createRule);
 
 router.route('/:id')
-  .put(protect, leaderOnly, updateRule)
-  .delete(protect, leaderOnly, deleteRule);
+  .put(protect, leaderOrSuperAdmin, updateRule)
+  .delete(protect, leaderOrSuperAdmin, deleteRule);
 
 module.exports = router;
