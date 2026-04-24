@@ -20,10 +20,20 @@ connectDB();
 const app = express();
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
+const ALLOWED_ORIGINS = [
+  'https://evergreen-two-alpha.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:3000'
+];
+
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow all origins in production for simplicity, or add specific ones
-    callback(null, true);
+    if (!origin) return callback(null, true);
+    if (ALLOWED_ORIGINS.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
   },
   credentials: true,
 }));
