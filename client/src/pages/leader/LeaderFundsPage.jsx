@@ -28,97 +28,102 @@ const LeaderFundsPage = () => {
   ];
 
   return (
-    <div className="animate-fadein">
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16 }}>
+    <div className="animate-fadein" style={{ paddingBottom: '40px' }}>
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 24, marginBottom: '40px' }}>
         <div>
-          <h1 className="page-title">Funds Available</h1>
-          <p className="page-subtitle">Real-time financial summary of Evergreen Welfare</p>
+          <h1 className="page-title" style={{ fontSize: '2rem' }}>Funds Available</h1>
+          <p className="page-subtitle" style={{ fontSize: '1rem', marginTop: '8px' }}>Real-time financial summary of Evergreen Welfare</p>
         </div>
         <div style={{ 
           display: 'flex', 
           alignItems: 'center', 
-          gap: 10, 
-          padding: '8px 16px', 
+          gap: 12, 
+          padding: '10px 20px', 
           background: 'var(--white)', 
           borderRadius: 'var(--radius-md)', 
           border: '1px solid var(--border)',
           boxShadow: 'var(--shadow-sm)'
         }}>
-          <Clock size={16} className="text-muted" />
-          <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--gray-700)' }}>
+          <Clock size={18} className="text-muted" />
+          <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--gray-700)' }}>
             As per {lastUpdated}
           </span>
         </div>
       </div>
 
-      <div className="grid grid-4 gap-6 mb-8">
+      <div className="grid grid-4 gap-8 mb-12">
         {cards.map((card, idx) => (
           <div key={idx} className="card" style={{ 
-            padding: '24px', 
+            padding: '32px', 
             position: 'relative', 
             overflow: 'hidden',
-            borderBottom: `4px solid ${card.color}`
+            borderBottom: `5px solid ${card.color}`,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between'
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
               <div style={{ 
-                width: 48, height: 48, borderRadius: 14, 
+                width: 56, height: 56, borderRadius: 16, 
                 background: card.bg, color: card.color,
                 display: 'flex', alignItems: 'center', justifyContent: 'center'
               }}>
-                <card.icon size={24} />
+                <card.icon size={28} />
               </div>
-              <div className="badge" style={{ background: card.bg, color: card.color }}>{card.trend}</div>
+              <div className="badge" style={{ background: card.bg, color: card.color, padding: '4px 12px' }}>{card.trend}</div>
             </div>
             
-            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500, marginBottom: 4 }}>{card.label}</div>
-            <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--gray-900)', letterSpacing: '-0.02em' }}>
-              {card.noKes ? '' : 'KES '}{card.value.toLocaleString()}
-            </div>
-
-            {stats.pendingClaims > 0 && card.label === 'Current Balance' && (
-              <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 6, color: '#dc2626', fontSize: '0.75rem', fontWeight: 700 }}>
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#dc2626', animation: 'pulse 1.5s infinite' }} />
-                {stats.pendingClaims} PENDING CLAIMS
+            <div>
+              <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{card.label}</div>
+              <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--gray-900)', letterSpacing: '-0.03em' }}>
+                {card.noKes ? '' : 'KES '}{card.value.toLocaleString()}
               </div>
-            )}
+
+              {stats.pendingClaims > 0 && card.label === 'Current Balance' && (
+                <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 8, color: '#dc2626', fontSize: '0.8rem', fontWeight: 800 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#dc2626', animation: 'pulse 1.5s infinite' }} />
+                  {stats.pendingClaims} PENDING CLAIMS
+                </div>
+              )}
+            </div>
           </div>
         ))}
       </div>
 
-      <div className="grid grid-2 gap-6">
-        <div className="card" style={{ padding: '32px' }}>
-          <div className="flex justify-between items-center mb-6">
-            <h3 style={{ margin: 0 }}>Financial Distribution</h3>
-            <div className="badge badge-gray">Overview</div>
+      <div className="grid grid-2 gap-8">
+        <div className="card" style={{ padding: '40px' }}>
+          <div className="flex justify-between items-center mb-10">
+            <h3 style={{ margin: 0, fontSize: '1.25rem' }}>Financial Distribution</h3>
+            <div className="badge badge-gray" style={{ padding: '4px 12px' }}>Overview</div>
           </div>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
             <div>
-              <div className="flex justify-between mb-3" style={{ fontSize: '0.9rem' }}>
-                <span className="flex items-center gap-2"><div style={{ width: 10, height: 10, borderRadius: 3, background: '#2563eb' }} /> Inflow (Contributions)</span>
-                <span style={{ fontWeight: 700 }}>100%</span>
+              <div className="flex justify-between mb-4" style={{ fontSize: '0.95rem' }}>
+                <span className="flex items-center gap-3"><div style={{ width: 12, height: 12, borderRadius: 3, background: '#2563eb' }} /> Inflow (Contributions)</span>
+                <span style={{ fontWeight: 800 }}>100%</span>
               </div>
-              <div style={{ height: 10, background: 'var(--gray-100)', borderRadius: 5, overflow: 'hidden' }}>
+              <div style={{ height: 12, background: 'var(--gray-100)', borderRadius: 6, overflow: 'hidden' }}>
                 <div style={{ width: '100%', height: '100%', background: '#2563eb' }} />
               </div>
             </div>
             
             <div>
-              <div className="flex justify-between mb-3" style={{ fontSize: '0.9rem' }}>
-                <span className="flex items-center gap-2"><div style={{ width: 10, height: 10, borderRadius: 3, background: '#dc2626' }} /> Outflow (Claims)</span>
-                <span style={{ fontWeight: 700 }}>{((stats.totalOut / stats.totalIn) * 100).toFixed(1)}%</span>
+              <div className="flex justify-between mb-4" style={{ fontSize: '0.95rem' }}>
+                <span className="flex items-center gap-3"><div style={{ width: 12, height: 12, borderRadius: 3, background: '#dc2626' }} /> Outflow (Claims)</span>
+                <span style={{ fontWeight: 800 }}>{((stats.totalOut / stats.totalIn) * 100).toFixed(1)}%</span>
               </div>
-              <div style={{ height: 10, background: 'var(--gray-100)', borderRadius: 5, overflow: 'hidden' }}>
+              <div style={{ height: 12, background: 'var(--gray-100)', borderRadius: 6, overflow: 'hidden' }}>
                 <div style={{ width: `${(stats.totalOut / stats.totalIn) * 100}%`, height: '100%', background: '#dc2626' }} />
               </div>
             </div>
 
             <div>
-              <div className="flex justify-between mb-3" style={{ fontSize: '0.9rem' }}>
-                <span className="flex items-center gap-2"><div style={{ width: 10, height: 10, borderRadius: 3, background: 'var(--green-600)' }} /> Reserve (Available)</span>
-                <span style={{ fontWeight: 700 }}>{((stats.balance / stats.totalIn) * 100).toFixed(1)}%</span>
+              <div className="flex justify-between mb-4" style={{ fontSize: '0.95rem' }}>
+                <span className="flex items-center gap-3"><div style={{ width: 12, height: 12, borderRadius: 3, background: 'var(--green-600)' }} /> Reserve (Available)</span>
+                <span style={{ fontWeight: 800 }}>{((stats.balance / stats.totalIn) * 100).toFixed(1)}%</span>
               </div>
-              <div style={{ height: 10, background: 'var(--gray-100)', borderRadius: 5, overflow: 'hidden' }}>
+              <div style={{ height: 12, background: 'var(--gray-100)', borderRadius: 6, overflow: 'hidden' }}>
                 <div style={{ width: `${(stats.balance / stats.totalIn) * 100}%`, height: '100%', background: 'var(--green-600)' }} />
               </div>
             </div>
@@ -133,36 +138,37 @@ const LeaderFundsPage = () => {
           textAlign: 'center', 
           background: 'linear-gradient(135deg, var(--green-600), var(--green-800))', 
           color: '#fff',
-          padding: '40px',
+          padding: '60px 40px',
           border: 'none',
           boxShadow: 'var(--shadow-lg)'
         }}>
           <div style={{ 
-            width: 80, height: 80, borderRadius: '50%', 
+            width: 100, height: 100, borderRadius: '50%', 
             background: 'rgba(255,255,255,0.1)', 
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            marginBottom: 20
+            marginBottom: 24
           }}>
-            <Landmark size={40} style={{ color: 'var(--green-300)' }} />
+            <Landmark size={48} style={{ color: 'var(--green-300)' }} />
           </div>
-          <h2 style={{ color: '#fff', marginBottom: 12, fontSize: '1.75rem', fontWeight: 800 }}>Evergreen Treasury</h2>
-          <p style={{ opacity: 0.85, maxWidth: 320, fontSize: '0.95rem', lineHeight: 1.6 }}>
+          <h2 style={{ color: '#fff', marginBottom: 16, fontSize: '2rem', fontWeight: 800 }}>Evergreen Treasury</h2>
+          <p style={{ opacity: 0.85, maxWidth: 360, fontSize: '1.05rem', lineHeight: 1.7 }}>
             This balance represents the liquid funds available for welfare activities and approved member claims.
           </p>
           <div style={{ 
-            marginTop: 32, 
-            padding: '20px 32px', 
+            marginTop: 40, 
+            padding: '24px 40px', 
             background: 'rgba(255,255,255,0.08)', 
-            borderRadius: 20, 
+            borderRadius: 24, 
             border: '1px solid rgba(255,255,255,0.15)',
-            backdropFilter: 'blur(10px)',
+            backdropFilter: 'blur(12px)',
             width: '100%'
           }}>
-            <div style={{ fontSize: '0.75rem', opacity: 0.7, textTransform: 'uppercase', letterSpacing: 2, fontWeight: 700, marginBottom: 8 }}>Total Available Reserve</div>
-            <div style={{ fontSize: '2.2rem', fontWeight: 800, color: 'var(--green-300)' }}>KES {stats.balance.toLocaleString()}</div>
+            <div style={{ fontSize: '0.85rem', opacity: 0.7, textTransform: 'uppercase', letterSpacing: 3, fontWeight: 700, marginBottom: 12 }}>Total Available Reserve</div>
+            <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--green-300)', letterSpacing: '-0.02em' }}>KES {stats.balance.toLocaleString()}</div>
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 };
