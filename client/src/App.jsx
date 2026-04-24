@@ -25,14 +25,7 @@ import LeaderMembersPage from './pages/leader/LeaderMembersPage';
 import LeaderContributionsPage from './pages/leader/LeaderContributionsPage';
 import LeaderEventsPage from './pages/leader/LeaderEventsPage';
 import LeaderClaimsPage from './pages/leader/LeaderClaimsPage';
-
-// Placeholder for Super Admin leader management
-const PlaceholderPage = ({ title }) => (
-  <div className="card text-center" style={{ padding: 60 }}>
-    <h2>{title} Management</h2>
-    <p>This section is under construction.</p>
-  </div>
-);
+import ManageLeadersPage from './pages/leader/ManageLeadersPage';
 
 function App() {
   return (
@@ -68,7 +61,7 @@ function App() {
             
             {/* Officials view and Super Admin management */}
             <Route path="/leader/officials" element={<OfficialsPage />} />
-            <Route path="/leader/manage-leaders" element={<PlaceholderPage title="Super Admin: Leaders" />} />
+            <Route path="/leader/manage-leaders" element={<ManageLeadersPage />} />
           </Route>
           
           <Route path="*" element={<Navigate to="/login" replace />} />
