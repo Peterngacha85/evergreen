@@ -8,7 +8,6 @@ const eventSchema = new mongoose.Schema(
     location: { type: String, trim: true },
     category: {
       type: String,
-      enum: ['Meeting', 'Fundraiser', 'Social', 'Emergency', 'Other'],
       default: 'Meeting',
     },
     isActive: { type: Boolean, default: true },

@@ -16,7 +16,6 @@ const ruleSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['general', 'contributions', 'claims', 'membership', 'other'],
     default: 'general'
   },
   lastUpdatedBy: {

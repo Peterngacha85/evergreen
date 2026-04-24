@@ -69,7 +69,7 @@ const superAdminLogin = async (req, res) => {
     res.json({
       token,
       user: {
-        id: superAdminRecord._id,
+        _id: superAdminRecord._id,
         name: superAdminRecord.name,
         email: superAdminRecord.email,
         profilePhoto: superAdminRecord.profilePhoto,
