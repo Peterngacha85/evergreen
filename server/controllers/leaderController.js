@@ -7,7 +7,7 @@ const cloudinary = require('../config/cloudinary');
 const getAllLeaders = async (req, res) => {
   try {
     const ROLE_ORDER = ['Chairman', 'Vice Chairman', 'Secretary', 'Treasurer', 'Organizer'];
-    const query = Leader.find({ isActive: true, role: 'leader' });
+    const query = Leader.find({ isActive: true, role: 'leader', idNumber: { $ne: '00000000' } });
     if (req.role !== 'superadmin') query.select('-password');
     const leaders = await query;
     leaders.sort((a, b) => ROLE_ORDER.indexOf(a.leaderRole) - ROLE_ORDER.indexOf(b.leaderRole));
