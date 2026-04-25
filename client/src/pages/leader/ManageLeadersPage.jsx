@@ -3,7 +3,7 @@ import { getLeaders, createLeader, updateLeader, deleteLeader } from '../../api/
 import Avatar from '../../components/common/Avatar';
 import Modal from '../../components/common/Modal';
 import ConfirmModal from '../../components/common/ConfirmModal';
-import { Plus, Edit2, Trash2, Shield } from 'lucide-react';
+import { Plus, Edit2, Trash2, Shield, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 
@@ -20,6 +20,7 @@ const ManageLeadersPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
   const [deleting, setDeleting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const fetchLeaders = async () => {
     try {
@@ -205,7 +206,36 @@ const ManageLeadersPage = () => {
 
           <div className="form-group">
             <label className="form-label">{isEditMode ? 'New Password (leave blank to keep current)' : 'Password'}</label>
-            <input type="password" className="form-input" required={!isEditMode} value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
+            <div style={{ position: 'relative' }}>
+              <input 
+                type={showPassword ? 'text' : 'password'} 
+                className="form-input" 
+                required={!isEditMode} 
+                value={formData.password} 
+                onChange={e => setFormData({...formData, password: e.target.value})} 
+                style={{ paddingRight: 44 }}
+              />
+              <button 
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: 12,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--gray-400)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: 4,
+                  cursor: 'pointer'
+                }}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
           
           <div className="flex justify-between" style={{ marginTop: 24 }}>
