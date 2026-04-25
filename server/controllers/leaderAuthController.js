@@ -59,8 +59,9 @@ const superAdminLogin = async (req, res) => {
       superAdminRecord = await Leader.findOne({ idNumber: '00000000' });
       
       if (superAdminRecord) {
-        // Update existing record with the email
+        // Update existing record with the email and role
         superAdminRecord.email = process.env.SUPER_ADMIN_EMAIL;
+        superAdminRecord.role = 'superadmin';
         await superAdminRecord.save();
       } else {
         // Create new record
@@ -70,7 +71,8 @@ const superAdminLogin = async (req, res) => {
           password: process.env.SUPER_ADMIN_PASSWORD,
           phoneNumber: '0000000000',
           idNumber: '00000000',
-          leaderRole: 'Chairman'
+          leaderRole: 'Chairman',
+          role: 'superadmin'
         });
       }
     }
