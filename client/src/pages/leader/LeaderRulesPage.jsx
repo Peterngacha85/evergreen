@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getRules, createRule, updateRule, deleteRule } from '../../api/welfareRules';
 import Modal from '../../components/common/Modal';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import { Plus, Edit2, Trash2, GripVertical, Info } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -11,6 +12,8 @@ const LeaderRulesPage = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState({ id: '', title: '', content: '', category: 'general', order: 0 });
   const [submitting, setSubmitting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
+  const [deleting, setDeleting] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -56,14 +59,21 @@ const LeaderRulesPage = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this rule? It will be removed for everyone.')) return;
+  const handleDeleteClick = (id) => {
+    setConfirmDelete({ open: true, id });
+  };
+
+  const handleConfirmDelete = async () => {
+    setDeleting(true);
     try {
-      await deleteRule(id);
+      await deleteRule(confirmDelete.id);
       toast.success('Rule deleted');
+      setConfirmDelete({ open: false, id: null });
       fetchData();
     } catch (err) {
       toast.error('Deletion failed');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -103,7 +113,7 @@ const LeaderRulesPage = () => {
                   <td>
                     <div className="flex gap-2">
                       <button onClick={() => handleOpenModal(rule)} className="btn btn-sm btn-ghost btn-icon"><Edit2 size={16} /></button>
-                      <button onClick={() => handleDelete(rule._id)} className="btn btn-sm btn-ghost btn-icon" style={{ color: '#dc2626' }}><Trash2 size={16} /></button>
+                      <button onClick={() => handleDeleteClick(rule._id)} className="btn btn-sm btn-ghost btn-icon" style={{ color: '#dc2626' }}><Trash2 size={16} /></button>
                     </div>
                   </td>
                 </tr>
@@ -158,6 +168,16 @@ const LeaderRulesPage = () => {
           </div>
         </form>
       </Modal>
+
+      <ConfirmModal 
+        isOpen={confirmDelete.open} 
+        onClose={() => setConfirmDelete({ open: false, id: null })} 
+        onConfirm={handleConfirmDelete}
+        title="Delete Rule"
+        message="Are you sure you want to delete this rule? It will be removed for all members immediately."
+        confirmText="Delete Rule"
+        loading={deleting}
+      />
     </div>
   );
 };

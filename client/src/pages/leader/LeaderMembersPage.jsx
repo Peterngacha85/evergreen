@@ -3,6 +3,7 @@ import { getMembers, createMember, updateMember, updateMemberPhoto, deleteMember
 import { validateSession } from '../../api/changeRequests';
 import Avatar from '../../components/common/Avatar';
 import Modal from '../../components/common/Modal';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import AccessRequiredModal from '../../components/common/AccessRequiredModal';
 import { Plus, Edit2, Trash2, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -22,6 +23,8 @@ const LeaderMembersPage = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState({ id: '', name: '', idNumber: '', phoneNumber: '', password: '', profilePhoto: null });
   const [submitting, setSubmitting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
+  const [deleting, setDeleting] = useState(false);
 
   const fetchMembers = async () => {
     try {
@@ -95,18 +98,25 @@ const LeaderMembersPage = () => {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDeleteClick = (id) => {
     if (!hasAccess && !isSuperAdmin) {
       setIsAccessModalOpen(true);
       return;
     }
-    if (!window.confirm('Are you sure you want to deactivate this member?')) return;
+    setConfirmDelete({ open: true, id });
+  };
+
+  const handleConfirmDelete = async () => {
+    setDeleting(true);
     try {
-      await deleteMember(id);
+      await deleteMember(confirmDelete.id);
       toast.success('Member deactivated');
+      setConfirmDelete({ open: false, id: null });
       fetchMembers();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Operation failed');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -185,7 +195,7 @@ const LeaderMembersPage = () => {
                   <td>
                     <div className="flex gap-2">
                       <button onClick={() => handleOpenModal(m)} className="btn btn-sm btn-ghost btn-icon" title="Edit"><Edit2 size={16} /></button>
-                      <button onClick={() => handleDelete(m._id)} className="btn btn-sm btn-ghost btn-icon" style={{ color: '#dc2626' }} title="Deactivate"><Trash2 size={16} /></button>
+                      <button onClick={() => handleDeleteClick(m._id)} className="btn btn-sm btn-ghost btn-icon" style={{ color: '#dc2626' }} title="Deactivate"><Trash2 size={16} /></button>
                     </div>
                   </td>
                 </tr>
@@ -230,6 +240,16 @@ const LeaderMembersPage = () => {
       <AccessRequiredModal 
         isOpen={isAccessModalOpen} 
         onClose={() => setIsAccessModalOpen(false)} 
+      />
+
+      <ConfirmModal 
+        isOpen={confirmDelete.open} 
+        onClose={() => setConfirmDelete({ open: false, id: null })} 
+        onConfirm={handleConfirmDelete}
+        title="Deactivate Member"
+        message="Are you sure you want to deactivate this member? They will no longer be able to log in or access their profile."
+        confirmText="Deactivate"
+        loading={deleting}
       />
     </div>
   );

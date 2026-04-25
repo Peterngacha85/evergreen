@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { getLeaders, createLeader, updateLeader, deleteLeader } from '../../api/leaders';
 import Avatar from '../../components/common/Avatar';
 import Modal from '../../components/common/Modal';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import { Plus, Edit2, Trash2, Shield } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
@@ -17,6 +18,8 @@ const ManageLeadersPage = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState({ id: '', name: '', idNumber: '', phoneNumber: '', password: '', leaderRole: LEADER_ROLES[0], profilePhoto: null });
   const [submitting, setSubmitting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
+  const [deleting, setDeleting] = useState(false);
 
   const fetchLeaders = async () => {
     try {
@@ -89,14 +92,21 @@ const ManageLeadersPage = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to completely remove this leader?')) return;
+  const handleDeleteClick = (id) => {
+    setConfirmDelete({ open: true, id });
+  };
+
+  const handleConfirmDelete = async () => {
+    setDeleting(true);
     try {
-      await deleteLeader(id);
+      await deleteLeader(confirmDelete.id);
       toast.success('Leader removed');
+      setConfirmDelete({ open: false, id: null });
       fetchLeaders();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Deletion failed');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -151,7 +161,7 @@ const ManageLeadersPage = () => {
                   <td>
                     <div className="flex gap-2">
                       <button onClick={() => handleOpenModal(l)} className="btn btn-sm btn-ghost btn-icon" title="Edit"><Edit2 size={16} /></button>
-                      <button onClick={() => handleDelete(l._id)} className="btn btn-sm btn-ghost btn-icon" style={{ color: '#dc2626' }} title="Delete"><Trash2 size={16} /></button>
+                      <button onClick={() => handleDeleteClick(l._id)} className="btn btn-sm btn-ghost btn-icon" style={{ color: '#dc2626' }} title="Delete"><Trash2 size={16} /></button>
                     </div>
                   </td>
                 </tr>
@@ -206,6 +216,16 @@ const ManageLeadersPage = () => {
           </div>
         </form>
       </Modal>
+
+      <ConfirmModal 
+        isOpen={confirmDelete.open} 
+        onClose={() => setConfirmDelete({ open: false, id: null })} 
+        onConfirm={handleConfirmDelete}
+        title="Remove Leader"
+        message="Are you sure you want to completely remove this official? This action will deactivate their access."
+        confirmText="Remove Leader"
+        loading={deleting}
+      />
     </div>
   );
 };
