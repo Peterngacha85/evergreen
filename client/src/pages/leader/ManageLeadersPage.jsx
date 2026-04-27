@@ -134,7 +134,7 @@ const ManageLeadersPage = () => {
               <tr>
                 <th>Official</th>
                 <th>Role</th>
-                <th>ID Number</th>
+                <th>Member No.</th>
                 <th>Phone</th>
                 <th>Password</th>
                 <th>Registered</th>
@@ -182,8 +182,8 @@ const ManageLeadersPage = () => {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             {!isEditMode && (
               <div className="form-group">
-                <label className="form-label">National ID Number</label>
-                <input type="text" className="form-input" required value={formData.idNumber} onChange={e => setFormData({...formData, idNumber: e.target.value})} />
+                <label className="form-label">Member Number (3 digits)</label>
+                <input type="text" className="form-input" required value={formData.idNumber} onChange={e => setFormData({...formData, idNumber: e.target.value})} placeholder="e.g. 001" maxLength={3} />
               </div>
             )}
             <div className="form-group">

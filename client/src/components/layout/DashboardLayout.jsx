@@ -19,7 +19,8 @@ const PAGE_TITLES = {
   '/leader/manage-leaders':   'Manage Leaders',
   '/rules':                   'Welfare Rules',
   '/leader/rules':            'Rules Management',
-  '/leader/defaulters':       'Defaulters List',
+  '/leader/unpaid':           'Unpaid Members List',
+  '/mission-vision':          'Mission & Vision',
   '/leader/funds':            'Funds Available',
   '/funds':                   'Funds Available',
 };

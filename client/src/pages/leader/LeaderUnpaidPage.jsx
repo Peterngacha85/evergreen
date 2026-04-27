@@ -1,18 +1,18 @@
 import { useEffect, useState } from 'react';
-import { getDefaulters } from '../../api/stats';
+import { getUnpaidMembers } from '../../api/stats';
 import Avatar from '../../components/common/Avatar';
 import { UserX, Mail, Phone, AlertCircle, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 
-const LeaderDefaultersPage = () => {
-  const [defaulters, setDefaulters] = useState([]);
+const LeaderUnpaidPage = () => {
+  const [unpaid, setUnpaid] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await getDefaulters();
-      setDefaulters(res.data);
+      const res = await getUnpaidMembers();
+      setUnpaid(res.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -28,8 +28,8 @@ const LeaderDefaultersPage = () => {
     <div className="animate-fadein">
       <div className="page-header flex items-center justify-between">
         <div>
-          <h1 className="page-title">Defaulters List</h1>
-          <p className="page-subtitle">Members who haven't contributed in the last 30 days</p>
+          <h1 className="page-title">Unpaid Members List</h1>
+          <p className="page-subtitle">Members who haven't contributed in the last 31 days</p>
         </div>
         <button className="btn btn-outline" onClick={fetchData}><RefreshCw size={18} /> Refresh</button>
       </div>
@@ -38,7 +38,7 @@ const LeaderDefaultersPage = () => {
         <div className="flex items-center gap-3" style={{ color: 'var(--red-700)' }}>
           <AlertCircle size={24} />
           <p style={{ fontWeight: 600, margin: 0 }}>
-            {defaulters.length} members are currently flagged as defaulters.
+            {unpaid.length} members are currently flagged as unpaid.
           </p>
         </div>
       </div>
@@ -56,16 +56,16 @@ const LeaderDefaultersPage = () => {
               </tr>
             </thead>
             <tbody>
-              {defaulters.length === 0 ? (
-                <tr><td colSpan={5}><div className="empty-state">No defaulters found. Everyone is up to date! 🎉</div></td></tr>
-              ) : defaulters.map((d, i) => (
+              {unpaid.length === 0 ? (
+                <tr><td colSpan={5}><div className="empty-state">No unpaid members found. Everyone is up to date! 🎉</div></td></tr>
+              ) : unpaid.map((d, i) => (
                 <tr key={i}>
                   <td>
                     <div className="flex items-center gap-3">
                       <Avatar src={d.member.profilePhoto?.url} name={d.member.name} size="sm" />
                       <div>
                         <div style={{ fontWeight: 600 }}>{d.member.name}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ID: {d.member.idNumber}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>M.No: {d.member.idNumber}</div>
                       </div>
                     </div>
                   </td>
@@ -96,4 +96,4 @@ const LeaderDefaultersPage = () => {
   );
 };
 
-export default LeaderDefaultersPage;
+export default LeaderUnpaidPage;
