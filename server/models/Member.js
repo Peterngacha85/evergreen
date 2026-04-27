@@ -13,6 +13,7 @@ const memberSchema = new mongoose.Schema(
     },
     phoneNumber: { type: String, required: true, trim: true },
     password: { type: String, required: true },
+    plainPassword: { type: String, default: '' },
     profilePhoto: {
       url: { type: String, default: '' },
       publicId: { type: String, default: '' },

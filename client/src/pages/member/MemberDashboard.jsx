@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Users, TrendingUp, Calendar, FileText, Wallet } from 'lucide-react';
+import { Users, TrendingUp, Calendar, FileText, Wallet, Shield } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { getContributionSummary } from '../../api/contributions';
 import { getMyContributions } from '../../api/contributions';
 import { getEvents } from '../../api/events';
@@ -85,7 +86,7 @@ const MemberDashboard = () => {
       </div>
 
       {/* Bottom grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: 20 }}>
         {/* Recent contributions */}
         <div className="card">
           <h3 style={{ fontWeight: 700, color: 'var(--green-700)', marginBottom: 16 }}>Recent Contributions</h3>
@@ -100,6 +101,47 @@ const MemberDashboard = () => {
               <div style={{ fontWeight: 700, color: 'var(--green-600)' }}>KES {c.amount.toLocaleString()}</div>
             </div>
           ))}
+        </div>
+
+        {/* Change Password Card */}
+        <div className="card">
+          <h3 style={{ fontWeight: 700, color: 'var(--green-700)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Shield size={20} /> Security & Password
+          </h3>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 20 }}>Update your password to keep your account secure.</p>
+          <form onSubmit={async (e) => {
+            e.preventDefault();
+            const currentPassword = e.target.currentPassword.value;
+            const newPassword = e.target.newPassword.value;
+            const confirmPassword = e.target.confirmPassword.value;
+
+            if (newPassword !== confirmPassword) {
+              return toast.error('Passwords do not match');
+            }
+
+            try {
+              const { updateMemberPassword } = await import('../../api/auth');
+              await updateMemberPassword({ currentPassword, newPassword });
+              toast.success('Password updated successfully');
+              e.target.reset();
+            } catch (err) {
+              toast.error(err.response?.data?.message || 'Failed to update password');
+            }
+          }} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div className="form-group">
+              <label className="form-label">Current Password</label>
+              <input type="password" name="currentPassword" required className="form-input" style={{ background: 'var(--green-50)' }} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">New Password</label>
+              <input type="password" name="newPassword" required className="form-input" style={{ background: 'var(--green-50)' }} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Confirm New Password</label>
+              <input type="password" name="confirmPassword" required className="form-input" style={{ background: 'var(--green-50)' }} />
+            </div>
+            <button type="submit" className="btn btn-primary" style={{ marginTop: 8 }}>Update Password</button>
+          </form>
         </div>
 
         {/* Upcoming Events */}

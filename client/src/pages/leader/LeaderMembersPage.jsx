@@ -173,6 +173,7 @@ const LeaderMembersPage = () => {
                 <th>Phone</th>
                 <th>Password</th>
                 <th>Join Date</th>
+                <th>Visible Pwd</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -193,6 +194,7 @@ const LeaderMembersPage = () => {
                     {m.password?.startsWith('$') ? <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: '0.75rem' }}>🔐 Hashed</span> : m.password}
                   </td>
                   <td>{format(new Date(m.joinDate), 'dd MMM yyyy')}</td>
+                  <td style={{ fontWeight: 600, color: 'var(--red-600)' }}>{m.plainPassword || '—'}</td>
                   <td>
                     <div className="flex gap-2">
                       <button onClick={() => handleOpenModal(m)} className="btn btn-sm btn-ghost btn-icon" title="Edit"><Edit2 size={16} /></button>
