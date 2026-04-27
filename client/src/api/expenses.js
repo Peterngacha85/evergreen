@@ -1,4 +1,4 @@
-import API from './axiosConfig';
+import API from './axios';
 
 export const getExpenses = () => API.get('/expenses');
 export const createExpense = (data) => API.post('/expenses', data);
