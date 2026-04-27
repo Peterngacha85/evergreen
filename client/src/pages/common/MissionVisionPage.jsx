@@ -51,7 +51,7 @@ const MissionVisionPage = () => {
       <div className="page-header flex items-center justify-between">
         <div>
           <h1 className="page-title">Our Mission & Vision</h1>
-          <p className="page-subtitle">The core values and goals of Evergreen Community Welfare</p>
+          <p className="page-subtitle">The core values and goals of Evergreen Community</p>
         </div>
         {!isMember && !isEditing && (
           <button className="btn btn-primary" onClick={() => setIsEditing(true)}>

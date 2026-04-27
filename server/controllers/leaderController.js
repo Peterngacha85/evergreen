@@ -1,4 +1,5 @@
 const Leader = require('../models/Leader');
+const Member = require('../models/Member');
 const cloudinary = require('../config/cloudinary');
 
 // @desc  Get all leaders (public-facing, for the Officials page)
@@ -6,11 +7,11 @@ const cloudinary = require('../config/cloudinary');
 // @access Member + Leader + SuperAdmin
 const getAllLeaders = async (req, res) => {
   try {
-    const ROLE_ORDER = ['Chairman', 'Vice Chairman', 'Secretary', 'Treasurer', 'Organizer'];
     const query = Leader.find({ isActive: true, role: 'leader', idNumber: { $ne: '00000000' } });
     if (req.role !== 'superadmin') query.select('-password');
     const leaders = await query;
-    leaders.sort((a, b) => ROLE_ORDER.indexOf(a.leaderRole) - ROLE_ORDER.indexOf(b.leaderRole));
+    // Simple alphabetic sort by role since roles are now custom
+    leaders.sort((a, b) => a.leaderRole.localeCompare(b.leaderRole));
     res.json(leaders);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -32,37 +33,55 @@ const getLeaderById = async (req, res) => {
   }
 };
 
-// @desc  Add a new leader
+// @desc  Add a new leader (or promote member)
 // @route POST /api/leaders
 // @access SuperAdmin only
 const createLeader = async (req, res) => {
   try {
-    const { name, idNumber, phoneNumber, password, leaderRole } = req.body;
+    const { name, idNumber, phoneNumber, password, leaderRole, memberId } = req.body;
 
-    if (!name || !idNumber || !phoneNumber || !password || !leaderRole)
+    let leaderData = { name, idNumber, phoneNumber, password, leaderRole };
+
+    // If promoting a member, fetch their details
+    if (memberId) {
+      const member = await Member.findById(memberId).select('+password');
+      if (!member) return res.status(404).json({ message: 'Member not found' });
+      
+      leaderData = {
+        name: member.name,
+        idNumber: member.idNumber,
+        phoneNumber: member.phoneNumber,
+        password: member.password, // This will be the hashed password, but pre-save will re-hash it if not careful.
+        leaderRole: leaderRole,
+        profilePhoto: member.profilePhoto
+      };
+    }
+
+    if (!leaderData.name || !leaderData.idNumber || !leaderData.phoneNumber || !leaderData.password || !leaderData.leaderRole)
       return res.status(400).json({ message: 'All fields are required' });
 
-    const existing = await Leader.findOne({ idNumber });
-    if (existing) return res.status(400).json({ message: 'Leader with this ID already exists' });
+    const existing = await Leader.findOne({ idNumber: leaderData.idNumber });
+    if (existing) {
+      if (existing.isActive) return res.status(400).json({ message: 'Leader with this ID already exists' });
+      // Reactivate if inactive
+      existing.isActive = true;
+      existing.leaderRole = leaderData.leaderRole;
+      await existing.save();
+      return res.status(200).json(existing);
+    }
 
-    let profilePhoto = { url: '', publicId: '' };
+    let profilePhoto = leaderData.profilePhoto || { url: '', publicId: '' };
     if (req.file) {
       profilePhoto = { url: req.file.path, publicId: req.file.filename };
     }
 
     const leader = await Leader.create({
-      name, idNumber, phoneNumber, password, leaderRole, profilePhoto,
+      ...leaderData,
+      profilePhoto,
       addedBy: 'superadmin',
     });
 
-    res.status(201).json({
-      _id: leader._id,
-      name: leader.name,
-      idNumber: leader.idNumber,
-      phoneNumber: leader.phoneNumber,
-      leaderRole: leader.leaderRole,
-      profilePhoto: leader.profilePhoto,
-    });
+    res.status(201).json(leader);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
