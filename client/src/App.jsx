@@ -55,6 +55,7 @@ function App() {
             <Route path="/claims" element={<MemberClaimsPage />} />
             <Route path="/rules" element={<MemberRulesPage />} />
             <Route path="/funds" element={<FundsAvailablePage />} />
+            <Route path="/mission-vision" element={<MissionVisionPage />} />
           </Route>
 
           {/* Leader/SuperAdmin Protected Routes */}
@@ -72,7 +73,6 @@ function App() {
             <Route path="/leader/officials" element={<OfficialsPage />} />
             <Route path="/leader/rules" element={<LeaderRulesPage />} />
             <Route path="/leader/unpaid" element={<LeaderUnpaidPage />} />
-            <Route path="/mission-vision" element={<MissionVisionPage />} />
             <Route path="/leader/funds" element={<FundsAvailablePage />} />
             <Route path="/leader/manage-leaders" element={<SuperAdminRoute><ManageLeadersPage /></SuperAdminRoute>} />
           </Route>
