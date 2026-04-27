@@ -21,7 +21,13 @@ const MemberLoginPage = () => {
       const { data } = await memberLogin(form);
       login(data.user, data.token);
       toast.success(`Welcome back, ${data.user.name}!`);
-      navigate('/dashboard');
+      
+      // Redirect leaders to their dashboard, others to member dashboard
+      if (data.user.role === 'leader' || data.user.role === 'superadmin') {
+        navigate('/leader/dashboard');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Login failed');
     } finally {

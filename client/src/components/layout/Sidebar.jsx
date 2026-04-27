@@ -122,7 +122,7 @@ const Sidebar = ({ isOpen, onClose }) => {
               Evergreen
             </div>
             <div style={{ color: 'var(--sidebar-active)', fontSize: '0.7rem', fontWeight: 600 }}>
-              Community Welfare
+              Community
             </div>
           </div>
         )}
