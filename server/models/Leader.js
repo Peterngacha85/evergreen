@@ -14,6 +14,7 @@ const leaderSchema = new mongoose.Schema(
       publicId: { type: String, default: '' },
     },
     role: { type: String, default: 'leader' },
+    order: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },
     addedBy: { type: String, default: 'superadmin' },
   },
