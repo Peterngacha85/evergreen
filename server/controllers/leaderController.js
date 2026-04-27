@@ -10,8 +10,8 @@ const getAllLeaders = async (req, res) => {
     const query = Leader.find({ isActive: true, role: 'leader', idNumber: { $ne: '00000000' } });
     if (req.role !== 'superadmin') query.select('-password');
     const leaders = await query;
-    // Simple alphabetic sort by role since roles are now custom
-    leaders.sort((a, b) => a.leaderRole.localeCompare(b.leaderRole));
+    // Sort by order number (lower numbers first), then alphabetically by role
+    leaders.sort((a, b) => (a.order - b.order) || a.leaderRole.localeCompare(b.leaderRole));
     res.json(leaders);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -38,9 +38,9 @@ const getLeaderById = async (req, res) => {
 // @access SuperAdmin only
 const createLeader = async (req, res) => {
   try {
-    const { name, idNumber, phoneNumber, password, leaderRole, memberId } = req.body;
+    const { name, idNumber, phoneNumber, password, leaderRole, memberId, order } = req.body;
 
-    let leaderData = { name, idNumber, phoneNumber, password, leaderRole };
+    let leaderData = { name, idNumber, phoneNumber, password, leaderRole, order: order || 0 };
 
     // If promoting a member, fetch their details
     if (memberId) {
@@ -95,12 +95,13 @@ const updateLeader = async (req, res) => {
     const leader = await Leader.findById(req.params.id);
     if (!leader) return res.status(404).json({ message: 'Leader not found' });
 
-    const { name, phoneNumber, leaderRole, password } = req.body;
+    const { name, phoneNumber, leaderRole, password, order } = req.body;
 
     if (name) leader.name = name;
     if (phoneNumber) leader.phoneNumber = phoneNumber;
     if (leaderRole) leader.leaderRole = leaderRole;
     if (password) leader.password = password; // will be hashed by pre-save
+    if (order !== undefined) leader.order = order;
 
     if (req.file) {
       // Delete old photo from cloudinary if exists

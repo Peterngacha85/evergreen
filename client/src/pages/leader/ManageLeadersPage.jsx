@@ -17,7 +17,7 @@ const ManageLeadersPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isPromoting, setIsPromoting] = useState(false);
-  const [formData, setFormData] = useState({ id: '', name: '', idNumber: '', phoneNumber: '', password: '', leaderRole: '', profilePhoto: null, memberId: '' });
+  const [formData, setFormData] = useState({ id: '', name: '', idNumber: '', phoneNumber: '', password: '', leaderRole: '', profilePhoto: null, memberId: '', order: 0 });
   const [submitting, setSubmitting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
   const [deleting, setDeleting] = useState(false);
@@ -52,11 +52,12 @@ const ManageLeadersPage = () => {
         leaderRole: leader.leaderRole,
         password: '', 
         profilePhoto: null,
-        memberId: ''
+        memberId: '',
+        order: leader.order || 0
       });
     } else {
       setIsEditMode(false);
-      setFormData({ id: '', name: '', idNumber: '', phoneNumber: '', password: '', leaderRole: '', profilePhoto: null, memberId: '' });
+      setFormData({ id: '', name: '', idNumber: '', phoneNumber: '', password: '', leaderRole: '', profilePhoto: null, memberId: '', order: leaders.length + 1 });
     }
     setIsModalOpen(true);
   };
@@ -73,10 +74,12 @@ const ManageLeadersPage = () => {
     if (isPromoting && formData.memberId) {
       data.append('memberId', formData.memberId);
       data.append('leaderRole', formData.leaderRole);
+      data.append('order', formData.order);
     } else {
       data.append('name', formData.name);
       data.append('phoneNumber', formData.phoneNumber);
       data.append('leaderRole', formData.leaderRole);
+      data.append('order', formData.order);
       if (formData.password) data.append('password', formData.password);
       if (formData.profilePhoto) data.append('profilePhoto', formData.profilePhoto);
       if (!isEditMode) {
@@ -145,6 +148,7 @@ const ManageLeadersPage = () => {
                 <th>Member No.</th>
                 <th>Phone</th>
                 <th>Password</th>
+                <th>Order</th>
                 <th>Registered</th>
                 <th>Actions</th>
               </tr>
@@ -166,6 +170,7 @@ const ManageLeadersPage = () => {
                   <td style={{ fontFamily: 'monospace', color: 'var(--red-600)' }}>
                     {l.password?.startsWith('$') ? '••• (Hashed)' : l.password}
                   </td>
+                  <td><span className="badge badge-blue">{l.order || 0}</span></td>
                   <td>{format(new Date(l.createdAt), 'dd MMM yyyy')}</td>
                   <td>
                     <div className="flex gap-2">
@@ -286,6 +291,18 @@ const ManageLeadersPage = () => {
             />
           </div>
           
+          <div className="form-group">
+            <label className="form-label">Display Order (Hierarchy Position)</label>
+            <input 
+              type="number" 
+              className="form-input" 
+              required 
+              value={formData.order} 
+              onChange={e => setFormData({...formData, order: e.target.value})} 
+              placeholder="1 for first, 2 for second, etc."
+            />
+          </div>
+
           <div className="flex justify-between" style={{ marginTop: 24 }}>
             <button type="button" className="btn btn-ghost" onClick={() => setIsModalOpen(false)}>Cancel</button>
             <button type="submit" className="btn btn-primary" style={{ background: '#111827' }} disabled={submitting}>
