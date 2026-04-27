@@ -30,6 +30,8 @@ const server = http.createServer(app);
 // ─── Middleware ───────────────────────────────────────────────────────────────
 const ALLOWED_ORIGINS = [
   'https://evergreen-two-alpha.vercel.app',
+  'https://evergreencommunity.co.ke',
+  'https://www.evergreencommunity.co.ke',
   'http://localhost:5173',
   'http://localhost:3000'
 ];
