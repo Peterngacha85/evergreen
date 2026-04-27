@@ -20,6 +20,7 @@ const categoryRoutes = require('./routes/categoryRoutes');
 const ruleRoutes = require('./routes/ruleRoutes');
 const statsRoutes = require('./routes/statsRoutes');
 const missionVisionRoutes = require('./routes/missionVisionRoutes');
+const expenseRoutes = require('./routes/expenseRoutes');
 
 // Connect to MongoDB
 connectDB();
@@ -80,6 +81,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/rules', ruleRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/mission-vision', missionVisionRoutes);
+app.use('/api/expenses', expenseRoutes);
 
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {

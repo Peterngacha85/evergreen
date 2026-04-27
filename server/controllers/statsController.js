@@ -1,6 +1,7 @@
 const Contribution = require('../models/Contribution');
 const Claim = require('../models/Claim');
 const Member = require('../models/Member');
+const Expense = require('../models/Expense');
 
 // @desc    Get financial overview
 // @route   GET /api/stats/funds
@@ -14,12 +15,16 @@ exports.getFundsOverview = async (req, res) => {
       Claim.aggregate([
         { $match: { status: 'paid' } },
         { $group: { _id: null, total: { $sum: "$amount" } } }
+      ]),
+      Expense.aggregate([
+        { $group: { _id: null, total: { $sum: "$amount" } } }
       ])
     ]);
 
     const totalIn = totalContributions[0]?.total || 0;
-    const totalOut = totalClaimsPaid[0]?.total || 0;
-    const balance = totalIn - totalOut;
+    const totalOutClaims = totalClaimsPaid[0]?.total || 0;
+    const totalOutExpenses = totalExpenses[0]?.total || 0;
+    const balance = totalIn - totalOutClaims - totalOutExpenses;
 
     // Also get counts
     const [memberCount, pendingClaims] = await Promise.all([
@@ -29,7 +34,9 @@ exports.getFundsOverview = async (req, res) => {
 
     res.json({
       totalIn,
-      totalOut,
+      totalOutClaims,
+      totalOutExpenses,
+      totalOut: totalOutClaims + totalOutExpenses,
       balance,
       memberCount,
       pendingClaims

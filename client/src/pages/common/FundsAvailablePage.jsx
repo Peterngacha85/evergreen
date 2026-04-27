@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getFundsOverview } from '../../api/stats';
-import { Landmark, ArrowUpCircle, ArrowDownCircle, Wallet, Users, Clock } from 'lucide-react';
+import { Landmark, ArrowUpCircle, ArrowDownCircle, Wallet, Users, Clock, Receipt } from 'lucide-react';
 
 const LeaderFundsPage = () => {
   const [stats, setStats] = useState(null);
@@ -23,8 +23,8 @@ const LeaderFundsPage = () => {
   const cards = [
     { label: 'Current Balance', value: stats.balance, icon: Wallet, color: 'var(--green-600)', bg: 'var(--green-50)', trend: 'Liquid' },
     { label: 'Total Contributions', value: stats.totalIn, icon: ArrowUpCircle, color: '#2563eb', bg: '#eff6ff', trend: 'Inflow' },
-    { label: 'Total Claims Paid', value: stats.totalOut, icon: ArrowDownCircle, color: '#dc2626', bg: '#fef2f2', trend: 'Outflow' },
-    { label: 'Active Members', value: stats.memberCount, icon: Users, color: '#7c3aed', bg: '#f5f3ff', noKes: true, trend: 'Growth' },
+    { label: 'Claims Paid', value: stats.totalOutClaims, icon: ArrowDownCircle, color: '#dc2626', bg: '#fef2f2', trend: 'Outflow' },
+    { label: 'Expenses Paid', value: stats.totalOutExpenses, icon: Receipt, color: '#f97316', bg: '#fff7ed', trend: 'Costs' },
   ];
 
   return (
@@ -111,10 +111,20 @@ const LeaderFundsPage = () => {
             <div>
               <div className="flex justify-between mb-4" style={{ fontSize: '0.95rem' }}>
                 <span className="flex items-center gap-3"><div style={{ width: 12, height: 12, borderRadius: 3, background: '#dc2626' }} /> Outflow (Claims)</span>
-                <span style={{ fontWeight: 800 }}>{((stats.totalOut / stats.totalIn) * 100).toFixed(1)}%</span>
+                <span style={{ fontWeight: 800 }}>{((stats.totalOutClaims / stats.totalIn) * 100).toFixed(1)}%</span>
               </div>
               <div style={{ height: 12, background: 'var(--gray-100)', borderRadius: 6, overflow: 'hidden' }}>
-                <div style={{ width: `${(stats.totalOut / stats.totalIn) * 100}%`, height: '100%', background: '#dc2626' }} />
+                <div style={{ width: `${(stats.totalOutClaims / stats.totalIn) * 100}%`, height: '100%', background: '#dc2626' }} />
+              </div>
+            </div>
+
+            <div>
+              <div className="flex justify-between mb-4" style={{ fontSize: '0.95rem' }}>
+                <span className="flex items-center gap-3"><div style={{ width: 12, height: 12, borderRadius: 3, background: '#f97316' }} /> Outflow (Expenses)</span>
+                <span style={{ fontWeight: 800 }}>{((stats.totalOutExpenses / stats.totalIn) * 100).toFixed(1)}%</span>
+              </div>
+              <div style={{ height: 12, background: 'var(--gray-100)', borderRadius: 6, overflow: 'hidden' }}>
+                <div style={{ width: `${(stats.totalOutExpenses / stats.totalIn) * 100}%`, height: '100%', background: '#f97316' }} />
               </div>
             </div>
 
