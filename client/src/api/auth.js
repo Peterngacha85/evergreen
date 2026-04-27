@@ -11,3 +11,5 @@ export const updateLeaderProfile = (data) => {
     headers: { 'Content-Type': 'multipart/form-data' }
   });
 };
+
+export const updateMemberPassword = (data) => api.put('/auth/member/password', data);

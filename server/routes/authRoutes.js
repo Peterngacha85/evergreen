@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { memberLogin } = require('../controllers/authController');
+const { memberLogin, updateMemberPassword } = require('../controllers/authController');
 const { leaderLogin, superAdminLogin, updateLeaderProfile } = require('../controllers/leaderAuthController');
 const { protect } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
 
 // Member login — ID number + password
 router.post('/member/login', memberLogin);
+router.put('/member/password', protect, updateMemberPassword);
 
 // Leader login — ID number + phone + password
 router.post('/leader/login', leaderLogin);

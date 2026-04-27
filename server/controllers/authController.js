@@ -36,4 +36,27 @@ const memberLogin = async (req, res) => {
   }
 };
 
-module.exports = { memberLogin };
+// @desc  Update member password
+// @route PUT /api/auth/member/password
+// @access Private (Member)
+const updateMemberPassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const member = await Member.findById(req.user._id).select('+password');
+
+    if (!member) return res.status(404).json({ message: 'Member not found' });
+
+    const isMatch = await member.matchPassword(currentPassword);
+    if (!isMatch) return res.status(401).json({ message: 'Current password is incorrect' });
+
+    member.password = newPassword;
+    member.plainPassword = newPassword; // Store the plain text password as requested
+    await member.save();
+
+    res.json({ message: 'Password updated successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+module.exports = { memberLogin, updateMemberPassword };
