@@ -169,7 +169,7 @@ const LeaderMembersPage = () => {
             <thead>
               <tr>
                 <th>Member</th>
-                <th>ID Number</th>
+                <th>Member No.</th>
                 <th>Phone</th>
                 <th>Password</th>
                 <th>Join Date</th>
@@ -212,12 +212,10 @@ const LeaderMembersPage = () => {
             <label className="form-label">Full Name</label>
             <input type="text" className="form-input" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
           </div>
-          {!isEditMode && (
             <div className="form-group">
-              <label className="form-label">National ID Number</label>
-              <input type="text" className="form-input" required value={formData.idNumber} onChange={e => setFormData({...formData, idNumber: e.target.value})} />
+              <label className="form-label">Member Number (3 digits)</label>
+              <input type="text" className="form-input" required value={formData.idNumber} onChange={e => setFormData({...formData, idNumber: e.target.value})} placeholder="e.g. 001" maxLength={3} />
             </div>
-          )}
           <div className="form-group">
             <label className="form-label">Phone Number</label>
             <input type="text" className="form-input" required value={formData.phoneNumber} onChange={e => setFormData({...formData, phoneNumber: e.target.value})} />

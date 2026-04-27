@@ -49,8 +49,13 @@ const MemberDashboard = () => {
         <div>
           <div style={{ fontSize: '0.85rem', opacity: 0.8, marginBottom: 4 }}>Welcome back 👋</div>
           <h2 style={{ fontSize: '1.8rem', fontWeight: 800, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{user?.name}</h2>
-          <div style={{ fontSize: '0.8rem', opacity: 0.7, marginTop: 4 }}>
-            Member since {user?.joinDate ? format(new Date(user.joinDate), 'MMM yyyy') : '—'}
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 4 }}>
+            <div style={{ fontSize: '0.8rem', opacity: 0.8, background: 'rgba(255,255,255,0.15)', padding: '2px 8px', borderRadius: 6, fontWeight: 600 }}>
+              M.No: {user?.idNumber}
+            </div>
+            <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>
+              Member since {user?.joinDate ? format(new Date(user.joinDate), 'MMM yyyy') : '—'}
+            </div>
           </div>
         </div>
         <div style={{ textAlign: 'right' }}>

@@ -65,9 +65,9 @@ const MemberLoginPage = () => {
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
             <div className="form-group">
-              <label className="form-label">National ID Number</label>
+              <label className="form-label">Member Number (3 digits)</label>
               <input name="idNumber" value={form.idNumber} onChange={handleChange}
-                className="form-input" placeholder="Enter your ID number" required />
+                className="form-input" placeholder="e.g. 001" required />
             </div>
 
             <div className="form-group">

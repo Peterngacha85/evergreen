@@ -4,7 +4,13 @@ const bcrypt = require('bcryptjs');
 const memberSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
-    idNumber: { type: String, required: true, unique: true, trim: true },
+    idNumber: { 
+      type: String, 
+      required: true, 
+      unique: true, 
+      trim: true,
+      match: [/^\d{3}$/, 'Member number must be exactly 3 digits (e.g., 001)']
+    },
     phoneNumber: { type: String, required: true, trim: true },
     password: { type: String, required: true },
     profilePhoto: {

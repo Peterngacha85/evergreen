@@ -5,7 +5,7 @@ import { useSocket } from '../../context/SocketContext';
 import {
   LayoutDashboard, Users, TrendingUp, Calendar, Award,
   FileText, GitPullRequestDraft, LogOut, ChevronLeft, ChevronRight, Shield,
-  BookOpen, UserX, Landmark
+  BookOpen, UserX, Landmark, Info
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import Avatar from '../common/Avatar';
@@ -19,6 +19,7 @@ const MEMBER_NAV = [
   { to: '/claims',          icon: FileText,        label: 'My Claims'      },
   { to: '/rules',           icon: BookOpen,        label: 'Welfare Rules'  },
   { to: '/funds',           icon: Landmark,        label: 'Funds Available' },
+  { to: '/mission-vision',  icon: Info,            label: 'Mission & Vision' },
 ];
 
 const LEADER_NAV = [
@@ -29,9 +30,10 @@ const LEADER_NAV = [
   { to: '/leader/claims',         icon: FileText,            label: 'Claims'           },
   { to: '/leader/officials',      icon: Award,               label: 'Officials'        },
   { to: '/leader/change-requests',icon: GitPullRequestDraft, label: 'Change Requests'  },
-  { to: '/leader/defaulters',     icon: UserX,               label: 'Defaulters'       },
+  { to: '/leader/unpaid',         icon: UserX,               label: 'Unpaid'           },
   { to: '/leader/funds',          icon: Landmark,            label: 'Funds Available'  },
   { to: '/leader/rules',          icon: BookOpen,            label: 'Rules & Regs'     },
+  { to: '/mission-vision',        icon: Info,                label: 'Mission & Vision' },
 ];
 
 const SUPERADMIN_NAV = [
@@ -42,9 +44,10 @@ const SUPERADMIN_NAV = [
   { to: '/leader/claims',         icon: FileText,            label: 'Claims'           },
   { to: '/leader/officials',      icon: Award,               label: 'Officials'        },
   { to: '/leader/change-requests',icon: GitPullRequestDraft, label: 'Change Requests'  },
-  { to: '/leader/defaulters',     icon: UserX,               label: 'Defaulters'       },
+  { to: '/leader/unpaid',         icon: UserX,               label: 'Unpaid'           },
   { to: '/leader/funds',          icon: Landmark,            label: 'Funds Available'  },
   { to: '/leader/rules',          icon: BookOpen,            label: 'Rules & Regs'     },
+  { to: '/mission-vision',        icon: Info,                label: 'Mission & Vision' },
   { to: '/leader/manage-leaders', icon: Shield,              label: 'Manage Leaders'   },
 ];
 

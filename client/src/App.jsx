@@ -29,7 +29,8 @@ import LeaderEventsPage from './pages/leader/LeaderEventsPage';
 import LeaderClaimsPage from './pages/leader/LeaderClaimsPage';
 import ManageLeadersPage from './pages/leader/ManageLeadersPage';
 import LeaderRulesPage from './pages/leader/LeaderRulesPage';
-import LeaderDefaultersPage from './pages/leader/LeaderDefaultersPage';
+import LeaderUnpaidPage from './pages/leader/LeaderUnpaidPage';
+import MissionVisionPage from './pages/common/MissionVisionPage';
 import FundsAvailablePage from './pages/common/FundsAvailablePage';
 
 function App() {
@@ -70,7 +71,8 @@ function App() {
             {/* Officials view and Super Admin management */}
             <Route path="/leader/officials" element={<OfficialsPage />} />
             <Route path="/leader/rules" element={<LeaderRulesPage />} />
-            <Route path="/leader/defaulters" element={<LeaderDefaultersPage />} />
+            <Route path="/leader/unpaid" element={<LeaderUnpaidPage />} />
+            <Route path="/mission-vision" element={<MissionVisionPage />} />
             <Route path="/leader/funds" element={<FundsAvailablePage />} />
             <Route path="/leader/manage-leaders" element={<SuperAdminRoute><ManageLeadersPage /></SuperAdminRoute>} />
           </Route>

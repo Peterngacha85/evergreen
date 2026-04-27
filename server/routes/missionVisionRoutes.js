@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { getFundsOverview, getUnpaidMembers } = require('../controllers/statsController');
+const { getMissionVision, updateMissionVision } = require('../controllers/missionVisionController');
 const { protect } = require('../middleware/authMiddleware');
 const { leaderOrSuperAdmin } = require('../middleware/roleMiddleware');
 
-router.get('/funds', protect, getFundsOverview);
-router.get('/unpaid', protect, leaderOrSuperAdmin, getUnpaidMembers);
+router.get('/', getMissionVision);
+router.post('/', protect, leaderOrSuperAdmin, updateMissionVision);
 
 module.exports = router;
