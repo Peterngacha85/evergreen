@@ -6,39 +6,42 @@ import ConfirmModal from '../../components/common/ConfirmModal';
 import { Plus, Edit2, Trash2, Shield, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
-
-const LEADER_ROLES = ['Chairman', 'Vice Chairman', 'Secretary', 'Treasurer', 'Organizer'];
+import { getMembers } from '../../api/members';
 
 const ManageLeadersPage = () => {
   const [leaders, setLeaders] = useState([]);
+  const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [formData, setFormData] = useState({ id: '', name: '', idNumber: '', phoneNumber: '', password: '', leaderRole: LEADER_ROLES[0], profilePhoto: null });
+  const [isPromoting, setIsPromoting] = useState(false);
+  const [formData, setFormData] = useState({ id: '', name: '', idNumber: '', phoneNumber: '', password: '', leaderRole: '', profilePhoto: null, memberId: '' });
   const [submitting, setSubmitting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
   const [deleting, setDeleting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const fetchLeaders = async () => {
+  const fetchData = async () => {
     try {
-      const res = await getLeaders();
-      setLeaders(res.data);
+      const [leaderRes, memberRes] = await Promise.all([getLeaders(), getMembers()]);
+      setLeaders(leaderRes.data);
+      setMembers(memberRes.data);
     } catch (err) {
       console.error(err);
-      toast.error('Failed to load leaders');
+      toast.error('Failed to load data');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchLeaders();
+    fetchData();
   }, []);
 
   const handleOpenModal = (leader = null) => {
+    setIsPromoting(false);
     if (leader) {
       setIsEditMode(true);
       setFormData({ 
@@ -48,11 +51,12 @@ const ManageLeadersPage = () => {
         phoneNumber: leader.phoneNumber, 
         leaderRole: leader.leaderRole,
         password: '', 
-        profilePhoto: null 
+        profilePhoto: null,
+        memberId: ''
       });
     } else {
       setIsEditMode(false);
-      setFormData({ id: '', name: '', idNumber: '', phoneNumber: '', password: '', leaderRole: LEADER_ROLES[0], profilePhoto: null });
+      setFormData({ id: '', name: '', idNumber: '', phoneNumber: '', password: '', leaderRole: '', profilePhoto: null, memberId: '' });
     }
     setIsModalOpen(true);
   };
@@ -66,14 +70,18 @@ const ManageLeadersPage = () => {
     setSubmitting(true);
     
     const data = new FormData();
-    data.append('name', formData.name);
-    data.append('phoneNumber', formData.phoneNumber);
-    data.append('leaderRole', formData.leaderRole);
-    if (formData.password) data.append('password', formData.password);
-    if (formData.profilePhoto) data.append('profilePhoto', formData.profilePhoto);
-    
-    if (!isEditMode) {
-      data.append('idNumber', formData.idNumber);
+    if (isPromoting && formData.memberId) {
+      data.append('memberId', formData.memberId);
+      data.append('leaderRole', formData.leaderRole);
+    } else {
+      data.append('name', formData.name);
+      data.append('phoneNumber', formData.phoneNumber);
+      data.append('leaderRole', formData.leaderRole);
+      if (formData.password) data.append('password', formData.password);
+      if (formData.profilePhoto) data.append('profilePhoto', formData.profilePhoto);
+      if (!isEditMode) {
+        data.append('idNumber', formData.idNumber);
+      }
     }
 
     try {
@@ -85,7 +93,7 @@ const ManageLeadersPage = () => {
         toast.success('Leader added successfully');
       }
       setIsModalOpen(false);
-      fetchLeaders();
+      fetchData();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Operation failed');
     } finally {
@@ -103,7 +111,7 @@ const ManageLeadersPage = () => {
       await deleteLeader(confirmDelete.id);
       toast.success('Leader removed');
       setConfirmDelete({ open: false, id: null });
-      fetchLeaders();
+      fetchData();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Deletion failed');
     } finally {
@@ -174,68 +182,108 @@ const ManageLeadersPage = () => {
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={isEditMode ? 'Edit Leader' : 'Register New Leader'}>
         <form onSubmit={handleSubmit} className="flex-col gap-4">
-          <div className="form-group">
-            <label className="form-label">Full Name</label>
-            <input type="text" className="form-input" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
-          </div>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            {!isEditMode && (
-              <div className="form-group">
-                <label className="form-label">Member Number (3 digits)</label>
-                <input type="text" className="form-input" required value={formData.idNumber} onChange={e => setFormData({...formData, idNumber: e.target.value})} placeholder="e.g. 001" maxLength={3} />
-              </div>
-            )}
+          {!isEditMode && (
+            <div className="form-group" style={{ marginBottom: 16 }}>
+              <label className="flex items-center gap-2 cursor-pointer" style={{ fontSize: '0.9rem', color: 'var(--green-700)', fontWeight: 600 }}>
+                <input 
+                  type="checkbox" 
+                  checked={isPromoting} 
+                  onChange={(e) => setIsPromoting(e.target.checked)} 
+                  style={{ width: 16, height: 16 }}
+                />
+                Promote from existing members
+              </label>
+            </div>
+          )}
+
+          {isPromoting ? (
             <div className="form-group">
-              <label className="form-label">Phone Number</label>
-              <input type="text" className="form-input" required value={formData.phoneNumber} onChange={e => setFormData({...formData, phoneNumber: e.target.value})} />
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Official Role</label>
-            <select className="form-select" required value={formData.leaderRole} onChange={e => setFormData({...formData, leaderRole: e.target.value})}>
-              {LEADER_ROLES.map(role => <option key={role} value={role}>{role}</option>)}
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Profile Photo (Optional)</label>
-            <input type="file" accept="image/*" className="form-input" style={{ padding: '8px 12px' }} onChange={handleFileChange} />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">{isEditMode ? 'New Password (leave blank to keep current)' : 'Password'}</label>
-            <div style={{ position: 'relative' }}>
-              <input 
-                type={showPassword ? 'text' : 'password'} 
-                className="form-input" 
-                required={!isEditMode} 
-                value={formData.password} 
-                onChange={e => setFormData({...formData, password: e.target.value})} 
-                style={{ paddingRight: 44 }}
-              />
-              <button 
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: 'absolute',
-                  right: 12,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--gray-400)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: 4,
-                  cursor: 'pointer'
-                }}
+              <label className="form-label">Select Member</label>
+              <select 
+                className="form-select" 
+                required 
+                value={formData.memberId} 
+                onChange={e => setFormData({...formData, memberId: e.target.value})}
               >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
+                <option value="">-- Select Member --</option>
+                {members.map(m => (
+                  <option key={m._id} value={m._id}>
+                    {m.name} ({m.idNumber})
+                  </option>
+                ))}
+              </select>
             </div>
+          ) : (
+            <>
+              <div className="form-group">
+                <label className="form-label">Full Name</label>
+                <input type="text" className="form-input" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+              </div>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                {!isEditMode && (
+                  <div className="form-group">
+                    <label className="form-label">Member Number (3 digits)</label>
+                    <input type="text" className="form-input" required value={formData.idNumber} onChange={e => setFormData({...formData, idNumber: e.target.value})} placeholder="e.g. 001" maxLength={3} />
+                  </div>
+                )}
+                <div className="form-group">
+                  <label className="form-label">Phone Number</label>
+                  <input type="text" className="form-input" required value={formData.phoneNumber} onChange={e => setFormData({...formData, phoneNumber: e.target.value})} />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Profile Photo (Optional)</label>
+                <input type="file" accept="image/*" className="form-input" style={{ padding: '8px 12px' }} onChange={handleFileChange} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">{isEditMode ? 'New Password (leave blank to keep current)' : 'Password'}</label>
+                <div style={{ position: 'relative' }}>
+                  <input 
+                    type={showPassword ? 'text' : 'password'} 
+                    className="form-input" 
+                    required={!isEditMode} 
+                    value={formData.password} 
+                    onChange={e => setFormData({...formData, password: e.target.value})} 
+                    style={{ paddingRight: 44 }}
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: 12,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--gray-400)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: 4,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+
+          <div className="form-group">
+            <label className="form-label">Official Role (Category)</label>
+            <input 
+              type="text" 
+              className="form-input" 
+              required 
+              value={formData.leaderRole} 
+              onChange={e => setFormData({...formData, leaderRole: e.target.value})} 
+              placeholder="e.g. Patron, Treasurer, etc."
+            />
           </div>
           
           <div className="flex justify-between" style={{ marginTop: 24 }}>

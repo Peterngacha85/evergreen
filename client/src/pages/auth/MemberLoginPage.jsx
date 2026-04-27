@@ -59,7 +59,7 @@ const MemberLoginPage = () => {
             </div>
             <div>
               <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--green-700)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Member Login</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Evergreen Community Welfare</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Evergreen Community</div>
             </div>
           </div>
 

@@ -32,7 +32,7 @@ const LeaderFundsPage = () => {
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 24, marginBottom: '40px' }}>
         <div>
           <h1 className="page-title" style={{ fontSize: '2rem' }}>Funds Available</h1>
-          <p className="page-subtitle" style={{ fontSize: '1rem', marginTop: '8px' }}>Real-time financial summary of Evergreen Welfare</p>
+          <p className="page-subtitle" style={{ fontSize: '1rem', marginTop: '8px' }}>Real-time financial summary of Evergreen Community</p>
         </div>
         <div style={{ 
           display: 'flex', 

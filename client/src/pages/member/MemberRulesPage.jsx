@@ -26,7 +26,7 @@ const MemberRulesPage = () => {
     <div className="animate-fadein">
       <div className="page-header">
         <h1 className="page-title">Rules & Regulations</h1>
-        <p className="page-subtitle">Guidelines for Evergreen Community Welfare</p>
+        <p className="page-subtitle">Guidelines for Evergreen Community</p>
       </div>
 
       {rules.length === 0 ? (
