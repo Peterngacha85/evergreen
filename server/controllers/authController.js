@@ -1,4 +1,5 @@
 const Member = require('../models/Member');
+const Leader = require('../models/Leader');
 const generateToken = require('../utils/generateToken');
 
 // @desc  Member login (ID Number + Password)
@@ -17,17 +18,24 @@ const memberLogin = async (req, res) => {
     const isMatch = await member.matchPassword(password);
     if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
 
-    const token = generateToken(member._id, 'member');
+    // Check if this member is also a leader
+    const leader = await Leader.findOne({ idNumber, isActive: true });
+    const userRole = leader ? 'leader' : 'member';
+    
+    // If they are a leader, we use the leader ID for the token so the leader middleware works
+    const userId = leader ? leader._id : member._id;
+    const token = generateToken(userId, userRole);
 
     res.json({
       token,
       user: {
-        _id: member._id,
+        _id: userId,
         name: member.name,
         idNumber: member.idNumber,
         phoneNumber: member.phoneNumber,
         profilePhoto: member.profilePhoto,
-        role: 'member',
+        role: userRole,
+        leaderRole: leader?.leaderRole || null,
         joinDate: member.joinDate,
       },
     });
