@@ -99,21 +99,34 @@ const ExpensesPage = () => {
 
   return (
     <div className="animate-fadein">
-      <div className="page-header flex items-center justify-between">
-        <div>
+      <div className="page-header" style={{ 
+        display: 'flex', 
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: 16,
+        marginBottom: 30
+      }}>
+        <div style={{ flex: '1 1 300px' }}>
           <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Receipt size={24} color="var(--red-600)" /> Community Expenses
           </h1>
           <p className="page-subtitle">Tracking all costs and expenditures of Evergreen Community</p>
         </div>
         {!isMember && (
-          <button className="btn btn-primary" onClick={() => handleOpenModal()} style={{ background: '#ef4444' }}>
+          <button className="btn btn-primary" onClick={() => handleOpenModal()} style={{ background: '#ef4444', whiteSpace: 'nowrap' }}>
             <Plus size={18} /> Record Expense
           </button>
         )}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20, marginBottom: 30 }}>
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', 
+        gap: 16, 
+        marginBottom: 24 
+      }}>
         <div className="card flex items-center gap-4" style={{ borderLeft: '4px solid #ef4444' }}>
           <div style={{ width: 48, height: 48, borderRadius: 12, background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444' }}>
             <DollarSign size={24} />
