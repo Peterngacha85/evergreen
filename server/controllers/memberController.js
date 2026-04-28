@@ -110,7 +110,7 @@ const updateMember = async (req, res) => {
     const { name, idNumber, phoneNumber, password } = req.body;
     const oldIdNumber = member.idNumber;
 
-    // If idNumber is changing, check for duplicates in both Member and Leader collections
+    // 1. Handle ID Number change with duplicate checks
     if (idNumber && idNumber !== oldIdNumber) {
       const existingMember = await Member.findOne({ idNumber });
       const existingLeader = await Leader.findOne({ idNumber });
@@ -129,15 +129,28 @@ const updateMember = async (req, res) => {
       }
     }
 
+    // 2. Handle other fields
     if (name) member.name = name;
     if (phoneNumber) member.phoneNumber = phoneNumber;
+    
+    // 3. Handle password change
     if (password) {
       member.password = password;
-      member.plainPassword = password; // Also update plainPassword for visibility
+      member.plainPassword = password; // Ensure visibility field is updated
     }
 
+    // 4. Save and return
     const updated = await member.save();
-    res.json({ message: 'Member updated', member: { _id: updated._id, name: updated.name, idNumber: updated.idNumber } });
+    
+    res.json({ 
+      message: 'Member updated successfully', 
+      member: { 
+        _id: updated._id, 
+        name: updated.name, 
+        idNumber: updated.idNumber,
+        phoneNumber: updated.phoneNumber
+      } 
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
