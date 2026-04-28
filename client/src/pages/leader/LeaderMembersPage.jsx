@@ -96,7 +96,10 @@ const LeaderMembersPage = () => {
         toast.success('Member added successfully');
       }
       setIsModalOpen(false);
-      fetchMembers();
+      // Wait a tiny bit to ensure DB has finished write if needed, though await should handle it
+      setTimeout(() => {
+        fetchMembers();
+      }, 300);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Operation failed');
     } finally {
