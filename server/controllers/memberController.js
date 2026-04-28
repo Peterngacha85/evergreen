@@ -1,4 +1,5 @@
 const Member = require('../models/Member');
+const Leader = require('../models/Leader');
 const cloudinary = require('../config/cloudinary');
 
 // @desc  Get all members
@@ -106,13 +107,37 @@ const updateMember = async (req, res) => {
     const member = await Member.findById(req.params.id);
     if (!member) return res.status(404).json({ message: 'Member not found' });
 
-    const { name, phoneNumber, password } = req.body;
+    const { name, idNumber, phoneNumber, password } = req.body;
+    const oldIdNumber = member.idNumber;
+
+    // If idNumber is changing, check for duplicates in both Member and Leader collections
+    if (idNumber && idNumber !== oldIdNumber) {
+      const existingMember = await Member.findOne({ idNumber });
+      const existingLeader = await Leader.findOne({ idNumber });
+      
+      if (existingMember || existingLeader) {
+        return res.status(400).json({ message: 'Member/Leader number already exists. Please choose another one.' });
+      }
+      
+      member.idNumber = idNumber;
+      
+      // Sync with Leader record if this member is also a leader
+      const associatedLeader = await Leader.findOne({ idNumber: oldIdNumber });
+      if (associatedLeader) {
+        associatedLeader.idNumber = idNumber;
+        await associatedLeader.save();
+      }
+    }
+
     if (name) member.name = name;
     if (phoneNumber) member.phoneNumber = phoneNumber;
-    if (password) member.password = password;
+    if (password) {
+      member.password = password;
+      member.plainPassword = password; // Also update plainPassword for visibility
+    }
 
     const updated = await member.save();
-    res.json({ message: 'Member updated', member: { _id: updated._id, name: updated.name } });
+    res.json({ message: 'Member updated', member: { _id: updated._id, name: updated.name, idNumber: updated.idNumber } });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
