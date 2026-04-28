@@ -71,7 +71,12 @@ const LeaderMembersPage = () => {
     try {
       if (isEditMode) {
         // Update details first
-        await updateMember(formData.id, { name: formData.name, phoneNumber: formData.phoneNumber, ...(formData.password && { password: formData.password }) });
+        await updateMember(formData.id, { 
+          name: formData.name, 
+          idNumber: formData.idNumber,
+          phoneNumber: formData.phoneNumber, 
+          ...(formData.password && { password: formData.password }) 
+        });
         // Update photo if provided
         if (formData.profilePhoto) {
           const photoData = new FormData();
