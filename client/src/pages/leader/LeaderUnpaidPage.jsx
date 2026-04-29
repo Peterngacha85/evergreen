@@ -1,18 +1,31 @@
 import { useEffect, useState } from 'react';
 import { getUnpaidMembers } from '../../api/stats';
+import { addContribution } from '../../api/contributions';
+import { getCategories } from '../../api/categories';
 import Avatar from '../../components/common/Avatar';
-import { UserX, Mail, Phone, AlertCircle, RefreshCw } from 'lucide-react';
+import Modal from '../../components/common/Modal';
+import { UserX, Phone, AlertCircle, RefreshCw, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
+import toast from 'react-hot-toast';
 
 const LeaderUnpaidPage = () => {
   const [unpaid, setUnpaid] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isPayModalOpen, setIsPayModalOpen] = useState(false);
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [payForm, setPayForm] = useState({ amount: '', category: '', description: '' });
+  const [submitting, setSubmitting] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await getUnpaidMembers();
+      const [res, catRes] = await Promise.all([
+        getUnpaidMembers(),
+        getCategories()
+      ]);
       setUnpaid(res.data);
+      setCategories(catRes.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -21,6 +34,37 @@ const LeaderUnpaidPage = () => {
   };
 
   useEffect(() => { fetchData(); }, []);
+
+  const handleMarkPaid = (member) => {
+    setSelectedMember(member);
+    setPayForm({ 
+      amount: '', 
+      category: categories.length > 0 ? categories[0].name : '', 
+      description: '' 
+    });
+    setIsPayModalOpen(true);
+  };
+
+  const handlePaySubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await addContribution({
+        memberId: selectedMember._id,
+        amount: Number(payForm.amount),
+        category: payForm.category,
+        description: payForm.description || `Marked paid from unpaid list`,
+        datePaid: new Date().toISOString().split('T')[0]
+      });
+      toast.success(`${selectedMember.name} marked as paid`);
+      setIsPayModalOpen(false);
+      fetchData(); // Refresh the list
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to record payment');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   if (loading) return <div className="flex justify-center" style={{ paddingTop: 80 }}><div className="spinner" /></div>;
 
@@ -53,11 +97,12 @@ const LeaderUnpaidPage = () => {
                 <th>Amount</th>
                 <th>Days Since</th>
                 <th>Contact</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
               {unpaid.length === 0 ? (
-                <tr><td colSpan={5}><div className="empty-state">No unpaid members found. Everyone is up to date! 🎉</div></td></tr>
+                <tr><td colSpan={6}><div className="empty-state">No unpaid members found. Everyone is up to date! 🎉</div></td></tr>
               ) : unpaid.map((d, i) => (
                 <tr key={i}>
                   <td>
@@ -86,12 +131,46 @@ const LeaderUnpaidPage = () => {
                       <button className="btn btn-sm btn-outline">Send Reminder</button>
                     </div>
                   </td>
+                  <td>
+                    <button 
+                      className="btn btn-sm btn-primary" 
+                      onClick={() => handleMarkPaid(d.member)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 4 }}
+                    >
+                      <CheckCircle size={14} /> Mark Paid
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* Mark as Paid Modal */}
+      <Modal isOpen={isPayModalOpen} onClose={() => setIsPayModalOpen(false)} title={`Record Payment — ${selectedMember?.name || ''}`}>
+        <form onSubmit={handlePaySubmit} className="flex-col gap-4">
+          <div className="form-group">
+            <label className="form-label">Category</label>
+            <select className="form-select" required value={payForm.category} onChange={e => setPayForm({...payForm, category: e.target.value})}>
+              <option value="">-- Choose Category --</option>
+              {categories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
+            </select>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Amount (KES)</label>
+            <input type="number" className="form-input" required min="1" value={payForm.amount} onChange={e => setPayForm({...payForm, amount: e.target.value})} />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Notes (Optional)</label>
+            <input type="text" className="form-input" value={payForm.description} onChange={e => setPayForm({...payForm, description: e.target.value})} placeholder="e.g. Paid via M-Pesa" />
+          </div>
+          <div className="flex justify-between" style={{ marginTop: 16 }}>
+            <button type="button" className="btn btn-ghost" onClick={() => setIsPayModalOpen(false)}>Cancel</button>
+            <button type="submit" className="btn btn-primary" disabled={submitting}>{submitting ? 'Saving...' : 'Confirm Payment'}</button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

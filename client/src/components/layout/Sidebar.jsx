@@ -5,7 +5,7 @@ import { useSocket } from '../../context/SocketContext';
 import {
   LayoutDashboard, Users, TrendingUp, Calendar, Award,
   FileText, GitPullRequestDraft, LogOut, ChevronLeft, ChevronRight, Shield,
-  BookOpen, UserX, Landmark, Info, Receipt
+  BookOpen, UserX, Landmark, Info, Receipt, Archive
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import Avatar from '../common/Avatar';
@@ -21,6 +21,7 @@ const MEMBER_NAV = [
   { to: '/funds',           icon: Landmark,        label: 'Funds Available' },
   { to: '/mission-vision',  icon: Info,            label: 'Mission & Vision' },
   { to: '/expenses',        icon: Receipt,         label: 'Expenses'        },
+  { to: '/archive',          icon: Archive,         label: 'Archive'         },
 ];
 
 const LEADER_NAV = [
@@ -36,6 +37,7 @@ const LEADER_NAV = [
   { to: '/leader/rules',          icon: BookOpen,            label: 'Rules & Regs'     },
   { to: '/mission-vision',        icon: Info,                label: 'Mission & Vision' },
   { to: '/leader/expenses',       icon: Receipt,             label: 'Expenses'        },
+  { to: '/leader/archive',         icon: Archive,             label: 'Archive'         },
 ];
 
 const SUPERADMIN_NAV = [
@@ -51,6 +53,7 @@ const SUPERADMIN_NAV = [
   { to: '/leader/rules',          icon: BookOpen,            label: 'Rules & Regs'     },
   { to: '/mission-vision',        icon: Info,                label: 'Mission & Vision' },
   { to: '/leader/expenses',       icon: Receipt,             label: 'Expenses'        },
+  { to: '/leader/archive',         icon: Archive,             label: 'Archive'         },
   { to: '/leader/manage-leaders', icon: Shield,              label: 'Manage Leaders'   },
 ];
 

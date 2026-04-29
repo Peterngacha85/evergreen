@@ -13,3 +13,4 @@ export const updateLeaderProfile = (data) => {
 };
 
 export const updateMemberPassword = (data) => api.put('/auth/member/password', data);
+export const updateLeaderPassword = (data) => api.put('/auth/leader/password', data);
