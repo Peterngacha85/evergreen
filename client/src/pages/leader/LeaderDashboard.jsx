@@ -3,9 +3,10 @@ import { getContributionSummary } from '../../api/contributions';
 import { getChangeRequests } from '../../api/changeRequests';
 import { getMembers } from '../../api/members';
 import { useAuth } from '../../context/AuthContext';
-import { Users, TrendingUp, AlertCircle, ShieldCheck } from 'lucide-react';
+import { Users, TrendingUp, AlertCircle, ShieldCheck, Shield } from 'lucide-react';
 import StatusBadge from '../../components/common/StatusBadge';
 import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 const LeaderDashboard = () => {
   const { user } = useAuth();
@@ -73,7 +74,7 @@ const LeaderDashboard = () => {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
         <div className="card">
           <h3 style={{ fontWeight: 700, color: 'var(--green-700)', marginBottom: 16 }}>Fund Categories</h3>
           {summary?.summary?.length === 0 ? (
@@ -101,6 +102,50 @@ const LeaderDashboard = () => {
             <Link to="/leader/contributions" className="btn btn-outline w-full" style={{ justifyContent: 'flex-start' }}>Record Contribution</Link>
             <Link to="/leader/claims" className="btn btn-outline w-full" style={{ justifyContent: 'flex-start' }}>Process Claims</Link>
           </div>
+        </div>
+
+        {/* Change Password Card */}
+        <div className="card">
+          <h3 style={{ fontWeight: 700, color: 'var(--green-700)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Shield size={20} /> Security & Password
+          </h3>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 20 }}>Update your password to keep your account secure.</p>
+          <form onSubmit={async (e) => {
+            e.preventDefault();
+            const currentPassword = e.target.currentPassword.value;
+            const newPassword = e.target.newPassword.value;
+            const confirmPassword = e.target.confirmPassword.value;
+
+            if (newPassword !== confirmPassword) {
+              return toast.error('Passwords do not match');
+            }
+            if (newPassword.length < 4) {
+              return toast.error('Password must be at least 4 characters');
+            }
+
+            try {
+              const { updateLeaderPassword } = await import('../../api/auth');
+              await updateLeaderPassword({ currentPassword, newPassword });
+              toast.success('Password updated successfully');
+              e.target.reset();
+            } catch (err) {
+              toast.error(err.response?.data?.message || 'Failed to update password');
+            }
+          }} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div className="form-group">
+              <label className="form-label">Current Password</label>
+              <input type="password" name="currentPassword" required className="form-input" style={{ background: 'var(--green-50)' }} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">New Password</label>
+              <input type="password" name="newPassword" required className="form-input" style={{ background: 'var(--green-50)' }} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Confirm New Password</label>
+              <input type="password" name="confirmPassword" required className="form-input" style={{ background: 'var(--green-50)' }} />
+            </div>
+            <button type="submit" className="btn btn-primary" style={{ marginTop: 8 }}>Update Password</button>
+          </form>
         </div>
       </div>
     </div>

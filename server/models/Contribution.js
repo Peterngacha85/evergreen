@@ -8,7 +8,7 @@ const contributionSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      // e.g. "Monthly Dues", "Medical", "Bereavement", "Development Fund"
+      // Occasional / need-based categories e.g. "Medical", "Bereavement", "Development Fund"
     },
     description: { type: String, trim: true },
     datePaid: { type: Date, default: Date.now },

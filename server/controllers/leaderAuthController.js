@@ -124,4 +124,28 @@ const updateLeaderProfile = async (req, res) => {
   }
 };
 
-module.exports = { leaderLogin, superAdminLogin, updateLeaderProfile };
+// @desc  Update leader password
+// @route PUT /api/auth/leader/password
+// @access Private (Leader)
+const updateLeaderPassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword)
+      return res.status(400).json({ message: 'Current and new password are required' });
+
+    const leader = await Leader.findById(req.user._id).select('+password');
+    if (!leader) return res.status(404).json({ message: 'Leader not found' });
+
+    const isMatch = await leader.matchPassword(currentPassword);
+    if (!isMatch) return res.status(401).json({ message: 'Current password is incorrect' });
+
+    leader.password = newPassword;
+    await leader.save();
+
+    res.json({ message: 'Password updated successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+module.exports = { leaderLogin, superAdminLogin, updateLeaderProfile, updateLeaderPassword };

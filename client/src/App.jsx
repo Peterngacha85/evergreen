@@ -32,6 +32,7 @@ import LeaderRulesPage from './pages/leader/LeaderRulesPage';
 import LeaderUnpaidPage from './pages/leader/LeaderUnpaidPage';
 import MissionVisionPage from './pages/common/MissionVisionPage';
 import FundsAvailablePage from './pages/common/FundsAvailablePage';
+import ContributionArchivePage from './pages/common/ContributionArchivePage';
 import ExpensesPage from './pages/common/ExpensesPage';
 
 function App() {
@@ -58,6 +59,7 @@ function App() {
             <Route path="/funds" element={<FundsAvailablePage />} />
             <Route path="/mission-vision" element={<MissionVisionPage />} />
             <Route path="/expenses" element={<ExpensesPage />} />
+            <Route path="/archive" element={<ContributionArchivePage />} />
           </Route>
 
           {/* Leader/SuperAdmin Protected Routes */}
@@ -77,6 +79,7 @@ function App() {
             <Route path="/leader/unpaid" element={<LeaderUnpaidPage />} />
             <Route path="/leader/funds" element={<FundsAvailablePage />} />
             <Route path="/leader/expenses" element={<ExpensesPage />} />
+            <Route path="/leader/archive" element={<ContributionArchivePage />} />
             <Route path="/leader/manage-leaders" element={<SuperAdminRoute><ManageLeadersPage /></SuperAdminRoute>} />
           </Route>
           
