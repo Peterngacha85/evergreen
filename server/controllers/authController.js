@@ -58,8 +58,15 @@ const updateMemberPassword = async (req, res) => {
     if (!isMatch) return res.status(401).json({ message: 'Current password is incorrect' });
 
     member.password = newPassword;
-    member.plainPassword = newPassword; // Store the plain text password as requested
+    member.plainPassword = newPassword;
     await member.save();
+
+    // Sync with Leader record if it exists
+    const leader = await Leader.findOne({ idNumber: member.idNumber });
+    if (leader) {
+      leader.password = newPassword;
+      await leader.save();
+    }
 
     res.json({ message: 'Password updated successfully' });
   } catch (err) {
