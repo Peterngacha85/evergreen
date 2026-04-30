@@ -19,6 +19,7 @@ import EventsPage from './pages/member/EventsPage';
 import OfficialsPage from './pages/member/OfficialsPage';
 import MemberClaimsPage from './pages/member/MemberClaimsPage';
 import MemberRulesPage from './pages/member/MemberRulesPage';
+import MemberListPage from './pages/member/MemberListPage';
 
 // Leader Pages
 import LeaderDashboard from './pages/leader/LeaderDashboard';
@@ -55,6 +56,7 @@ function App() {
             <Route path="/events" element={<EventsPage />} />
             <Route path="/officials" element={<OfficialsPage />} />
             <Route path="/claims" element={<MemberClaimsPage />} />
+            <Route path="/members" element={<MemberListPage />} />
             <Route path="/rules" element={<MemberRulesPage />} />
             <Route path="/funds" element={<FundsAvailablePage />} />
             <Route path="/mission-vision" element={<MissionVisionPage />} />

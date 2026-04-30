@@ -14,7 +14,8 @@ router.get('/me', protect, getMyProfile);
 router.patch('/:id/photo', protect, upload.single('profilePhoto'), updateMemberPhoto);
 
 // Leader/SuperAdmin routes
-router.get('/', protect, leaderOrSuperAdmin, getAllMembers);
+// Member directory & admin list
+router.get('/', protect, getAllMembers);
 router.get('/:id', protect, getMemberById);
 
 // Write operations — leaders need approved session

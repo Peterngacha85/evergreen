@@ -7,9 +7,15 @@ const cloudinary = require('../config/cloudinary');
 // @access Leader + SuperAdmin
 const getAllMembers = async (req, res) => {
   try {
-    const members = await Member.find({ isActive: true })
+    const query = Member.find({ isActive: true })
       .populate('addedBy', 'name leaderRole')
       .sort({ idNumber: 1 });
+    
+    if (req.role === 'member') {
+      query.select('-password -plainPassword');
+    }
+    
+    const members = await query;
     res.json(members);
   } catch (err) {
     res.status(500).json({ message: err.message });
