@@ -3,7 +3,7 @@ import { getContributionSummary } from '../../api/contributions';
 import { getChangeRequests } from '../../api/changeRequests';
 import { getMembers } from '../../api/members';
 import { useAuth } from '../../context/AuthContext';
-import { Users, TrendingUp, AlertCircle, ShieldCheck, Shield } from 'lucide-react';
+import { Users, TrendingUp, AlertCircle, ShieldCheck, Shield, Eye, EyeOff } from 'lucide-react';
 import StatusBadge from '../../components/common/StatusBadge';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -14,6 +14,7 @@ const LeaderDashboard = () => {
   const [pendingReqs, setPendingReqs] = useState([]);
   const [memberCount, setMemberCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [showPasswords, setShowPasswords] = useState({ current: false, new: false, confirm: false });
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -134,15 +135,30 @@ const LeaderDashboard = () => {
           }} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div className="form-group">
               <label className="form-label">Current Password</label>
-              <input type="password" name="currentPassword" required className="form-input" style={{ background: 'var(--green-50)' }} />
+              <div style={{ position: 'relative' }}>
+                <input type={showPasswords.current ? "text" : "password"} name="currentPassword" required className="form-input" style={{ background: 'var(--green-50)', paddingRight: '40px' }} />
+                <button type="button" onClick={() => setShowPasswords(prev => ({ ...prev, current: !prev.current }))} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}>
+                  {showPasswords.current ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
             <div className="form-group">
               <label className="form-label">New Password</label>
-              <input type="password" name="newPassword" required className="form-input" style={{ background: 'var(--green-50)' }} />
+              <div style={{ position: 'relative' }}>
+                <input type={showPasswords.new ? "text" : "password"} name="newPassword" required className="form-input" style={{ background: 'var(--green-50)', paddingRight: '40px' }} />
+                <button type="button" onClick={() => setShowPasswords(prev => ({ ...prev, new: !prev.new }))} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}>
+                  {showPasswords.new ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
             <div className="form-group">
               <label className="form-label">Confirm New Password</label>
-              <input type="password" name="confirmPassword" required className="form-input" style={{ background: 'var(--green-50)' }} />
+              <div style={{ position: 'relative' }}>
+                <input type={showPasswords.confirm ? "text" : "password"} name="confirmPassword" required className="form-input" style={{ background: 'var(--green-50)', paddingRight: '40px' }} />
+                <button type="button" onClick={() => setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}>
+                  {showPasswords.confirm ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
             <button type="submit" className="btn btn-primary" style={{ marginTop: 8 }}>Update Password</button>
           </form>
