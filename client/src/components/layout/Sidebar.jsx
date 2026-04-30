@@ -17,6 +17,7 @@ const MEMBER_NAV = [
   { to: '/events',          icon: Calendar,        label: 'Events'         },
   { to: '/officials',       icon: Award,           label: 'Officials'      },
   { to: '/claims',          icon: FileText,        label: 'My Claims'      },
+  { to: '/members',         icon: Users,           label: 'Member Directory' },
   { to: '/rules',           icon: BookOpen,        label: 'Community Rules'  },
   { to: '/funds',           icon: Landmark,        label: 'Funds Available' },
   { to: '/mission-vision',  icon: Info,            label: 'Mission & Vision' },
