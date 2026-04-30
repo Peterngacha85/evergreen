@@ -23,6 +23,7 @@ const MEMBER_NAV = [
   { to: '/mission-vision',  icon: Info,            label: 'Mission & Vision' },
   { to: '/expenses',        icon: Receipt,         label: 'Expenses'        },
   { to: '/archive',          icon: Archive,         label: 'Archive'         },
+  { to: '/security',         icon: Shield,          label: 'Security'        },
 ];
 
 const LEADER_NAV = [
@@ -39,6 +40,7 @@ const LEADER_NAV = [
   { to: '/mission-vision',        icon: Info,                label: 'Mission & Vision' },
   { to: '/leader/expenses',       icon: Receipt,             label: 'Expenses'        },
   { to: '/leader/archive',         icon: Archive,             label: 'Archive'         },
+  { to: '/leader/security',        icon: Shield,              label: 'Security'        },
 ];
 
 const SUPERADMIN_NAV = [
@@ -55,6 +57,7 @@ const SUPERADMIN_NAV = [
   { to: '/mission-vision',        icon: Info,                label: 'Mission & Vision' },
   { to: '/leader/expenses',       icon: Receipt,             label: 'Expenses'        },
   { to: '/leader/archive',         icon: Archive,             label: 'Archive'         },
+  { to: '/leader/security',        icon: Shield,              label: 'Security'        },
   { to: '/leader/manage-leaders', icon: Shield,              label: 'Manage Leaders'   },
 ];
 

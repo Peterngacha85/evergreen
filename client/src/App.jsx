@@ -35,6 +35,7 @@ import MissionVisionPage from './pages/common/MissionVisionPage';
 import FundsAvailablePage from './pages/common/FundsAvailablePage';
 import ContributionArchivePage from './pages/common/ContributionArchivePage';
 import ExpensesPage from './pages/common/ExpensesPage';
+import SecurityPage from './pages/common/SecurityPage';
 
 function App() {
   return (
@@ -62,6 +63,7 @@ function App() {
             <Route path="/mission-vision" element={<MissionVisionPage />} />
             <Route path="/expenses" element={<ExpensesPage />} />
             <Route path="/archive" element={<ContributionArchivePage />} />
+            <Route path="/security" element={<SecurityPage />} />
           </Route>
 
           {/* Leader/SuperAdmin Protected Routes */}
@@ -82,6 +84,7 @@ function App() {
             <Route path="/leader/funds" element={<FundsAvailablePage />} />
             <Route path="/leader/expenses" element={<ExpensesPage />} />
             <Route path="/leader/archive" element={<ContributionArchivePage />} />
+            <Route path="/leader/security" element={<SecurityPage />} />
             <Route path="/leader/manage-leaders" element={<SuperAdminRoute><ManageLeadersPage /></SuperAdminRoute>} />
           </Route>
           
