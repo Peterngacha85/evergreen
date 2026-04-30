@@ -104,8 +104,6 @@ const LeaderDashboard = () => {
             <Link to="/leader/claims" className="btn btn-outline w-full" style={{ justifyContent: 'flex-start' }}>Process Claims</Link>
           </div>
         </div>
-
-        </div>
       </div>
     </div>
   );
