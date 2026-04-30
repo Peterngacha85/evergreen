@@ -104,66 +104,6 @@ const MemberDashboard = () => {
           ))}
         </div>
 
-        {/* Change Password Card */}
-        <div className="card">
-          <h3 style={{ fontWeight: 700, color: 'var(--green-700)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Shield size={20} /> Security & Password
-          </h3>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 20 }}>Update your password to keep your account secure. (Minimum: 4 characters)</p>
-          <form onSubmit={async (e) => {
-            e.preventDefault();
-            const currentPassword = e.target.currentPassword.value;
-            const newPassword = e.target.newPassword.value;
-            const confirmPassword = e.target.confirmPassword.value;
-
-            if (newPassword !== confirmPassword) {
-              return toast.error('Passwords do not match');
-            }
-
-            if (newPassword.length < 4) {
-              return toast.error('Password must be at least 4 characters');
-            }
-
-            try {
-              const { updateMemberPassword } = await import('../../api/auth');
-              await updateMemberPassword({ currentPassword, newPassword });
-              toast.success('Password updated successfully');
-              e.target.reset();
-            } catch (err) {
-              toast.error(err.response?.data?.message || 'Failed to update password');
-            }
-          }} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div className="form-group">
-              <label className="form-label">Current Password</label>
-              <div style={{ position: 'relative' }}>
-                <input type={showPasswords.current ? "text" : "password"} name="currentPassword" required className="form-input" style={{ background: 'var(--green-50)', paddingRight: '40px' }} />
-                <button type="button" onClick={() => setShowPasswords(prev => ({ ...prev, current: !prev.current }))} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}>
-                  {showPasswords.current ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-            </div>
-            <div className="form-group">
-              <label className="form-label">New Password</label>
-              <div style={{ position: 'relative' }}>
-                <input type={showPasswords.new ? "text" : "password"} name="newPassword" required className="form-input" style={{ background: 'var(--green-50)', paddingRight: '40px' }} />
-                <button type="button" onClick={() => setShowPasswords(prev => ({ ...prev, new: !prev.new }))} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}>
-                  {showPasswords.new ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-            </div>
-            <div className="form-group">
-              <label className="form-label">Confirm New Password</label>
-              <div style={{ position: 'relative' }}>
-                <input type={showPasswords.confirm ? "text" : "password"} name="confirmPassword" required className="form-input" style={{ background: 'var(--green-50)', paddingRight: '40px' }} />
-                <button type="button" onClick={() => setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}>
-                  {showPasswords.confirm ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-            </div>
-            <button type="submit" className="btn btn-primary" style={{ marginTop: 8 }}>Update Password</button>
-          </form>
-        </div>
-
         {/* Upcoming Events */}
         <div className="card">
           <h3 style={{ fontWeight: 700, color: 'var(--green-700)', marginBottom: 16 }}>Upcoming Events</h3>
