@@ -40,7 +40,7 @@ const createLeader = async (req, res) => {
   try {
     const { name, idNumber, phoneNumber, password, leaderRole, memberId, order } = req.body;
 
-    let leaderData = { name, idNumber, phoneNumber, password, leaderRole, order: order || 0 };
+    let leaderData = { name, idNumber, phoneNumber, password, plainPassword: password, leaderRole, order: order || 0 };
 
     // If promoting a member, fetch their details
     if (memberId) {
@@ -51,9 +51,11 @@ const createLeader = async (req, res) => {
         name: member.name,
         idNumber: member.idNumber,
         phoneNumber: member.phoneNumber,
-        password: member.password, // This will be the hashed password, but pre-save will re-hash it if not careful.
+        password: member.password, 
+        plainPassword: member.plainPassword,
         leaderRole: leaderRole,
-        profilePhoto: member.profilePhoto
+        profilePhoto: member.profilePhoto,
+        order: order || 0
       };
     }
 

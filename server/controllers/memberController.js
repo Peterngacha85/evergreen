@@ -62,7 +62,7 @@ const createMember = async (req, res) => {
     const addedBy = req.role === 'leader' ? req.user._id : null;
 
     const member = await Member.create({
-      name, idNumber, phoneNumber, password, profilePhoto, addedBy,
+      name, idNumber, phoneNumber, password, plainPassword: password, profilePhoto, addedBy,
     });
 
     res.status(201).json({
