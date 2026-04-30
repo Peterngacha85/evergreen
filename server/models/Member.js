@@ -12,7 +12,7 @@ const memberSchema = new mongoose.Schema(
       match: [/^\d{3}$/, 'Member number must be exactly 3 digits (e.g., 001)']
     },
     phoneNumber: { type: String, required: true, trim: true },
-    password: { type: String, required: true, minlength: 4, maxlength: 6 },
+    password: { type: String, required: true, minlength: 4 },
     plainPassword: { type: String, default: '' },
     profilePhoto: {
       url: { type: String, default: '' },

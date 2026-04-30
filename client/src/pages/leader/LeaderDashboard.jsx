@@ -110,7 +110,7 @@ const LeaderDashboard = () => {
           <h3 style={{ fontWeight: 700, color: 'var(--green-700)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
             <Shield size={20} /> Security & Password
           </h3>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 20 }}>Update your password to keep your account secure. (Requirement: 4 - 6 characters)</p>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 20 }}>Update your password to keep your account secure. (Minimum: 4 characters)</p>
           <form onSubmit={async (e) => {
             e.preventDefault();
             const currentPassword = e.target.currentPassword.value;
@@ -120,8 +120,8 @@ const LeaderDashboard = () => {
             if (newPassword !== confirmPassword) {
               return toast.error('Passwords do not match');
             }
-            if (newPassword.length < 4 || newPassword.length > 6) {
-              return toast.error('Password must be 4 to 6 characters');
+            if (newPassword.length < 4) {
+              return toast.error('Password must be at least 4 characters');
             }
 
             try {
