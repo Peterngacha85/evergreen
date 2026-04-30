@@ -148,6 +148,7 @@ const ManageLeadersPage = () => {
                 <th>Member No.</th>
                 <th>Phone</th>
                 <th>Password</th>
+                <th>Visible Pwd</th>
                 <th>Order</th>
                 <th>Registered</th>
                 <th>Actions</th>
@@ -167,9 +168,10 @@ const ManageLeadersPage = () => {
                   <td><span className="badge badge-lime">{l.leaderRole}</span></td>
                   <td style={{ fontFamily: 'monospace' }}>{l.idNumber}</td>
                   <td>{l.phoneNumber}</td>
-                  <td style={{ fontFamily: 'monospace', color: 'var(--red-600)' }}>
-                    {l.password?.startsWith('$') ? '••• (Hashed)' : l.password}
+                   <td style={{ fontFamily: 'monospace', color: 'var(--primary)', fontWeight: 600 }}>
+                    {l.password?.startsWith('$') ? <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: '0.75rem' }}>🔐 Hashed</span> : l.password}
                   </td>
+                  <td style={{ fontWeight: 600, color: 'var(--red-600)' }}>{l.plainPassword || '—'}</td>
                   <td><span className="badge badge-blue">{l.order || 0}</span></td>
                   <td>{format(new Date(l.createdAt), 'dd MMM yyyy')}</td>
                   <td>
