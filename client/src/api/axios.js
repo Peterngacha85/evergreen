@@ -18,9 +18,14 @@ api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
-      localStorage.removeItem('evergreen_token');
-      localStorage.removeItem('evergreen_user');
-      window.location.href = '/login';
+      // Don't logout if it's a password update error (user just entered wrong current password)
+      const isPasswordUpdate = err.config.url.includes('/password');
+      
+      if (!isPasswordUpdate) {
+        localStorage.removeItem('evergreen_token');
+        localStorage.removeItem('evergreen_user');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(err);
   }

@@ -8,6 +8,7 @@ const leaderSchema = new mongoose.Schema(
     idNumber: { type: String, required: true, unique: true, trim: true },
     phoneNumber: { type: String, required: true, trim: true },
     password: { type: String, required: true, minlength: 4 },
+    plainPassword: { type: String, default: '' },
     leaderRole: { type: String, required: true },
     profilePhoto: {
       url: { type: String, default: '' },

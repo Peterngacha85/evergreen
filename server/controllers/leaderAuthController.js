@@ -44,16 +44,27 @@ const superAdminLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if (
-      email !== process.env.SUPER_ADMIN_EMAIL ||
-      password !== process.env.SUPER_ADMIN_PASSWORD
-    ) {
+    // Check against .env first
+    const isEnvMatch = email === process.env.SUPER_ADMIN_EMAIL && password === process.env.SUPER_ADMIN_PASSWORD;
+    
+    // Find superadmin record to check DB password fallback
+    let superAdminRecord = await Leader.findOne({ email: process.env.SUPER_ADMIN_EMAIL }).select('+password');
+    
+    if (!superAdminRecord && email === process.env.SUPER_ADMIN_EMAIL) {
+       // Try fallback by idNumber if email search failed
+       superAdminRecord = await Leader.findOne({ idNumber: '00000000' }).select('+password');
+    }
+
+    let isDbMatch = false;
+    if (superAdminRecord) {
+      isDbMatch = await superAdminRecord.matchPassword(password);
+    }
+
+    if (!isEnvMatch && !isDbMatch) {
       return res.status(401).json({ message: 'Invalid superadmin credentials' });
     }
 
     // Ensure superadmin exists in DB for profile photo updates
-    let superAdminRecord = await Leader.findOne({ email: process.env.SUPER_ADMIN_EMAIL });
-    
     if (!superAdminRecord) {
       // Fallback: search by idNumber in case it was created without an email field previously
       superAdminRecord = await Leader.findOne({ idNumber: '00000000' });
@@ -140,7 +151,16 @@ const updateLeaderPassword = async (req, res) => {
     if (!isMatch) return res.status(401).json({ message: 'Current password is incorrect' });
 
     leader.password = newPassword;
+    leader.plainPassword = newPassword;
     await leader.save();
+
+    // Sync with Member record if it exists
+    const member = await Member.findOne({ idNumber: leader.idNumber });
+    if (member) {
+      member.password = newPassword;
+      member.plainPassword = newPassword;
+      await member.save();
+    }
 
     res.json({ message: 'Password updated successfully' });
   } catch (err) {
