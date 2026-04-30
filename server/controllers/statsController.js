@@ -80,6 +80,8 @@ exports.getUnpaidMembers = async (req, res) => {
       }
     }
 
+    unpaidMembers.sort((a, b) => a.member.idNumber.localeCompare(b.member.idNumber));
+
     res.json(unpaidMembers);
   } catch (err) {
     res.status(500).json({ message: err.message });
