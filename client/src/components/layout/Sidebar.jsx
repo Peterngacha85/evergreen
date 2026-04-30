@@ -23,7 +23,7 @@ const MEMBER_NAV = [
   { to: '/mission-vision',  icon: Info,            label: 'Mission & Vision' },
   { to: '/expenses',        icon: Receipt,         label: 'Expenses'        },
   { to: '/archive',          icon: Archive,         label: 'Archive'         },
-  { to: '/security',         icon: Shield,          label: 'Security'        },
+  { to: '/security',         icon: Shield,          label: 'Security & Password' },
 ];
 
 const LEADER_NAV = [
