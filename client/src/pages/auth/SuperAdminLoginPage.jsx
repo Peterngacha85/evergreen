@@ -70,6 +70,12 @@ const SuperAdminLoginPage = () => {
               {loading ? 'Authenticating…' : 'Access System'}
             </button>
           </form>
+          
+          {/* Copyright */}
+          <div style={{ marginTop: 40, opacity: 0.5, fontSize: '0.7rem', textAlign: 'center' }}>
+            &copy; {new Date().getFullYear()} Evergreen Community. <br/>
+            Developed by <a href="https://fastweb.co.ke" target="_blank" rel="noopener noreferrer" style={{ color: '#111827', textDecoration: 'underline', fontWeight: 600 }}>Fastweb Technologies</a>
+          </div>
         </div>
       </div>
     </div>

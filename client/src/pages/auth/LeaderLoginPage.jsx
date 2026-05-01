@@ -44,6 +44,12 @@ const LeaderLoginPage = () => {
             All write operations require<br />approval from all other leaders.
           </div>
         </div>
+
+        {/* Copyright */}
+        <div style={{ marginTop: 'auto', paddingTop: 40, opacity: 0.6, fontSize: '0.75rem', textAlign: 'center' }}>
+          &copy; {new Date().getFullYear()} Evergreen Community. <br/>
+          Developed by <a href="https://fastweb.co.ke" target="_blank" rel="noopener noreferrer" style={{ color: '#fff', textDecoration: 'underline', fontWeight: 600 }}>Fastweb Technologies</a>
+        </div>
       </div>
 
       {/* Form */}
