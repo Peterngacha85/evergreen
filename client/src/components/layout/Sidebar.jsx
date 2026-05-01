@@ -232,6 +232,22 @@ const Sidebar = ({ isOpen, onClose }) => {
         >
           {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
         </button>
+
+        {/* Copyright */}
+        {!collapsed && (
+          <div style={{ 
+            padding: '12px', 
+            fontSize: '0.65rem', 
+            color: 'var(--sidebar-text)', 
+            opacity: 0.5, 
+            textAlign: 'center',
+            borderTop: '1px solid rgba(255,255,255,0.05)',
+            marginTop: 8
+          }}>
+            &copy; {new Date().getFullYear()} Evergreen Community. <br/>
+            Dev by <a href="https://fastweb.co.ke" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--sidebar-active)', fontWeight: 600 }}>Fastweb Technologies</a>
+          </div>
+        )}
       </div>
     </aside>
   );
