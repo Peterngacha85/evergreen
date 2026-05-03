@@ -8,7 +8,7 @@ const Expense = require('../models/Expense');
 // @access  Private/Leader
 exports.getFundsOverview = async (req, res) => {
   try {
-    const [totalContributions, totalClaimsPaid] = await Promise.all([
+    const [totalContributions, totalClaimsPaid, totalExpenses] = await Promise.all([
       Contribution.aggregate([
         { $group: { _id: null, total: { $sum: "$amount" } } }
       ]),

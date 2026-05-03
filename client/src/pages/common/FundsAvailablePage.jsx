@@ -11,6 +11,7 @@ const LeaderFundsPage = () => {
   }, []);
 
   if (loading) return <div className="flex justify-center" style={{ paddingTop: 80 }}><div className="spinner" /></div>;
+  if (!stats) return <div className="flex justify-center" style={{ paddingTop: 80 }}><div className="card">Failed to load financial data. Please try again later.</div></div>;
 
   const lastUpdated = new Date().toLocaleString('en-GB', { 
     day: 'numeric', 
