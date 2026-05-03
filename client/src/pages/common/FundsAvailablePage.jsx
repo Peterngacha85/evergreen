@@ -112,30 +112,30 @@ const LeaderFundsPage = () => {
             <div>
               <div className="flex justify-between mb-4" style={{ fontSize: '0.95rem' }}>
                 <span className="flex items-center gap-3"><div style={{ width: 12, height: 12, borderRadius: 3, background: '#dc2626' }} /> Outflow (Claims)</span>
-                <span style={{ fontWeight: 800 }}>{((stats.totalOutClaims / stats.totalIn) * 100).toFixed(1)}%</span>
+                <span style={{ fontWeight: 800 }}>{stats.totalIn > 0 ? ((stats.totalOutClaims / stats.totalIn) * 100).toFixed(1) : '0.0'}%</span>
               </div>
               <div style={{ height: 12, background: 'var(--gray-100)', borderRadius: 6, overflow: 'hidden' }}>
-                <div style={{ width: `${(stats.totalOutClaims / stats.totalIn) * 100}%`, height: '100%', background: '#dc2626' }} />
+                <div style={{ width: `${stats.totalIn > 0 ? (stats.totalOutClaims / stats.totalIn) * 100 : 0}%`, height: '100%', background: '#dc2626' }} />
               </div>
             </div>
 
             <div>
               <div className="flex justify-between mb-4" style={{ fontSize: '0.95rem' }}>
                 <span className="flex items-center gap-3"><div style={{ width: 12, height: 12, borderRadius: 3, background: '#f97316' }} /> Outflow (Expenses)</span>
-                <span style={{ fontWeight: 800 }}>{((stats.totalOutExpenses / stats.totalIn) * 100).toFixed(1)}%</span>
+                <span style={{ fontWeight: 800 }}>{stats.totalIn > 0 ? ((stats.totalOutExpenses / stats.totalIn) * 100).toFixed(1) : '0.0'}%</span>
               </div>
               <div style={{ height: 12, background: 'var(--gray-100)', borderRadius: 6, overflow: 'hidden' }}>
-                <div style={{ width: `${(stats.totalOutExpenses / stats.totalIn) * 100}%`, height: '100%', background: '#f97316' }} />
+                <div style={{ width: `${stats.totalIn > 0 ? (stats.totalOutExpenses / stats.totalIn) * 100 : 0}%`, height: '100%', background: '#f97316' }} />
               </div>
             </div>
 
             <div>
               <div className="flex justify-between mb-4" style={{ fontSize: '0.95rem' }}>
                 <span className="flex items-center gap-3"><div style={{ width: 12, height: 12, borderRadius: 3, background: 'var(--green-600)' }} /> Reserve (Available)</span>
-                <span style={{ fontWeight: 800 }}>{((stats.balance / stats.totalIn) * 100).toFixed(1)}%</span>
+                <span style={{ fontWeight: 800 }}>{stats.totalIn > 0 ? ((stats.balance / stats.totalIn) * 100).toFixed(1) : '0.0'}%</span>
               </div>
               <div style={{ height: 12, background: 'var(--gray-100)', borderRadius: 6, overflow: 'hidden' }}>
-                <div style={{ width: `${(stats.balance / stats.totalIn) * 100}%`, height: '100%', background: 'var(--green-600)' }} />
+                <div style={{ width: `${stats.totalIn > 0 ? (stats.balance / stats.totalIn) * 100 : 0}%`, height: '100%', background: 'var(--green-600)' }} />
               </div>
             </div>
           </div>
