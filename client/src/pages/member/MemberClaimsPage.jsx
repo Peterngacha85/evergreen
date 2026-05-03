@@ -44,7 +44,7 @@ const MemberClaimsPage = () => {
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{c.description}</div>
                   </td>
                   <td><span className="badge badge-gray">{c.claimType}</span></td>
-                  <td style={{ fontWeight: 700 }}>KES {c.amount.toLocaleString()}</td>
+                  <td style={{ fontWeight: 700 }}>₪ {c.amount.toLocaleString()}</td>
                   <td><StatusBadge status={c.status} /></td>
                   <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{c.notes || '—'}</td>
                 </tr>

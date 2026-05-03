@@ -118,7 +118,7 @@ const LeaderUnpaidPage = () => {
                     {d.lastDate ? format(new Date(d.lastDate), 'dd MMM yyyy') : <span style={{ color: 'var(--red-500)', fontWeight: 600 }}>Never</span>}
                   </td>
                   <td style={{ fontWeight: 600 }}>
-                    {d.amount ? `KES ${d.amount.toLocaleString()}` : '—'}
+                    {d.amount ? `₪ ${d.amount.toLocaleString()}` : '—'}
                   </td>
                   <td>
                     <span className="badge" style={{ background: d.daysSince === 'Never' ? 'var(--red-100)' : 'var(--orange-100)', color: d.daysSince === 'Never' ? 'var(--red-700)' : 'var(--orange-700)' }}>
@@ -158,12 +158,12 @@ const LeaderUnpaidPage = () => {
             </select>
           </div>
           <div className="form-group">
-            <label className="form-label">Amount (KES)</label>
+            <label className="form-label">Amount (₪)</label>
             <input type="number" className="form-input" required min="1" value={payForm.amount} onChange={e => setPayForm({...payForm, amount: e.target.value})} />
           </div>
           <div className="form-group">
             <label className="form-label">Notes (Optional)</label>
-            <input type="text" className="form-input" value={payForm.description} onChange={e => setPayForm({...payForm, description: e.target.value})} placeholder="e.g. Paid via M-Pesa" />
+            <input type="text" className="form-input" value={payForm.description} onChange={e => setPayForm({...payForm, description: e.target.value})} placeholder="e.g. Bank Transfer or Bit" />
           </div>
           <div className="flex justify-between" style={{ marginTop: 16 }}>
             <button type="button" className="btn btn-ghost" onClick={() => setIsPayModalOpen(false)}>Cancel</button>

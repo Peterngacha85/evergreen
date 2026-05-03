@@ -252,7 +252,7 @@ const LeaderClaimsPage = () => {
                     <div style={{ fontWeight: 600 }}>{c.title} <span className="badge badge-gray ml-2">{c.claimType}</span></div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{c.description?.substring(0, 50)}...</div>
                   </td>
-                  <td style={{ fontWeight: 700 }}>KES {c.amount.toLocaleString()}</td>
+                  <td style={{ fontWeight: 700 }}>₪ {c.amount.toLocaleString()}</td>
                   <td><StatusBadge status={c.status} /></td>
                   <td>
                     <div className="flex gap-2">
@@ -292,7 +292,7 @@ const LeaderClaimsPage = () => {
             </select>
           </div>
           <div className="form-group">
-            <label className="form-label">Amount (KES)</label>
+            <label className="form-label">Amount (₪)</label>
             <input type="number" className="form-input" required min="1" value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})} />
           </div>
           <div className="form-group">
@@ -312,7 +312,7 @@ const LeaderClaimsPage = () => {
           <div style={{ background: 'var(--gray-50)', padding: 16, borderRadius: 'var(--radius-md)' }}>
             <div style={{ fontWeight: 600, marginBottom: 4 }}>{activeClaim?.title}</div>
             <div style={{ fontSize: '0.85rem' }}>For: {activeClaim?.member?.name}</div>
-            <div style={{ fontWeight: 700, marginTop: 8 }}>Amount: KES {activeClaim?.amount?.toLocaleString()}</div>
+            <div style={{ fontWeight: 700, marginTop: 8 }}>Amount: ₪ {activeClaim?.amount?.toLocaleString()}</div>
           </div>
           
           <div className="form-group" style={{ marginTop: 12 }}>

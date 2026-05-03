@@ -248,7 +248,7 @@ const LeaderContributionsPage = () => {
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{c.member?.idNumber}</div>
                   </td>
                   <td><span className="badge badge-green">{c.category}</span></td>
-                  <td style={{ fontWeight: 700, color: 'var(--green-700)' }}>KES {c.amount.toLocaleString()}</td>
+                  <td style={{ fontWeight: 700, color: 'var(--green-700)' }}>₪ {c.amount.toLocaleString()}</td>
                   <td>{format(new Date(c.datePaid), 'dd MMM yyyy')}</td>
                   <td style={{ fontSize: '0.8rem' }}>{c.recordedBy?.name}</td>
                   <td>
@@ -286,7 +286,7 @@ const LeaderContributionsPage = () => {
             </select>
           </div>
           <div className="form-group">
-            <label className="form-label">Amount (KES)</label>
+            <label className="form-label">Amount (₪)</label>
             <input type="number" className="form-input" required min="1" value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})} />
           </div>
           <div className="form-group">
