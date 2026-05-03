@@ -26,7 +26,7 @@ const MemberContributions = () => {
         </div>
         <div style={{ background: 'var(--green-50)', border: '2px solid var(--green-200)', borderRadius: 'var(--radius-lg)', padding: '12px 20px', textAlign: 'right' }}>
           <div style={{ fontSize: '0.75rem', color: 'var(--green-600)', fontWeight: 600 }}>Total</div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--green-700)' }}>KES {total.toLocaleString()}</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--green-700)' }}>₪ {total.toLocaleString()}</div>
         </div>
       </div>
 
@@ -47,7 +47,7 @@ const MemberContributions = () => {
                 <th>Category</th>
                 <th>Description</th>
                 <th>Date Paid</th>
-                <th>Amount (KES)</th>
+                <th>Amount (₪)</th>
                 <th>Recorded By</th>
               </tr>
             </thead>
@@ -60,7 +60,7 @@ const MemberContributions = () => {
                   <td><span className="badge badge-green">{c.category}</span></td>
                   <td>{c.description || '—'}</td>
                   <td>{format(new Date(c.datePaid), 'dd MMM yyyy')}</td>
-                  <td style={{ fontWeight: 700, color: 'var(--green-600)' }}>KES {c.amount.toLocaleString()}</td>
+                  <td style={{ fontWeight: 700, color: 'var(--green-600)' }}>₪ {c.amount.toLocaleString()}</td>
                   <td style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
                     {c.recordedBy?.name} <span style={{ fontSize: '0.72rem' }}>({c.recordedBy?.leaderRole})</span>
                   </td>

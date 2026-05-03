@@ -133,7 +133,7 @@ const ExpensesPage = () => {
           </div>
           <div>
             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>Total Expenses</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--gray-800)' }}>KES {totalExpenses.toLocaleString()}</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--gray-800)' }}>₪ {totalExpenses.toLocaleString()}</div>
           </div>
         </div>
         <div className="card flex items-center gap-4" style={{ borderLeft: '4px solid var(--blue-500)' }}>
@@ -190,7 +190,7 @@ const ExpensesPage = () => {
                     {exp.description && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{exp.description}</div>}
                   </td>
                   <td><span className="badge badge-blue">{exp.category}</span></td>
-                  <td style={{ fontWeight: 800, color: '#ef4444' }}>- KES {exp.amount.toLocaleString()}</td>
+                  <td style={{ fontWeight: 800, color: '#ef4444' }}>- ₪ {exp.amount.toLocaleString()}</td>
                   <td><div style={{ fontSize: '0.85rem' }}>{exp.addedBy}</div></td>
                   {!isMember && (
                     <td>
@@ -216,7 +216,7 @@ const ExpensesPage = () => {
           
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <div className="form-group">
-              <label className="form-label">Amount (KES)</label>
+              <label className="form-label">Amount (₪)</label>
               <input type="number" className="form-input" required value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})} placeholder="0.00" />
             </div>
             <div className="form-group">

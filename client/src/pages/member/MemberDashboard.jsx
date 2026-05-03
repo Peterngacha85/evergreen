@@ -62,7 +62,7 @@ const MemberDashboard = () => {
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: '0.78rem', opacity: 0.75 }}>Your Total Contributions</div>
-          <div style={{ fontSize: '2rem', fontWeight: 800 }}>KES {myTotal.toLocaleString()}</div>
+          <div style={{ fontSize: '2rem', fontWeight: 800 }}>₪ {myTotal.toLocaleString()}</div>
         </div>
       </div>
 
@@ -74,7 +74,7 @@ const MemberDashboard = () => {
         </div>
         <div className="stat-card">
           <div className="stat-icon stat-icon-lime"><Wallet size={22} /></div>
-          <div><div className="stat-value">KES {(summary?.grandTotal || 0).toLocaleString()}</div><div className="stat-label">Total Welfare Fund</div></div>
+          <div><div className="stat-value">₪ {(summary?.grandTotal || 0).toLocaleString()}</div><div className="stat-label">Total Welfare Fund</div></div>
         </div>
         <div className="stat-card">
           <div className="stat-icon stat-icon-blue"><Calendar size={22} /></div>
@@ -99,7 +99,7 @@ const MemberDashboard = () => {
                 <div style={{ fontWeight: 600, fontSize: '0.88rem' }}>{c.category}</div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{format(new Date(c.datePaid), 'dd MMM yyyy')}</div>
               </div>
-              <div style={{ fontWeight: 700, color: 'var(--green-600)' }}>KES {c.amount.toLocaleString()}</div>
+              <div style={{ fontWeight: 700, color: 'var(--green-600)' }}>₪ {c.amount.toLocaleString()}</div>
             </div>
           ))}
         </div>

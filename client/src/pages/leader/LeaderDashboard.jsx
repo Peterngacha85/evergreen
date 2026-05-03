@@ -63,7 +63,7 @@ const LeaderDashboard = () => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20, marginBottom: 28 }}>
         <div className="stat-card">
           <div className="stat-icon stat-icon-green"><TrendingUp size={24} /></div>
-          <div><div className="stat-value">KES {(summary?.grandTotal || 0).toLocaleString()}</div><div className="stat-label">Total Funds Managed</div></div>
+          <div><div className="stat-value">₪ {(summary?.grandTotal || 0).toLocaleString()}</div><div className="stat-label">Total Funds Managed</div></div>
         </div>
         <div className="stat-card">
           <div className="stat-icon stat-icon-blue"><Users size={24} /></div>
@@ -87,7 +87,7 @@ const LeaderDashboard = () => {
                   <div style={{ fontWeight: 600 }}>{item._id}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{item.count} records</div>
-                    <div style={{ fontWeight: 700, color: 'var(--green-600)', minWidth: 100, textAlign: 'right' }}>KES {item.total.toLocaleString()}</div>
+                    <div style={{ fontWeight: 700, color: 'var(--green-600)', minWidth: 100, textAlign: 'right' }}>₪ {item.total.toLocaleString()}</div>
                   </div>
                 </div>
               ))}

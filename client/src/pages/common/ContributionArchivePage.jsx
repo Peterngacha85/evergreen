@@ -65,7 +65,7 @@ const ContributionArchivePage = () => {
         </div>
         <div style={{ background: 'var(--green-50)', border: '2px solid var(--green-200)', borderRadius: 'var(--radius-lg)', padding: '12px 20px', textAlign: 'right' }}>
           <div style={{ fontSize: '0.75rem', color: 'var(--green-600)', fontWeight: 600 }}>Total ({filtered.length} records)</div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--green-700)' }}>KES {totalAmount.toLocaleString()}</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--green-700)' }}>₪ {totalAmount.toLocaleString()}</div>
         </div>
       </div>
 
@@ -76,7 +76,7 @@ const ContributionArchivePage = () => {
             <div key={cat} className="stat-card" style={{ padding: '14px 16px' }}>
               <div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>{cat}</div>
-                <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--green-700)' }}>KES {total.toLocaleString()}</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--green-700)' }}>₪ {total.toLocaleString()}</div>
               </div>
             </div>
           ))}
@@ -141,7 +141,7 @@ const ContributionArchivePage = () => {
                     <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{c.member?.idNumber}</div>
                   </td>
                   <td><span className="badge badge-green">{c.category}</span></td>
-                  <td style={{ fontWeight: 700, color: 'var(--green-700)' }}>KES {c.amount.toLocaleString()}</td>
+                  <td style={{ fontWeight: 700, color: 'var(--green-700)' }}>₪ {c.amount.toLocaleString()}</td>
                   <td>{format(new Date(c.datePaid), 'dd MMM yyyy')}</td>
                   <td style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{c.description || '—'}</td>
                   <td style={{ fontSize: '0.82rem' }}>{c.recordedBy?.name}</td>

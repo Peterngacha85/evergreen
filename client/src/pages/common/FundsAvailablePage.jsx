@@ -76,7 +76,7 @@ const LeaderFundsPage = () => {
             <div>
               <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{card.label}</div>
               <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--gray-900)', letterSpacing: '-0.03em' }}>
-                {card.noKes ? '' : 'KES '}{card.value.toLocaleString()}
+                {card.noKes ? '' : '₪ '}{card.value.toLocaleString()}
               </div>
 
               {stats.pendingClaims > 0 && card.label === 'Current Balance' && (
@@ -174,7 +174,7 @@ const LeaderFundsPage = () => {
             width: '100%'
           }}>
             <div style={{ fontSize: '0.85rem', opacity: 0.7, textTransform: 'uppercase', letterSpacing: 3, fontWeight: 700, marginBottom: 12 }}>Total Available Reserve</div>
-            <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--green-300)', letterSpacing: '-0.02em' }}>KES {stats.balance.toLocaleString()}</div>
+            <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--green-300)', letterSpacing: '-0.02em' }}>₪ {stats.balance.toLocaleString()}</div>
           </div>
         </div>
       </div>
