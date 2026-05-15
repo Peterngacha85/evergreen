@@ -20,6 +20,7 @@ const MEMBER_NAV = [
   { to: '/members',         icon: Users,           label: 'Member Directory' },
   { to: '/rules',           icon: BookOpen,        label: 'Community Rules'  },
   { to: '/funds',           icon: Landmark,        label: 'Funds Available' },
+  { to: '/unpaid',          icon: UserX,           label: 'Unpaid Members'   },
   { to: '/emergency-kit',   icon: Activity,        label: 'Emergency Kit'    },
   { to: '/mission-vision',  icon: Info,            label: 'Mission & Vision' },
   { to: '/expenses',        icon: Receipt,         label: 'Expenses'        },

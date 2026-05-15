@@ -61,6 +61,7 @@ function App() {
             <Route path="/members" element={<MemberListPage />} />
             <Route path="/rules" element={<MemberRulesPage />} />
             <Route path="/funds" element={<FundsAvailablePage />} />
+            <Route path="/unpaid" element={<LeaderUnpaidPage />} />
             <Route path="/emergency-kit" element={<EmergencyKitPage />} />
             <Route path="/mission-vision" element={<MissionVisionPage />} />
             <Route path="/expenses" element={<ExpensesPage />} />
