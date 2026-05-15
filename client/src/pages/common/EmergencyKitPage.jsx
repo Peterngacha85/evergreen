@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react';
 import { getFundsOverview } from '../../api/stats';
-import { Activity, ArrowUpCircle, ShieldAlert, Receipt } from 'lucide-react';
+import { Activity, ArrowUpCircle, ShieldAlert, Receipt, Edit, DollarSign } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 const EmergencyKitPage = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const { isMember } = useAuth();
 
   useEffect(() => {
     getFundsOverview().then(r => setStats(r.data)).catch(console.error).finally(() => setLoading(false));
@@ -26,6 +30,16 @@ const EmergencyKitPage = () => {
           <h1 className="page-title" style={{ fontSize: '2rem' }}>Emergency Kit</h1>
           <p className="page-subtitle" style={{ fontSize: '1rem', marginTop: '8px' }}>Registration & Emergency Fees vs Community Expenses</p>
         </div>
+        {!isMember && (
+          <div style={{ display: 'flex', gap: '12px' }}>
+             <button className="btn btn-ghost" onClick={() => navigate('/leader/contributions')} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+               <DollarSign size={16} /> Manage Fees
+             </button>
+             <button className="btn btn-primary" onClick={() => navigate('/leader/expenses')} style={{ display: 'flex', gap: '8px', alignItems: 'center', background: '#ef4444' }}>
+               <Edit size={16} /> Manage Expenses
+             </button>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-3 gap-8 mb-12">
