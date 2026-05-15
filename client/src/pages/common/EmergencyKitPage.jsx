@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { getFundsOverview } from '../../api/stats';
-import { Landmark, ArrowUpCircle, ArrowDownCircle, Wallet, Users, Clock, Receipt } from 'lucide-react';
+import { Activity, ArrowUpCircle, ShieldAlert, Receipt } from 'lucide-react';
 
-const LeaderFundsPage = () => {
+const EmergencyKitPage = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -13,41 +13,18 @@ const LeaderFundsPage = () => {
   if (loading) return <div className="flex justify-center" style={{ paddingTop: 80 }}><div className="spinner" /></div>;
   if (!stats) return <div className="flex justify-center" style={{ paddingTop: 80 }}><div className="card">Failed to load financial data. Please try again later.</div></div>;
 
-  const lastUpdated = new Date().toLocaleString('en-GB', { 
-    day: 'numeric', 
-    month: 'long', 
-    year: 'numeric', 
-    hour: '2-digit', 
-    minute: '2-digit' 
-  });
-
   const cards = [
-    { label: 'Treasury Balance', value: stats.balance, icon: Wallet, color: 'var(--green-600)', bg: 'var(--green-50)', trend: 'Liquid' },
-    { label: 'Regular Contributions', value: stats.totalIn, icon: ArrowUpCircle, color: '#2563eb', bg: '#eff6ff', trend: 'Inflow' },
-    { label: 'Claims Paid', value: stats.totalOutClaims, icon: ArrowDownCircle, color: '#dc2626', bg: '#fef2f2', trend: 'Outflow' }
+    { label: 'Kit Balance', value: stats.emergencyBalance, icon: ShieldAlert, color: 'var(--blue-600)', bg: 'var(--blue-50)', trend: 'Available' },
+    { label: 'Fees Collected', value: stats.emergencyIn, icon: ArrowUpCircle, color: '#2563eb', bg: '#eff6ff', trend: 'Inflow' },
+    { label: 'Expenses Paid', value: stats.totalOutExpenses, icon: Receipt, color: '#f97316', bg: '#fff7ed', trend: 'Outflow' }
   ];
 
   return (
     <div className="animate-fadein" style={{ paddingBottom: '40px' }}>
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 24, marginBottom: '40px' }}>
         <div>
-          <h1 className="page-title" style={{ fontSize: '2rem' }}>Funds Available</h1>
-          <p className="page-subtitle" style={{ fontSize: '1rem', marginTop: '8px' }}>Real-time financial summary of Evergreen Main Treasury</p>
-        </div>
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: 12, 
-          padding: '10px 20px', 
-          background: 'var(--white)', 
-          borderRadius: 'var(--radius-md)', 
-          border: '1px solid var(--border)',
-          boxShadow: 'var(--shadow-sm)'
-        }}>
-          <Clock size={18} className="text-muted" />
-          <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--gray-700)' }}>
-            As per {lastUpdated}
-          </span>
+          <h1 className="page-title" style={{ fontSize: '2rem' }}>Emergency Kit</h1>
+          <p className="page-subtitle" style={{ fontSize: '1rem', marginTop: '8px' }}>Registration & Emergency Fees vs Community Expenses</p>
         </div>
       </div>
 
@@ -76,15 +53,8 @@ const LeaderFundsPage = () => {
             <div>
               <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{card.label}</div>
               <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--gray-900)', letterSpacing: '-0.03em' }}>
-                {card.noKes ? '' : '₪ '}{card.value.toLocaleString()}
+                ₪ {card.value.toLocaleString()}
               </div>
-
-              {stats.pendingClaims > 0 && card.label === 'Treasury Balance' && (
-                <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 8, color: '#dc2626', fontSize: '0.8rem', fontWeight: 800 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#dc2626', animation: 'pulse 1.5s infinite' }} />
-                  {stats.pendingClaims} PENDING CLAIMS
-                </div>
-              )}
             </div>
           </div>
         ))}
@@ -93,14 +63,14 @@ const LeaderFundsPage = () => {
       <div className="grid grid-2 gap-8">
         <div className="card" style={{ padding: '40px' }}>
           <div className="flex justify-between items-center mb-10">
-            <h3 style={{ margin: 0, fontSize: '1.25rem' }}>Financial Distribution</h3>
-            <div className="badge badge-gray" style={{ padding: '4px 12px' }}>Main Treasury Overview</div>
+            <h3 style={{ margin: 0, fontSize: '1.25rem' }}>Kit Distribution</h3>
+            <div className="badge badge-gray" style={{ padding: '4px 12px' }}>Overview</div>
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
             <div>
               <div className="flex justify-between mb-4" style={{ fontSize: '0.95rem' }}>
-                <span className="flex items-center gap-3"><div style={{ width: 12, height: 12, borderRadius: 3, background: '#2563eb' }} /> Inflow (Contributions)</span>
+                <span className="flex items-center gap-3"><div style={{ width: 12, height: 12, borderRadius: 3, background: '#2563eb' }} /> Inflow (Fees)</span>
                 <span style={{ fontWeight: 800 }}>100%</span>
               </div>
               <div style={{ height: 12, background: 'var(--gray-100)', borderRadius: 6, overflow: 'hidden' }}>
@@ -110,21 +80,21 @@ const LeaderFundsPage = () => {
             
             <div>
               <div className="flex justify-between mb-4" style={{ fontSize: '0.95rem' }}>
-                <span className="flex items-center gap-3"><div style={{ width: 12, height: 12, borderRadius: 3, background: '#dc2626' }} /> Outflow (Claims)</span>
-                <span style={{ fontWeight: 800 }}>{stats.totalIn > 0 ? ((stats.totalOutClaims / stats.totalIn) * 100).toFixed(1) : '0.0'}%</span>
+                <span className="flex items-center gap-3"><div style={{ width: 12, height: 12, borderRadius: 3, background: '#f97316' }} /> Outflow (Expenses)</span>
+                <span style={{ fontWeight: 800 }}>{stats.emergencyIn > 0 ? ((stats.totalOutExpenses / stats.emergencyIn) * 100).toFixed(1) : '0.0'}%</span>
               </div>
               <div style={{ height: 12, background: 'var(--gray-100)', borderRadius: 6, overflow: 'hidden' }}>
-                <div style={{ width: `${stats.totalIn > 0 ? (stats.totalOutClaims / stats.totalIn) * 100 : 0}%`, height: '100%', background: '#dc2626' }} />
+                <div style={{ width: `${stats.emergencyIn > 0 ? (stats.totalOutExpenses / stats.emergencyIn) * 100 : 0}%`, height: '100%', background: '#f97316' }} />
               </div>
             </div>
 
             <div>
               <div className="flex justify-between mb-4" style={{ fontSize: '0.95rem' }}>
-                <span className="flex items-center gap-3"><div style={{ width: 12, height: 12, borderRadius: 3, background: 'var(--green-600)' }} /> Reserve (Available)</span>
-                <span style={{ fontWeight: 800 }}>{stats.totalIn > 0 ? ((stats.balance / stats.totalIn) * 100).toFixed(1) : '0.0'}%</span>
+                <span className="flex items-center gap-3"><div style={{ width: 12, height: 12, borderRadius: 3, background: 'var(--blue-600)' }} /> Reserve (Available)</span>
+                <span style={{ fontWeight: 800 }}>{stats.emergencyIn > 0 ? ((stats.emergencyBalance / stats.emergencyIn) * 100).toFixed(1) : '0.0'}%</span>
               </div>
               <div style={{ height: 12, background: 'var(--gray-100)', borderRadius: 6, overflow: 'hidden' }}>
-                <div style={{ width: `${stats.totalIn > 0 ? (stats.balance / stats.totalIn) * 100 : 0}%`, height: '100%', background: 'var(--green-600)' }} />
+                <div style={{ width: `${stats.emergencyIn > 0 ? (stats.emergencyBalance / stats.emergencyIn) * 100 : 0}%`, height: '100%', background: 'var(--blue-600)' }} />
               </div>
             </div>
           </div>
@@ -136,7 +106,7 @@ const LeaderFundsPage = () => {
           justifyContent: 'center', 
           alignItems: 'center', 
           textAlign: 'center', 
-          background: 'linear-gradient(135deg, var(--green-600), var(--green-800))', 
+          background: 'linear-gradient(135deg, #1e3a8a, #3b82f6)', 
           color: '#fff',
           padding: '60px 40px',
           border: 'none',
@@ -148,11 +118,11 @@ const LeaderFundsPage = () => {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             marginBottom: 24
           }}>
-            <Landmark size={48} style={{ color: 'var(--green-300)' }} />
+            <Activity size={48} style={{ color: '#93c5fd' }} />
           </div>
-          <h2 style={{ color: '#fff', marginBottom: 16, fontSize: '2rem', fontWeight: 800 }}>Evergreen Treasury</h2>
+          <h2 style={{ color: '#fff', marginBottom: 16, fontSize: '2rem', fontWeight: 800 }}>Emergency Kit</h2>
           <p style={{ opacity: 0.85, maxWidth: 360, fontSize: '1.05rem', lineHeight: 1.7 }}>
-            This balance represents the liquid funds available for welfare activities and approved member claims.
+            Funds strictly allocated from Registration and Emergency Fees, utilized for covering operational community expenses.
           </p>
           <div style={{ 
             marginTop: 40, 
@@ -163,8 +133,8 @@ const LeaderFundsPage = () => {
             backdropFilter: 'blur(12px)',
             width: '100%'
           }}>
-            <div style={{ fontSize: '0.85rem', opacity: 0.7, textTransform: 'uppercase', letterSpacing: 3, fontWeight: 700, marginBottom: 12 }}>Total Available Reserve</div>
-            <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--green-300)', letterSpacing: '-0.02em' }}>₪ {stats.balance.toLocaleString()}</div>
+            <div style={{ fontSize: '0.85rem', opacity: 0.7, textTransform: 'uppercase', letterSpacing: 3, fontWeight: 700, marginBottom: 12 }}>Kit Balance</div>
+            <div style={{ fontSize: '2.5rem', fontWeight: 800, color: '#bfdbfe', letterSpacing: '-0.02em' }}>₪ {stats.emergencyBalance.toLocaleString()}</div>
           </div>
         </div>
       </div>
@@ -172,4 +142,4 @@ const LeaderFundsPage = () => {
   );
 };
 
-export default LeaderFundsPage;
+export default EmergencyKitPage;

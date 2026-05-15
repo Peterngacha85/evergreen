@@ -112,7 +112,7 @@ const ExpensesPage = () => {
           <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Receipt size={24} color="var(--red-600)" /> Community Expenses
           </h1>
-          <p className="page-subtitle">Tracking all costs and expenditures of Evergreen Community</p>
+          <p className="page-subtitle">Tracking all costs and expenditures of Evergreen Community (Deducted from Emergency Kit)</p>
         </div>
         {!isMember && (
           <button className="btn btn-primary" onClick={() => handleOpenModal()} style={{ background: '#ef4444', whiteSpace: 'nowrap' }}>
@@ -249,7 +249,7 @@ const ExpensesPage = () => {
         onClose={() => setConfirmDelete({ open: false, id: null })}
         onConfirm={handleDelete}
         title="Delete Expense"
-        message="Are you sure you want to delete this expense record? This will adjust the available funds accordingly."
+        message="Are you sure you want to delete this expense record? This will adjust the Emergency Kit funds accordingly."
         confirmText="Delete Record"
         variant="danger"
         loading={deleting}
