@@ -20,6 +20,7 @@ const PAGE_TITLES = {
   '/rules':                   'Welfare Rules',
   '/leader/rules':            'Rules Management',
   '/leader/unpaid':           'Unpaid Members List',
+  '/unpaid':                  'Unpaid Members List',
   '/mission-vision':          'Mission & Vision',
   '/leader/funds':            'Funds Available',
   '/funds':                   'Funds Available',

@@ -5,6 +5,6 @@ const { protect } = require('../middleware/authMiddleware');
 const { leaderOrSuperAdmin } = require('../middleware/roleMiddleware');
 
 router.get('/funds', protect, getFundsOverview);
-router.get('/unpaid', protect, leaderOrSuperAdmin, getUnpaidMembers);
+router.get('/unpaid', protect, getUnpaidMembers);
 
 module.exports = router;

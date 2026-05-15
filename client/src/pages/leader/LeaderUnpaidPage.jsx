@@ -7,8 +7,10 @@ import Modal from '../../components/common/Modal';
 import { UserX, Phone, AlertCircle, RefreshCw, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
+import { useAuth } from '../../context/AuthContext';
 
 const LeaderUnpaidPage = () => {
+  const { isMember } = useAuth();
   const [unpaid, setUnpaid] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -96,8 +98,8 @@ const LeaderUnpaidPage = () => {
                 <th>Last Contribution</th>
                 <th>Amount</th>
                 <th>Days Since</th>
-                <th>Contact</th>
-                <th>Action</th>
+                {!isMember && <th>Contact</th>}
+                {!isMember && <th>Action</th>}
               </tr>
             </thead>
             <tbody>
@@ -125,21 +127,25 @@ const LeaderUnpaidPage = () => {
                       {d.daysSince} {d.daysSince === 'Never' ? '' : 'days'}
                     </span>
                   </td>
-                  <td>
-                    <div className="flex gap-2">
-                      <a href={`tel:${d.member.phoneNumber}`} className="btn btn-sm btn-ghost btn-icon" title="Call Member"><Phone size={16} /></a>
-                      <button className="btn btn-sm btn-outline">Send Reminder</button>
-                    </div>
-                  </td>
-                  <td>
-                    <button 
-                      className="btn btn-sm btn-primary" 
-                      onClick={() => handleMarkPaid(d.member)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 4 }}
-                    >
-                      <CheckCircle size={14} /> Mark Paid
-                    </button>
-                  </td>
+                  {!isMember && (
+                    <td>
+                      <div className="flex gap-2">
+                        <a href={`tel:${d.member.phoneNumber}`} className="btn btn-sm btn-ghost btn-icon" title="Call Member"><Phone size={16} /></a>
+                        <button className="btn btn-sm btn-outline">Send Reminder</button>
+                      </div>
+                    </td>
+                  )}
+                  {!isMember && (
+                    <td>
+                      <button 
+                        className="btn btn-sm btn-primary" 
+                        onClick={() => handleMarkPaid(d.member)}
+                        style={{ display: 'flex', alignItems: 'center', gap: 4 }}
+                      >
+                        <CheckCircle size={14} /> Mark Paid
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
