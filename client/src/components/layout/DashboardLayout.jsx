@@ -23,6 +23,8 @@ const PAGE_TITLES = {
   '/mission-vision':          'Mission & Vision',
   '/leader/funds':            'Funds Available',
   '/funds':                   'Funds Available',
+  '/emergency-kit':           'Emergency Kit',
+  '/leader/emergency-kit':    'Emergency Kit',
 };
 
 const DashboardLayout = () => {

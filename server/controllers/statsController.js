@@ -8,8 +8,9 @@ const Expense = require('../models/Expense');
 // @access  Private/Leader
 exports.getFundsOverview = async (req, res) => {
   try {
-    const [totalContributions, totalClaimsPaid, totalExpenses] = await Promise.all([
+    const [totalContributions, totalClaimsPaid, totalExpenses, emergencyContributions] = await Promise.all([
       Contribution.aggregate([
+        { $match: { category: { $nin: ['Registration Fee', 'Emergency Fee', 'Registration', 'Emergency'] } } },
         { $group: { _id: null, total: { $sum: "$amount" } } }
       ]),
       Claim.aggregate([
@@ -18,13 +19,20 @@ exports.getFundsOverview = async (req, res) => {
       ]),
       Expense.aggregate([
         { $group: { _id: null, total: { $sum: "$amount" } } }
+      ]),
+      Contribution.aggregate([
+        { $match: { category: { $in: ['Registration Fee', 'Emergency Fee', 'Registration', 'Emergency'] } } },
+        { $group: { _id: null, total: { $sum: "$amount" } } }
       ])
     ]);
 
-    const totalIn = totalContributions[0]?.total || 0;
+    const regularIn = totalContributions[0]?.total || 0;
     const totalOutClaims = totalClaimsPaid[0]?.total || 0;
+    const regularBalance = regularIn - totalOutClaims;
+
+    const emergencyIn = emergencyContributions[0]?.total || 0;
     const totalOutExpenses = totalExpenses[0]?.total || 0;
-    const balance = totalIn - totalOutClaims - totalOutExpenses;
+    const emergencyBalance = emergencyIn - totalOutExpenses;
 
     // Also get counts
     const [memberCount, pendingClaims] = await Promise.all([
@@ -33,11 +41,19 @@ exports.getFundsOverview = async (req, res) => {
     ]);
 
     res.json({
-      totalIn,
+      // Main Fund
+      totalIn: regularIn,
       totalOutClaims,
+      balance: regularBalance,
+      
+      // Emergency Kit Fund
+      emergencyIn,
       totalOutExpenses,
-      totalOut: totalOutClaims + totalOutExpenses,
-      balance,
+      emergencyBalance,
+      
+      // Global stats
+      overallTotalIn: regularIn + emergencyIn,
+      overallTotalOut: totalOutClaims + totalOutExpenses,
       memberCount,
       pendingClaims
     });

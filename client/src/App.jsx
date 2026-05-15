@@ -33,6 +33,7 @@ import LeaderRulesPage from './pages/leader/LeaderRulesPage';
 import LeaderUnpaidPage from './pages/leader/LeaderUnpaidPage';
 import MissionVisionPage from './pages/common/MissionVisionPage';
 import FundsAvailablePage from './pages/common/FundsAvailablePage';
+import EmergencyKitPage from './pages/common/EmergencyKitPage';
 import ContributionArchivePage from './pages/common/ContributionArchivePage';
 import ExpensesPage from './pages/common/ExpensesPage';
 import SecurityPage from './pages/common/SecurityPage';
@@ -60,6 +61,7 @@ function App() {
             <Route path="/members" element={<MemberListPage />} />
             <Route path="/rules" element={<MemberRulesPage />} />
             <Route path="/funds" element={<FundsAvailablePage />} />
+            <Route path="/emergency-kit" element={<EmergencyKitPage />} />
             <Route path="/mission-vision" element={<MissionVisionPage />} />
             <Route path="/expenses" element={<ExpensesPage />} />
             <Route path="/archive" element={<ContributionArchivePage />} />
@@ -82,6 +84,7 @@ function App() {
             <Route path="/leader/rules" element={<LeaderRulesPage />} />
             <Route path="/leader/unpaid" element={<LeaderUnpaidPage />} />
             <Route path="/leader/funds" element={<FundsAvailablePage />} />
+            <Route path="/leader/emergency-kit" element={<EmergencyKitPage />} />
             <Route path="/leader/expenses" element={<ExpensesPage />} />
             <Route path="/leader/archive" element={<ContributionArchivePage />} />
             <Route path="/leader/security" element={<SecurityPage />} />
