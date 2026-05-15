@@ -4,14 +4,20 @@ import { useAuth } from '../../context/AuthContext';
 import { Plus, Receipt, Trash2, Edit2, Search, Calendar as CalendarIcon, DollarSign, Tag } from 'lucide-react';
 import Modal from '../../components/common/Modal';
 import ConfirmModal from '../../components/common/ConfirmModal';
+import AccessRequiredModal from '../../components/common/AccessRequiredModal';
+import { validateSession } from '../../api/changeRequests';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 
 const ExpensesPage = () => {
-  const { isMember } = useAuth();
+  const { isMember, isSuperAdmin } = useAuth();
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  
+  // Access state
+  const [hasAccess, setHasAccess] = useState(false);
+  const [isAccessModalOpen, setIsAccessModalOpen] = useState(false);
   
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -23,8 +29,14 @@ const ExpensesPage = () => {
 
   const fetchExpenses = async () => {
     try {
-      const res = await getExpenses();
+      const [res, sessionRes] = await Promise.all([
+        getExpenses(),
+        !isMember && !isSuperAdmin ? validateSession().catch(() => ({ data: { hasSession: false } })) : Promise.resolve({ data: { hasSession: true } })
+      ]);
       setExpenses(res.data);
+      if (!isMember) {
+        setHasAccess(sessionRes.data.hasSession);
+      }
     } catch (err) {
       toast.error('Failed to load expenses');
     } finally {
@@ -37,6 +49,11 @@ const ExpensesPage = () => {
   }, []);
 
   const handleOpenModal = (expense = null) => {
+    if (!hasAccess && !isSuperAdmin) {
+      setIsAccessModalOpen(true);
+      return;
+    }
+    
     if (expense) {
       setIsEditMode(true);
       setFormData({
@@ -196,7 +213,13 @@ const ExpensesPage = () => {
                     <td>
                       <div className="flex gap-2">
                         <button className="btn btn-icon btn-sm btn-ghost" onClick={() => handleOpenModal(exp)}><Edit2 size={16} /></button>
-                        <button className="btn btn-icon btn-sm btn-ghost" style={{ color: '#ef4444' }} onClick={() => setConfirmDelete({ open: true, id: exp._id })}><Trash2 size={16} /></button>
+                        <button className="btn btn-icon btn-sm btn-ghost" style={{ color: '#ef4444' }} onClick={() => {
+                          if (!hasAccess && !isSuperAdmin) {
+                            setIsAccessModalOpen(true);
+                          } else {
+                            setConfirmDelete({ open: true, id: exp._id });
+                          }
+                        }}><Trash2 size={16} /></button>
                       </div>
                     </td>
                   )}
@@ -253,6 +276,11 @@ const ExpensesPage = () => {
         confirmText="Delete Record"
         variant="danger"
         loading={deleting}
+      />
+
+      <AccessRequiredModal 
+        isOpen={isAccessModalOpen} 
+        onClose={() => setIsAccessModalOpen(false)} 
       />
     </div>
   );
