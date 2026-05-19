@@ -6,9 +6,10 @@ const {
   getAllChangeRequests,
   getChangeRequestById,
   validateActiveSession,
+  deleteChangeRequest,
 } = require('../controllers/changeRequestController');
 const { protect } = require('../middleware/authMiddleware');
-const { leaderOrSuperAdmin } = require('../middleware/roleMiddleware');
+const { leaderOrSuperAdmin, superAdminOnly } = require('../middleware/roleMiddleware');
 
 // Check if current leader has an active approved session
 router.get('/validate', protect, leaderOrSuperAdmin, validateActiveSession);
@@ -24,5 +25,8 @@ router.post('/', protect, leaderOrSuperAdmin, createChangeRequest);
 
 // Vote on a change request (any leader except requester)
 router.post('/:id/vote', protect, leaderOrSuperAdmin, voteOnChangeRequest);
+
+// Delete a change request (super admin only)
+router.delete('/:id', protect, superAdminOnly, deleteChangeRequest);
 
 module.exports = router;

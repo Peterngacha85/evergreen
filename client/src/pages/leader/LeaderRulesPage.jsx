@@ -123,6 +123,54 @@ const LeaderRulesPage = () => {
         </div>
       </div>
 
+      {/* Rules Preview — shows content like members see it */}
+      {rules.length > 0 && (
+        <div style={{ marginTop: 32 }}>
+          <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--green-800)', marginBottom: 4 }}>Rules Preview</h2>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 20 }}>How members see the rules</p>
+          <div style={{ display: 'grid', gap: 20 }}>
+            {rules.map((rule, idx) => (
+              <div key={rule._id} className="card" style={{ padding: 0, overflow: 'hidden' }}>
+                <div style={{ 
+                  padding: '16px 24px', 
+                  background: 'var(--gray-50)', 
+                  borderBottom: '1px solid var(--border)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12
+                }}>
+                  <div style={{ 
+                    width: 32, height: 32, borderRadius: '50%', 
+                    background: 'var(--green-600)', color: '#fff', 
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '0.9rem', fontWeight: 700
+                  }}>
+                    {idx + 1}
+                  </div>
+                  <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'var(--green-800)' }}>{rule.title}</h3>
+                  <span className="badge badge-gray ml-auto">{rule.category}</span>
+                </div>
+                <div style={{ padding: '24px', lineHeight: 1.6, color: 'var(--text)', whiteSpace: 'pre-wrap' }}>
+                  {rule.content}
+                </div>
+                <div style={{ 
+                  padding: '12px 24px', 
+                  background: 'var(--bg)', 
+                  fontSize: '0.75rem', 
+                  color: 'var(--text-muted)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6
+                }}>
+                  <Info size={14} />
+                  Last updated {new Date(rule.updatedAt).toLocaleDateString()}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Rules Modal */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={isEditMode ? 'Edit Rule' : 'Add New Rule'}>
         <form onSubmit={handleSubmit} className="flex-col gap-4">

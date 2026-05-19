@@ -139,6 +139,11 @@ const updateMember = async (req, res) => {
     if (name) member.name = name;
     if (phoneNumber) member.phoneNumber = phoneNumber;
     
+    // 2b. Handle joinDate change (super admin only)
+    if (req.body.joinDate && req.role === 'superadmin') {
+      member.joinDate = new Date(req.body.joinDate);
+    }
+
     // 3. Handle password change
     if (password) {
       member.password = password;

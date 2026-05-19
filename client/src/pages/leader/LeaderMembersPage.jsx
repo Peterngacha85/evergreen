@@ -21,7 +21,7 @@ const LeaderMembersPage = () => {
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [formData, setFormData] = useState({ id: '', name: '', idNumber: '', phoneNumber: '', password: '', profilePhoto: null });
+  const [formData, setFormData] = useState({ id: '', name: '', idNumber: '', phoneNumber: '', password: '', profilePhoto: null, joinDate: '' });
   const [submitting, setSubmitting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
   const [deleting, setDeleting] = useState(false);
@@ -53,10 +53,10 @@ const LeaderMembersPage = () => {
     }
     if (member) {
       setIsEditMode(true);
-      setFormData({ id: member._id, name: member.name, idNumber: member.idNumber, phoneNumber: member.phoneNumber, password: '', profilePhoto: null });
+      setFormData({ id: member._id, name: member.name, idNumber: member.idNumber, phoneNumber: member.phoneNumber, password: '', profilePhoto: null, joinDate: member.joinDate ? new Date(member.joinDate).toISOString().split('T')[0] : '' });
     } else {
       setIsEditMode(false);
-      setFormData({ id: '', name: '', idNumber: '', phoneNumber: '', password: '', profilePhoto: null });
+      setFormData({ id: '', name: '', idNumber: '', phoneNumber: '', password: '', profilePhoto: null, joinDate: '' });
     }
     setIsModalOpen(true);
   };
@@ -75,7 +75,8 @@ const LeaderMembersPage = () => {
           name: formData.name, 
           idNumber: formData.idNumber,
           phoneNumber: formData.phoneNumber, 
-          ...(formData.password && { password: formData.password }) 
+          ...(formData.password && { password: formData.password }),
+          ...(isSuperAdmin && formData.joinDate && { joinDate: formData.joinDate })
         });
         // Update photo if provided
         if (formData.profilePhoto) {
@@ -267,6 +268,17 @@ const LeaderMembersPage = () => {
             <label className="form-label">Profile Photo (Optional)</label>
             <input type="file" accept="image/*" className="form-input" style={{ padding: '8px 12px' }} onChange={handleFileChange} />
           </div>
+          {isSuperAdmin && isEditMode && (
+            <div className="form-group">
+              <label className="form-label">Join Date</label>
+              <input 
+                type="date" 
+                className="form-input" 
+                value={formData.joinDate} 
+                onChange={e => setFormData({...formData, joinDate: e.target.value})} 
+              />
+            </div>
+          )}
           
           <div className="flex justify-between" style={{ marginTop: 24 }}>
             <button type="button" className="btn btn-ghost" onClick={() => setIsModalOpen(false)}>Cancel</button>
