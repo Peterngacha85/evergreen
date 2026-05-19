@@ -182,10 +182,33 @@ const validateActiveSession = async (req, res) => {
   }
 };
 
+// @desc  Delete a change request
+// @route DELETE /api/change-requests/:id
+// @access SuperAdmin only
+const deleteChangeRequest = async (req, res) => {
+  try {
+    const changeRequest = await ChangeRequest.findById(req.params.id);
+    if (!changeRequest) return res.status(404).json({ message: 'Change request not found' });
+
+    await ChangeRequest.findByIdAndDelete(req.params.id);
+
+    // Notify all leaders about the deletion
+    const io = req.app.get('socketio');
+    if (io) {
+      io.emit('changeRequestDeleted', req.params.id);
+    }
+
+    res.json({ message: 'Change request deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 module.exports = {
   createChangeRequest,
   voteOnChangeRequest,
   getAllChangeRequests,
   getChangeRequestById,
   validateActiveSession,
+  deleteChangeRequest,
 };

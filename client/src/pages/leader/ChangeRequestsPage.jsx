@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { getChangeRequests, createChangeRequest, voteOnChangeRequest, validateSession } from '../../api/changeRequests';
+import { getChangeRequests, createChangeRequest, voteOnChangeRequest, validateSession, deleteChangeRequest } from '../../api/changeRequests';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
 import { format } from 'date-fns';
-import { Check, X, ShieldAlert, Plus, Info } from 'lucide-react';
+import { Check, X, ShieldAlert, Plus, Info, Trash2 } from 'lucide-react';
 import Modal from '../../components/common/Modal';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import StatusBadge from '../../components/common/StatusBadge';
 import toast from 'react-hot-toast';
 
@@ -19,6 +20,8 @@ const ChangeRequestsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [reason, setReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
+  const [deleting, setDeleting] = useState(false);
 
   const fetchRequests = async () => {
     try {
@@ -56,12 +59,17 @@ const ChangeRequestsPage = () => {
           fetchRequests();
         }
       });
+
+      socket.on('changeRequestDeleted', (deletedId) => {
+        setRequests(prev => prev.filter(r => r._id !== deletedId));
+      });
     }
 
     return () => {
       if (socket) {
         socket.off('newChangeRequest');
         socket.off('changeRequestUpdated');
+        socket.off('changeRequestDeleted');
       }
     };
   }, [socket, user?._id]);
@@ -89,6 +97,24 @@ const ChangeRequestsPage = () => {
       fetchRequests();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to record vote');
+    }
+  };
+
+  const handleDeleteClick = (id) => {
+    setConfirmDelete({ open: true, id });
+  };
+
+  const handleConfirmDelete = async () => {
+    setDeleting(true);
+    try {
+      await deleteChangeRequest(confirmDelete.id);
+      toast.success('Change request deleted');
+      setConfirmDelete({ open: false, id: null });
+      fetchRequests();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete request');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -139,6 +165,7 @@ const ChangeRequestsPage = () => {
                 <th>Status</th>
                 <th>Votes</th>
                 <th>Your Vote</th>
+                {isSuperAdmin && <th>Delete</th>}
               </tr>
             </thead>
             <tbody>
@@ -180,6 +207,18 @@ const ChangeRequestsPage = () => {
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>—</span>
                       )}
                     </td>
+                    {isSuperAdmin && (
+                      <td>
+                        <button
+                          onClick={() => handleDeleteClick(req._id)}
+                          className="btn btn-sm btn-ghost btn-icon"
+                          style={{ color: '#dc2626' }}
+                          title="Delete Request"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 );
               })}
@@ -211,6 +250,16 @@ const ChangeRequestsPage = () => {
           </div>
         </form>
       </Modal>
+
+      <ConfirmModal
+        isOpen={confirmDelete.open}
+        onClose={() => setConfirmDelete({ open: false, id: null })}
+        onConfirm={handleConfirmDelete}
+        title="Delete Change Request"
+        message="Are you sure you want to permanently delete this change request? This action cannot be undone."
+        confirmText="Delete"
+        loading={deleting}
+      />
     </div>
   );
 };
