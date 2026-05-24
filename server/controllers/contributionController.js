@@ -1,4 +1,16 @@
 const Contribution = require('../models/Contribution');
+const ContributionCampaign = require('../models/ContributionCampaign');
+
+// Categories that go directly to the Emergency Kit (NOT campaign-based)
+const EMERGENCY_KIT_CATEGORIES = [
+  'Registration Fee', 'Emergency Fee', 'Registration', 'Emergency',
+  'registration fee', 'emergency fee', 'registration', 'emergency',
+];
+
+const normalizeCategory = (category) => (category || '').toString().trim();
+const isEmergencyKitCategory = (category) => EMERGENCY_KIT_CATEGORIES.some(
+  (ec) => ec.toLowerCase() === normalizeCategory(category).toLowerCase()
+);
 
 // @desc  Add a contribution
 // @route POST /api/contributions
@@ -6,23 +18,43 @@ const Contribution = require('../models/Contribution');
 const addContribution = async (req, res) => {
   try {
     const { memberId, amount, category, description, datePaid } = req.body;
+    const normalizedCategory = normalizeCategory(category);
 
-    if (!memberId || !amount || !category)
+    if (!memberId || !amount || !normalizedCategory)
       return res.status(400).json({ message: 'Member, amount, and category are required' });
+
+    const emergencyKit = isEmergencyKitCategory(normalizedCategory);
+    let campaignId = null;
+    let finalCategory = normalizedCategory;
+
+    // For non-emergency-kit categories, require an active campaign and lock category to it
+    if (!emergencyKit) {
+      const activeCampaign = await ContributionCampaign.findOne({ status: 'active' });
+      if (!activeCampaign) {
+        return res.status(400).json({
+          message: 'No active contribution campaign. A leader must start a campaign before recording event contributions.',
+          requiresCampaign: true,
+        });
+      }
+      campaignId = activeCampaign._id;
+      finalCategory = normalizeCategory(activeCampaign.category);
+    }
 
     const contribution = await Contribution.create({
       member: memberId,
       amount,
-      category,
+      category: finalCategory,
       description,
       datePaid: datePaid || Date.now(),
       recordedBy: req.user._id,
       changeRequest: req.body.changeRequestId || null,
+      campaign: campaignId,
     });
 
     const populated = await contribution.populate([
       { path: 'member', select: 'name idNumber' },
       { path: 'recordedBy', select: 'name leaderRole' },
+      { path: 'campaign', select: 'title category status' },
     ]);
 
     res.status(201).json(populated);
@@ -43,6 +75,7 @@ const getAllContributions = async (req, res) => {
     const contributions = await Contribution.find(filter)
       .populate('member', 'name idNumber')
       .populate('recordedBy', 'name leaderRole')
+      .populate('campaign', 'title category status')
       .sort({ datePaid: -1 });
 
     res.json(contributions);
@@ -58,6 +91,7 @@ const getMyContributions = async (req, res) => {
   try {
     const contributions = await Contribution.find({ member: req.user._id })
       .populate('recordedBy', 'name leaderRole')
+      .populate('campaign', 'title category status')
       .sort({ datePaid: -1 });
     res.json(contributions);
   } catch (err) {
@@ -97,10 +131,38 @@ const updateContribution = async (req, res) => {
     if (!contribution) return res.status(404).json({ message: 'Contribution not found' });
 
     const { amount, category, description, datePaid } = req.body;
-    if (amount) contribution.amount = amount;
-    if (category) contribution.category = category;
-    if (description) contribution.description = description;
-    if (datePaid) contribution.datePaid = datePaid;
+    const hasCategoryUpdate = category !== undefined && category !== null;
+    const normalizedCategory = hasCategoryUpdate ? normalizeCategory(category) : null;
+    const emergencyKit = hasCategoryUpdate ? isEmergencyKitCategory(normalizedCategory) : null;
+
+    // If contribution belongs to an existing campaign, keep it linked and lock category to that campaign
+    let currentCampaign = null;
+    if (contribution.campaign) {
+      currentCampaign = await ContributionCampaign.findById(contribution.campaign);
+    }
+
+    if (amount !== undefined) contribution.amount = amount;
+    if (description !== undefined) contribution.description = description;
+    if (datePaid !== undefined) contribution.datePaid = datePaid;
+
+    if (hasCategoryUpdate) {
+      if (emergencyKit) {
+        contribution.category = normalizedCategory;
+        contribution.campaign = null;
+      } else {
+        const activeCampaign = currentCampaign || await ContributionCampaign.findOne({ status: 'active' });
+        if (!activeCampaign) {
+          return res.status(400).json({
+            message: 'No active contribution campaign. A leader must start a campaign before recording event contributions.',
+            requiresCampaign: true,
+          });
+        }
+        contribution.category = normalizeCategory(activeCampaign.category);
+        contribution.campaign = activeCampaign._id;
+      }
+    } else if (currentCampaign) {
+      contribution.category = normalizeCategory(currentCampaign.category);
+    }
 
     const updated = await contribution.save();
     res.json(updated);

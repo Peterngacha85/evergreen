@@ -14,6 +14,7 @@ const contributionSchema = new mongoose.Schema(
     datePaid: { type: Date, default: Date.now },
     recordedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Leader', required: true },
     changeRequest: { type: mongoose.Schema.Types.ObjectId, ref: 'ChangeRequest' },
+    campaign: { type: mongoose.Schema.Types.ObjectId, ref: 'ContributionCampaign' },
   },
   { timestamps: true }
 );

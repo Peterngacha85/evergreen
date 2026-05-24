@@ -1,36 +1,34 @@
 import { useEffect, useState } from 'react';
-import { Users, TrendingUp, Calendar, FileText, Wallet, Shield, Eye, EyeOff } from 'lucide-react';
-import toast from 'react-hot-toast';
-import { getContributionSummary } from '../../api/contributions';
+import { TrendingUp, Calendar, FileText, Wallet, Flag } from 'lucide-react';
 import { getMyContributions } from '../../api/contributions';
 import { getEvents } from '../../api/events';
 import { getMyClaims } from '../../api/claims';
+import { getActiveCampaign } from '../../api/campaigns';
 import { useAuth } from '../../context/AuthContext';
 import { format } from 'date-fns';
 import StatusBadge from '../../components/common/StatusBadge';
 
 const MemberDashboard = () => {
   const { user } = useAuth();
-  const [summary, setSummary]   = useState(null);
   const [contribs, setContribs] = useState([]);
   const [events, setEvents]     = useState([]);
   const [claims, setClaims]     = useState([]);
+  const [activeCampaign, setActiveCampaign] = useState(null);
   const [loading, setLoading]   = useState(true);
-  const [showPasswords, setShowPasswords] = useState({ current: false, new: false, confirm: false });
 
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const [s, c, e, cl] = await Promise.all([
-          getContributionSummary(),
+        const [c, e, cl, ac] = await Promise.all([
           getMyContributions(),
           getEvents({ upcoming: 'true' }),
           getMyClaims(),
+          getActiveCampaign(),
         ]);
-        setSummary(s.data);
         setContribs(c.data.slice(0, 5));
         setEvents(e.data.slice(0, 3));
         setClaims(cl.data.slice(0, 3));
+        setActiveCampaign(ac.data);
       } catch {/* silent */} finally { setLoading(false); }
     };
     fetchAll();
@@ -43,6 +41,9 @@ const MemberDashboard = () => {
   );
 
   const myTotal = contribs.reduce((a, c) => a + c.amount, 0);
+  const campaignProgress = activeCampaign?.targetAmount
+    ? Math.min(100, ((activeCampaign.totalRaised || 0) / activeCampaign.targetAmount) * 100)
+    : null;
 
   return (
     <div className="animate-fadein">
@@ -66,6 +67,45 @@ const MemberDashboard = () => {
         </div>
       </div>
 
+      {/* Active Campaign Card */}
+      {activeCampaign ? (
+        <div style={{
+          background: 'linear-gradient(135deg, #1d4ed8, #3b82f6)',
+          borderRadius: 'var(--radius-xl)', padding: '18px 24px', marginBottom: 24,
+          color: '#fff', boxShadow: '0 4px 20px rgba(37,99,235,0.22)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 14, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Flag size={22} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '0.7rem', opacity: 0.8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 3 }}>🟢 Active Campaign</div>
+              <div style={{ fontWeight: 800, fontSize: '1.05rem', marginBottom: 4 }}>{activeCampaign.title}</div>
+              <div style={{ fontSize: '0.8rem', opacity: 0.85 }}>
+                KSh {(activeCampaign.totalRaised || 0).toLocaleString()} raised · {activeCampaign.contributionCount || 0} contributions
+              </div>
+              {campaignProgress !== null && (
+                <div style={{ marginTop: 10 }}>
+                  <div style={{ height: 7, background: 'rgba(255,255,255,0.2)', borderRadius: 4, overflow: 'hidden' }}>
+                    <div style={{ width: `${campaignProgress}%`, height: '100%', background: '#86efac', borderRadius: 4 }} />
+                  </div>
+                  <div style={{ fontSize: '0.72rem', opacity: 0.75, marginTop: 4 }}>{campaignProgress.toFixed(0)}% of KSh {activeCampaign.targetAmount.toLocaleString()} target</div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div style={{
+          background: 'var(--gray-50)', border: '2px dashed var(--border)',
+          borderRadius: 'var(--radius-xl)', padding: '14px 22px', marginBottom: 24,
+          display: 'flex', alignItems: 'center', gap: 12
+        }}>
+          <Flag size={20} style={{ color: 'var(--gray-400)' }} />
+          <div style={{ fontWeight: 600, color: 'var(--gray-500)', fontSize: '0.9rem' }}>No Active Contribution Campaign</div>
+        </div>
+      )}
+
       {/* Stats grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 28 }}>
         <div className="stat-card">
@@ -74,7 +114,7 @@ const MemberDashboard = () => {
         </div>
         <div className="stat-card">
           <div className="stat-icon stat-icon-lime"><Wallet size={22} /></div>
-          <div><div className="stat-value">₪ {(summary?.grandTotal || 0).toLocaleString()}</div><div className="stat-label">Total Welfare Fund</div></div>
+          <div><div className="stat-value">KSh {myTotal.toLocaleString()}</div><div className="stat-label">My Total Paid</div></div>
         </div>
         <div className="stat-card">
           <div className="stat-icon stat-icon-blue"><Calendar size={22} /></div>

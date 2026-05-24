@@ -2,37 +2,51 @@ const Contribution = require('../models/Contribution');
 const Claim = require('../models/Claim');
 const Member = require('../models/Member');
 const Expense = require('../models/Expense');
+const ContributionCampaign = require('../models/ContributionCampaign');
 
 // @desc    Get financial overview
 // @route   GET /api/stats/funds
 // @access  Private/Leader
 exports.getFundsOverview = async (req, res) => {
   try {
-    const [totalContributions, totalClaimsPaid, totalExpenses, emergencyContributions] = await Promise.all([
-      Contribution.aggregate([
-        { $match: { category: { $nin: ['Registration Fee', 'Emergency Fee', 'Registration', 'Emergency'] } } },
-        { $group: { _id: null, total: { $sum: "$amount" } } }
-      ]),
-      Claim.aggregate([
-        { $match: { status: 'paid' } },
-        { $group: { _id: null, total: { $sum: "$amount" } } }
-      ]),
+    const [totalExpenses, emergencyContributions, activeCampaign] = await Promise.all([
       Expense.aggregate([
-        { $group: { _id: null, total: { $sum: "$amount" } } }
+        { $group: { _id: null, total: { $sum: '$amount' } } }
       ]),
       Contribution.aggregate([
-        { $match: { category: { $in: ['Registration Fee', 'Emergency Fee', 'Registration', 'Emergency'] } } },
-        { $group: { _id: null, total: { $sum: "$amount" } } }
-      ])
+        {
+          $match: {
+            $or: [
+              { category: { $in: ['Registration Fee', 'Emergency Fee', 'Registration', 'Emergency'] } },
+              // Also catch any lowercase variants
+              { category: /^(registration fee|emergency fee|registration|emergency)$/i }
+            ]
+          }
+        },
+        { $group: { _id: null, total: { $sum: '$amount' } } }
+      ]),
+      ContributionCampaign.findOne({ status: 'active' })
+        .populate('targetMember', 'name idNumber')
     ]);
 
-    const regularIn = totalContributions[0]?.total || 0;
-    const totalOutClaims = totalClaimsPaid[0]?.total || 0;
-    const regularBalance = regularIn - totalOutClaims;
-
+    // Emergency Kit: fees collected minus all expenses
     const emergencyIn = emergencyContributions[0]?.total || 0;
     const totalOutExpenses = totalExpenses[0]?.total || 0;
     const emergencyBalance = emergencyIn - totalOutExpenses;
+
+    // Campaign contributions (for the active campaign, if any)
+    let campaignStats = null;
+    if (activeCampaign) {
+      const campaignAgg = await Contribution.aggregate([
+        { $match: { campaign: activeCampaign._id } },
+        { $group: { _id: null, total: { $sum: '$amount' }, count: { $sum: 1 } } }
+      ]);
+      campaignStats = {
+        campaign: activeCampaign,
+        totalRaised: campaignAgg[0]?.total || 0,
+        contributionCount: campaignAgg[0]?.count || 0,
+      };
+    }
 
     // Also get counts
     const [memberCount, pendingClaims] = await Promise.all([
@@ -41,19 +55,18 @@ exports.getFundsOverview = async (req, res) => {
     ]);
 
     res.json({
-      // Main Fund
-      totalIn: regularIn,
-      totalOutClaims,
-      balance: regularBalance,
-      
-      // Emergency Kit Fund
+      // Emergency Kit Fund (the reserve)
       emergencyIn,
       totalOutExpenses,
       emergencyBalance,
-      
+
+      // Alias for legacy frontend compatibility
+      balance: emergencyBalance,
+
+      // Active campaign snapshot (if any)
+      campaignStats,
+
       // Global stats
-      overallTotalIn: regularIn + emergencyIn,
-      overallTotalOut: totalOutClaims + totalOutExpenses,
       memberCount,
       pendingClaims
     });

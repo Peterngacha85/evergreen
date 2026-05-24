@@ -2,31 +2,33 @@ import { useEffect, useState } from 'react';
 import { getContributionSummary } from '../../api/contributions';
 import { getChangeRequests } from '../../api/changeRequests';
 import { getMembers } from '../../api/members';
+import { getActiveCampaign } from '../../api/campaigns';
 import { useAuth } from '../../context/AuthContext';
-import { Users, TrendingUp, AlertCircle, ShieldCheck, Shield, Eye, EyeOff } from 'lucide-react';
+import { Users, TrendingUp, AlertCircle, ShieldCheck, Flag } from 'lucide-react';
 import StatusBadge from '../../components/common/StatusBadge';
 import { Link } from 'react-router-dom';
-import toast from 'react-hot-toast';
 
 const LeaderDashboard = () => {
   const { user } = useAuth();
   const [summary, setSummary] = useState(null);
   const [pendingReqs, setPendingReqs] = useState([]);
   const [memberCount, setMemberCount] = useState(0);
+  const [activeCampaign, setActiveCampaign] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showPasswords, setShowPasswords] = useState({ current: false, new: false, confirm: false });
 
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const [s, m, r] = await Promise.all([
+        const [s, m, r, ac] = await Promise.all([
           getContributionSummary(),
           getMembers(),
-          getChangeRequests({ status: 'pending' })
+          getChangeRequests({ status: 'pending' }),
+          getActiveCampaign(),
         ]);
         setSummary(s.data);
         setMemberCount(m.data.length);
         setPendingReqs(r.data);
+        setActiveCampaign(ac.data);
       } catch (err) {
         // Handle error quietly
       } finally {
@@ -63,7 +65,7 @@ const LeaderDashboard = () => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20, marginBottom: 28 }}>
         <div className="stat-card">
           <div className="stat-icon stat-icon-green"><TrendingUp size={24} /></div>
-          <div><div className="stat-value">₪ {(summary?.grandTotal || 0).toLocaleString()}</div><div className="stat-label">Total Funds Managed</div></div>
+          <div><div className="stat-value">KSh {(summary?.grandTotal || 0).toLocaleString()}</div><div className="stat-label">Total Funds Managed</div></div>
         </div>
         <div className="stat-card">
           <div className="stat-icon stat-icon-blue"><Users size={24} /></div>
@@ -74,6 +76,41 @@ const LeaderDashboard = () => {
           <div><div className="stat-value">{user?.leaderRole || 'Super Admin'}</div><div className="stat-label">Your Role</div></div>
         </div>
       </div>
+
+      {/* Active Campaign Banner */}
+      {activeCampaign ? (
+        <div style={{
+          background: 'linear-gradient(135deg, #1d4ed8, #3b82f6)',
+          borderRadius: 'var(--radius-xl)', padding: '18px 24px', marginBottom: 24,
+          color: '#fff', boxShadow: '0 4px 20px rgba(37,99,235,0.2)', display: 'flex', alignItems: 'center', gap: 14
+        }}>
+          <div style={{ width: 46, height: 46, borderRadius: 14, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Flag size={22} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '0.7rem', opacity: 0.8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>🟢 Active Campaign</div>
+            <div style={{ fontWeight: 800, fontSize: '1.05rem' }}>{activeCampaign.title}</div>
+            <div style={{ fontSize: '0.8rem', opacity: 0.85, marginTop: 3 }}>
+              KSh {(activeCampaign.totalRaised || 0).toLocaleString()} raised · {activeCampaign.contributionCount || 0} contributions
+            </div>
+          </div>
+          <Link to="/leader/contributions" style={{ background: 'rgba(255,255,255,0.18)', border: '1.5px solid rgba(255,255,255,0.3)', borderRadius: 10, padding: '8px 16px', color: '#fff', fontWeight: 700, textDecoration: 'none', fontSize: '0.85rem', flexShrink: 0 }}>
+            Manage →
+          </Link>
+        </div>
+      ) : (
+        <div style={{
+          background: 'var(--gray-50)', border: '2px dashed var(--border)',
+          borderRadius: 'var(--radius-xl)', padding: '14px 22px', marginBottom: 24,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <Flag size={20} style={{ color: 'var(--gray-400)' }} />
+            <span style={{ fontWeight: 600, color: 'var(--gray-500)', fontSize: '0.9rem' }}>No Active Contribution Campaign</span>
+          </div>
+          <Link to="/leader/contributions" className="btn btn-sm btn-outline">Start Campaign</Link>
+        </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
         <div className="card">
