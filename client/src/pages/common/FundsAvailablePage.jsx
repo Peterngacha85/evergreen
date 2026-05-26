@@ -59,8 +59,8 @@ const LeaderFundsPage = () => {
               {campaignProgress !== null ? (
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', opacity: 0.85, marginBottom: 6 }}>
-                    <span>KSh {campaign.totalRaised.toLocaleString()} raised</span>
-                    <span>Target: KSh {campaign.campaign.targetAmount.toLocaleString()}</span>
+                    <span>Shekel {campaign.totalRaised.toLocaleString()} raised</span>
+                    <span>Target: Shekel {campaign.campaign.targetAmount.toLocaleString()}</span>
                   </div>
                   <div style={{ height: 10, background: 'rgba(255,255,255,0.2)', borderRadius: 5, overflow: 'hidden' }}>
                     <div style={{ width: `${campaignProgress}%`, height: '100%', background: '#86efac', borderRadius: 5, transition: 'width 0.5s ease' }} />
@@ -69,7 +69,7 @@ const LeaderFundsPage = () => {
                 </div>
               ) : (
                 <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#86efac' }}>
-                  KSh {campaign.totalRaised.toLocaleString()}
+                  Shekel {campaign.totalRaised.toLocaleString()}
                   <span style={{ fontSize: '0.85rem', opacity: 0.75, fontWeight: 500, marginLeft: 8 }}>raised so far</span>
                 </div>
               )}
@@ -115,7 +115,7 @@ const LeaderFundsPage = () => {
             <div>
               <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{card.label}</div>
               <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--gray-900)', letterSpacing: '-0.03em' }}>
-                KSh {card.value.toLocaleString()}
+                Shekel {card.value.toLocaleString()}
               </div>
               {stats.pendingClaims > 0 && card.highlight && (
                 <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 8, color: '#dc2626', fontSize: '0.8rem', fontWeight: 800 }}>
@@ -188,7 +188,7 @@ const LeaderFundsPage = () => {
           <div style={{ marginTop: 40, padding: '24px 40px', background: 'rgba(255,255,255,0.08)', borderRadius: 24, border: '1px solid rgba(255,255,255,0.15)', backdropFilter: 'blur(12px)', width: '100%' }}>
             <div style={{ fontSize: '0.85rem', opacity: 0.7, textTransform: 'uppercase', letterSpacing: 3, fontWeight: 700, marginBottom: 12 }}>Available Reserve</div>
             <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--green-300)', letterSpacing: '-0.02em' }}>
-              KSh {stats.emergencyBalance.toLocaleString()}
+              Shekel {stats.emergencyBalance.toLocaleString()}
             </div>
           </div>
         </div>

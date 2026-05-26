@@ -82,14 +82,14 @@ const MemberDashboard = () => {
               <div style={{ fontSize: '0.7rem', opacity: 0.8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 3 }}>🟢 Active Campaign</div>
               <div style={{ fontWeight: 800, fontSize: '1.05rem', marginBottom: 4 }}>{activeCampaign.title}</div>
               <div style={{ fontSize: '0.8rem', opacity: 0.85 }}>
-                KSh {(activeCampaign.totalRaised || 0).toLocaleString()} raised · {activeCampaign.contributionCount || 0} contributions
+                Shekel {(activeCampaign.totalRaised || 0).toLocaleString()} raised · {activeCampaign.contributionCount || 0} contributions
               </div>
               {campaignProgress !== null && (
                 <div style={{ marginTop: 10 }}>
                   <div style={{ height: 7, background: 'rgba(255,255,255,0.2)', borderRadius: 4, overflow: 'hidden' }}>
                     <div style={{ width: `${campaignProgress}%`, height: '100%', background: '#86efac', borderRadius: 4 }} />
                   </div>
-                  <div style={{ fontSize: '0.72rem', opacity: 0.75, marginTop: 4 }}>{campaignProgress.toFixed(0)}% of KSh {activeCampaign.targetAmount.toLocaleString()} target</div>
+                  <div style={{ fontSize: '0.72rem', opacity: 0.75, marginTop: 4 }}>{campaignProgress.toFixed(0)}% of Shekel {activeCampaign.targetAmount.toLocaleString()} target</div>
                 </div>
               )}
             </div>
@@ -114,7 +114,7 @@ const MemberDashboard = () => {
         </div>
         <div className="stat-card">
           <div className="stat-icon stat-icon-lime"><Wallet size={22} /></div>
-          <div><div className="stat-value">KSh {myTotal.toLocaleString()}</div><div className="stat-label">My Total Paid</div></div>
+          <div><div className="stat-value">Shekel {myTotal.toLocaleString()}</div><div className="stat-label">My Total Paid</div></div>
         </div>
         <div className="stat-card">
           <div className="stat-icon stat-icon-blue"><Calendar size={22} /></div>
