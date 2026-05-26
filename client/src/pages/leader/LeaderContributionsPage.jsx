@@ -258,8 +258,8 @@ const LeaderContributionsPage = () => {
               {campaignProgress !== null && (
                 <div style={{ marginTop: 10 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem', opacity: 0.85, marginBottom: 5 }}>
-                    <span>Shekel {(activeCampaign.totalRaised || 0).toLocaleString()} raised</span>
-                    <span>Target: Shekel {activeCampaign.targetAmount.toLocaleString()}</span>
+                    <span>₪ {(activeCampaign.totalRaised || 0).toLocaleString()} raised</span>
+                    <span>Target: ₪ {activeCampaign.targetAmount.toLocaleString()}</span>
                   </div>
                   <div style={{ height: 8, background: 'rgba(255,255,255,0.2)', borderRadius: 4, overflow: 'hidden' }}>
                     <div style={{ width: `${campaignProgress}%`, height: '100%', background: '#86efac', borderRadius: 4, transition: 'width 0.5s ease' }} />
@@ -268,7 +268,7 @@ const LeaderContributionsPage = () => {
               )}
               {campaignProgress === null && (
                 <div style={{ marginTop: 8, opacity: 0.85, fontSize: '0.82rem' }}>
-                  Shekel {(activeCampaign.totalRaised || 0).toLocaleString()} raised · {activeCampaign.contributionCount || 0} contributions
+                  ₪ {(activeCampaign.totalRaised || 0).toLocaleString()} raised · {activeCampaign.contributionCount || 0} contributions
                 </div>
               )}
             </div>
@@ -365,7 +365,7 @@ const LeaderContributionsPage = () => {
                       <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Emergency Kit</span>
                     )}
                   </td>
-                  <td style={{ fontWeight: 700, color: 'var(--green-700)' }}>Shekel {c.amount.toLocaleString()}</td>
+                  <td style={{ fontWeight: 700, color: 'var(--green-700)' }}>₪ {c.amount.toLocaleString()}</td>
                   <td>{format(new Date(c.datePaid), 'dd MMM yyyy')}</td>
                   <td style={{ fontSize: '0.8rem' }}>{c.recordedBy?.name}</td>
                   <td>
@@ -435,7 +435,7 @@ const LeaderContributionsPage = () => {
             </select>
           </div>
           <div className="form-group">
-            <label className="form-label">Amount (Shekel)</label>
+            <label className="form-label">Amount (₪)</label>
             <input type="number" className="form-input" required min="1" value={formData.amount} onChange={e => setFormData({ ...formData, amount: e.target.value })} />
           </div>
           <div className="form-group">
@@ -478,7 +478,7 @@ const LeaderContributionsPage = () => {
             </select>
           </div>
           <div className="form-group">
-            <label className="form-label">Target Amount (Shekel) — Optional</label>
+            <label className="form-label">Target Amount (₪) — Optional</label>
             <input type="number" className="form-input" min="0" placeholder="Leave blank if open-ended"
               value={campaignForm.targetAmount} onChange={e => setCampaignForm({ ...campaignForm, targetAmount: e.target.value })} />
           </div>
@@ -502,7 +502,7 @@ const LeaderContributionsPage = () => {
           <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: '16px 20px', marginBottom: 20 }}>
             <div style={{ fontWeight: 700, color: 'var(--green-700)', fontSize: '1rem', marginBottom: 4 }}>{activeCampaign.title}</div>
             <div style={{ fontSize: '0.9rem', color: 'var(--green-600)' }}>
-              Total raised: <strong>Shekel {(activeCampaign.totalRaised || 0).toLocaleString()}</strong> · {activeCampaign.contributionCount || 0} contributions
+              Total raised: <strong>₪ {(activeCampaign.totalRaised || 0).toLocaleString()}</strong> · {activeCampaign.contributionCount || 0} contributions
             </div>
           </div>
         )}
@@ -510,7 +510,7 @@ const LeaderContributionsPage = () => {
           <div className="form-group">
             <label className="form-label">Payout Notes *</label>
             <textarea className="form-input" rows="4" required style={{ resize: 'none', height: 'auto' }}
-              placeholder="e.g. Amount of Shekel 45,000 handed to Jane Mwangi on 23rd May 2026."
+              placeholder="e.g. Amount of ₪ 45,000 handed to Jane Mwangi on 23rd May 2026."
               value={completeForm.payoutNotes} onChange={e => setCompleteForm({ ...completeForm, payoutNotes: e.target.value })} />
           </div>
           {activeCampaign?.claim && (
@@ -552,7 +552,7 @@ const LeaderContributionsPage = () => {
                     </div>
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <div style={{ fontWeight: 800, color: 'var(--green-700)', fontSize: '1.1rem' }}>Shekel {(camp.totalAmountRaised || 0).toLocaleString()}</div>
+                    <div style={{ fontWeight: 800, color: 'var(--green-700)', fontSize: '1.1rem' }}>₪ {(camp.totalAmountRaised || 0).toLocaleString()}</div>
                     <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Raised</div>
                   </div>
                 </div>

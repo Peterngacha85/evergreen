@@ -50,7 +50,7 @@ const MemberContributions = () => {
         </div>
         <div style={{ background: 'var(--green-50)', border: '2px solid var(--green-200)', borderRadius: 'var(--radius-lg)', padding: '12px 20px', textAlign: 'right' }}>
           <div style={{ fontSize: '0.75rem', color: 'var(--green-600)', fontWeight: 600 }}>My Total</div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--green-700)' }}>Shekel {total.toLocaleString()}</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--green-700)' }}>₪ {total.toLocaleString()}</div>
         </div>
       </div>
 
@@ -81,8 +81,8 @@ const MemberContributions = () => {
           {campaignProgress !== null ? (
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem', opacity: 0.85, marginBottom: 6 }}>
-                <span>Shekel {(activeCampaign.totalRaised || 0).toLocaleString()} raised</span>
-                <span>Target: Shekel {activeCampaign.targetAmount.toLocaleString()}</span>
+                <span>₪ {(activeCampaign.totalRaised || 0).toLocaleString()} raised</span>
+                <span>Target: ₪ {activeCampaign.targetAmount.toLocaleString()}</span>
               </div>
               <div style={{ height: 8, background: 'rgba(255,255,255,0.2)', borderRadius: 4, overflow: 'hidden' }}>
                 <div style={{ width: `${campaignProgress}%`, height: '100%', background: '#86efac', borderRadius: 4 }} />
@@ -90,7 +90,7 @@ const MemberContributions = () => {
             </div>
           ) : (
             <div style={{ fontSize: '0.82rem', opacity: 0.85 }}>
-              Shekel {(activeCampaign.totalRaised || 0).toLocaleString()} raised · {activeCampaign.contributionCount || 0} contributions
+              ₪ {(activeCampaign.totalRaised || 0).toLocaleString()} raised · {activeCampaign.contributionCount || 0} contributions
             </div>
           )}
         </div>
@@ -151,7 +151,7 @@ const MemberContributions = () => {
                     <th>Campaign / Type</th>
                     <th>Description</th>
                     <th>Date Paid</th>
-                    <th>Amount (Shekel)</th>
+                    <th>Amount (₪)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -172,7 +172,7 @@ const MemberContributions = () => {
                       </td>
                       <td>{c.description || '—'}</td>
                       <td>{format(new Date(c.datePaid), 'dd MMM yyyy')}</td>
-                      <td style={{ fontWeight: 700, color: 'var(--green-600)' }}>Shekel {c.amount.toLocaleString()}</td>
+                      <td style={{ fontWeight: 700, color: 'var(--green-600)' }}>₪ {c.amount.toLocaleString()}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -220,7 +220,7 @@ const MemberContributions = () => {
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
                       <div style={{ fontWeight: 800, color: 'var(--green-700)', fontSize: '1.3rem' }}>
-                        Shekel {(camp.totalAmountRaised || 0).toLocaleString()}
+                        ₪ {(camp.totalAmountRaised || 0).toLocaleString()}
                       </div>
                       <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>Total Raised</div>
                       <div style={{ marginTop: 6 }}>

@@ -65,7 +65,7 @@ const LeaderDashboard = () => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20, marginBottom: 28 }}>
         <div className="stat-card">
           <div className="stat-icon stat-icon-green"><TrendingUp size={24} /></div>
-          <div><div className="stat-value">Shekel {(summary?.grandTotal || 0).toLocaleString()}</div><div className="stat-label">Total Funds Managed</div></div>
+          <div><div className="stat-value">₪ {(summary?.grandTotal || 0).toLocaleString()}</div><div className="stat-label">Total Funds Managed</div></div>
         </div>
         <div className="stat-card">
           <div className="stat-icon stat-icon-blue"><Users size={24} /></div>
@@ -91,7 +91,7 @@ const LeaderDashboard = () => {
             <div style={{ fontSize: '0.7rem', opacity: 0.8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>🟢 Active Campaign</div>
             <div style={{ fontWeight: 800, fontSize: '1.05rem' }}>{activeCampaign.title}</div>
             <div style={{ fontSize: '0.8rem', opacity: 0.85, marginTop: 3 }}>
-              Shekel {(activeCampaign.totalRaised || 0).toLocaleString()} raised · {activeCampaign.contributionCount || 0} contributions
+              ₪ {(activeCampaign.totalRaised || 0).toLocaleString()} raised · {activeCampaign.contributionCount || 0} contributions
             </div>
           </div>
           <Link to="/leader/contributions" style={{ background: 'rgba(255,255,255,0.18)', border: '1.5px solid rgba(255,255,255,0.3)', borderRadius: 10, padding: '8px 16px', color: '#fff', fontWeight: 700, textDecoration: 'none', fontSize: '0.85rem', flexShrink: 0 }}>
