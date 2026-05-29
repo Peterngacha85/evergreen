@@ -1,6 +1,8 @@
 const ChangeRequest = require('../models/ChangeRequest');
 const Leader = require('../models/Leader');
 
+const APPROVER_ROLES = ['Chairperson', 'Secretary', 'Treasurer'];
+
 // @desc  Create a change request (leader requests approval to make changes)
 // @route POST /api/change-requests
 // @access Leader only
@@ -66,6 +68,11 @@ const voteOnChangeRequest = async (req, res) => {
     if (changeRequest.status !== 'pending')
       return res.status(400).json({ message: `Cannot vote on a ${changeRequest.status} request` });
 
+    // Only Chairperson, Secretary, and Treasurer can vote
+    if (!APPROVER_ROLES.includes(req.user.leaderRole)) {
+      return res.status(403).json({ message: 'Only Chairperson, Secretary, and Treasurer can vote on change requests' });
+    }
+
     // Requester cannot vote on their own request
     if (changeRequest.requestedBy.toString() === req.user._id.toString())
       return res.status(403).json({ message: 'You cannot vote on your own request' });
@@ -79,19 +86,22 @@ const voteOnChangeRequest = async (req, res) => {
     // Add vote
     changeRequest.votes.push({ leader: req.user._id, approved });
 
-    // If rejected by any one leader → rejected
+    // If rejected by any approver → rejected
     if (!approved) {
       changeRequest.status = 'rejected';
       await changeRequest.save();
       return res.json({ message: 'Request rejected', changeRequest });
     }
 
-    // Check if fully approved (all other active leaders voted yes)
-    const totalLeaders = await Leader.countDocuments({ isActive: true });
-    const approvals = changeRequest.votes.filter((v) => v.approved).length;
+    // Check if fully approved — only Chairperson, Secretary, Treasurer count
+    const approvers = await Leader.find({ isActive: true, leaderRole: { $in: APPROVER_ROLES } }, '_id');
+    const approverIds = approvers.map((l) => l._id.toString());
+    const requiredCount = approverIds.filter((id) => id !== changeRequest.requestedBy.toString()).length;
+    const approvals = changeRequest.votes.filter(
+      (v) => v.approved && approverIds.includes(v.leader.toString())
+    ).length;
 
-    // All leaders except requester must approve
-    if (approvals >= totalLeaders - 1) {
+    if (approvals >= requiredCount) {
       changeRequest.status = 'approved';
     }
 

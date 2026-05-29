@@ -9,9 +9,12 @@ import ConfirmModal from '../../components/common/ConfirmModal';
 import StatusBadge from '../../components/common/StatusBadge';
 import toast from 'react-hot-toast';
 
+const APPROVER_ROLES = ['Chairperson', 'Secretary', 'Treasurer'];
+
 const ChangeRequestsPage = () => {
   const socket = useSocket();
   const { user, isSuperAdmin } = useAuth();
+  const isApprover = APPROVER_ROLES.includes(user?.leaderRole);
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeSession, setActiveSession] = useState(null);
@@ -79,7 +82,7 @@ const ChangeRequestsPage = () => {
     setSubmitting(true);
     try {
       await createChangeRequest({ reason });
-      toast.success('Access request submitted to other leaders');
+      toast.success('Access request submitted to Chairperson, Secretary, and Treasurer');
       setIsModalOpen(false);
       setReason('');
       fetchRequests();
@@ -173,7 +176,7 @@ const ChangeRequestsPage = () => {
                 <tr><td colSpan={6}><div className="empty-state"><div className="empty-state-icon">📋</div><div className="empty-state-title">No requests found</div></div></td></tr>
               ) : requests.map(req => {
                 const myVote = req.votes.find(v => v.leader?._id === user?._id);
-                const canVote = req.status === 'pending' && req.requestedBy?._id !== user?._id && !myVote && !isSuperAdmin;
+                const canVote = req.status === 'pending' && req.requestedBy?._id !== user?._id && !myVote && !isSuperAdmin && isApprover;
 
                 return (
                   <tr key={req._id}>
@@ -230,7 +233,7 @@ const ChangeRequestsPage = () => {
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Request Edit Access">
         <form onSubmit={handleCreateRequest} className="flex-col gap-4">
           <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 16 }}>
-            To modify data (add members, record contributions, etc.), you must briefly describe what you intend to do. All other active leaders must approve this request.
+            To modify data (add members, record contributions, etc.), briefly describe what you intend to do. The Chairperson, Secretary, and Treasurer must approve this request.
           </p>
           <div className="form-group">
             <label className="form-label">Reason for access</label>
