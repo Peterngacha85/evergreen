@@ -38,55 +38,37 @@ const leaderLogin = async (req, res) => {
   }
 };
 
-// @desc  Super Admin login (email + password from .env)
+// @desc  Super Admin login (email + password from .env only)
 // @route POST /api/auth/superadmin/login
 // @access Public
 const superAdminLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Check against .env first
-    const isEnvMatch = email === process.env.SUPER_ADMIN_EMAIL && password === process.env.SUPER_ADMIN_PASSWORD;
-    
-    // Find superadmin record to check DB password fallback
-    let superAdminRecord = await Leader.findOne({ email: process.env.SUPER_ADMIN_EMAIL }).select('+password');
-    
-    if (!superAdminRecord && email === process.env.SUPER_ADMIN_EMAIL) {
-       // Try fallback by idNumber if email search failed
-       superAdminRecord = await Leader.findOne({ idNumber: '00000000' }).select('+password');
-    }
-
-    let isDbMatch = false;
-    if (superAdminRecord) {
-      isDbMatch = await superAdminRecord.matchPassword(password);
-    }
-
-    if (!isEnvMatch && !isDbMatch) {
+    // Only .env credentials are authoritative — no DB password fallback
+    if (email !== process.env.SUPER_ADMIN_EMAIL || password !== process.env.SUPER_ADMIN_PASSWORD) {
       return res.status(401).json({ message: 'Invalid superadmin credentials' });
     }
 
-    // Ensure superadmin exists in DB for profile photo updates
-    if (!superAdminRecord) {
-      // Fallback: search by idNumber in case it was created without an email field previously
-      superAdminRecord = await Leader.findOne({ idNumber: '00000000' });
-      
-      if (superAdminRecord) {
-        // Update existing record with the email and role
-        superAdminRecord.email = process.env.SUPER_ADMIN_EMAIL;
-        superAdminRecord.role = 'superadmin';
-        await superAdminRecord.save();
-      } else {
-        // Create new record
-        superAdminRecord = await Leader.create({
-          name: 'Super Admin',
-          email: process.env.SUPER_ADMIN_EMAIL,
-          password: process.env.SUPER_ADMIN_PASSWORD,
-          phoneNumber: '0000000000',
-          idNumber: '00000000',
-          leaderRole: 'Chairman',
-          role: 'superadmin'
-        });
-      }
+    // Ensure superadmin record exists in DB and is in sync with .env
+    let superAdminRecord = await Leader.findOne({ idNumber: '00000000' }).select('+password');
+
+    if (superAdminRecord) {
+      // Keep DB record in sync with current .env credentials
+      superAdminRecord.email = process.env.SUPER_ADMIN_EMAIL;
+      superAdminRecord.password = process.env.SUPER_ADMIN_PASSWORD;
+      superAdminRecord.role = 'superadmin';
+      await superAdminRecord.save();
+    } else {
+      superAdminRecord = await Leader.create({
+        name: 'Super Admin',
+        email: process.env.SUPER_ADMIN_EMAIL,
+        password: process.env.SUPER_ADMIN_PASSWORD,
+        phoneNumber: '0000000000',
+        idNumber: '00000000',
+        leaderRole: 'Chairman',
+        role: 'superadmin'
+      });
     }
 
     const token = generateToken(superAdminRecord._id, 'superadmin');
