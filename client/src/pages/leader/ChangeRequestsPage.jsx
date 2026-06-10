@@ -232,8 +232,11 @@ const ChangeRequestsPage = () => {
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Request Edit Access">
         <form onSubmit={handleCreateRequest} className="flex-col gap-4">
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 16 }}>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 8 }}>
             To modify data (add members, record contributions, etc.), briefly describe what you intend to do. The Chairperson, Secretary, and Treasurer must approve this request.
+          </p>
+          <p style={{ fontSize: '0.82rem', color: '#d97706', background: '#fef3c7', border: '1px solid #fde68a', borderRadius: 'var(--radius)', padding: '8px 12px', marginBottom: 16 }}>
+            Once approved, your edit session will be valid for <strong>24 hours</strong>.
           </p>
           <div className="form-group">
             <label className="form-label">Reason for access</label>

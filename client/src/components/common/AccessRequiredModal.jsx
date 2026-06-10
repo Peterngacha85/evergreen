@@ -122,7 +122,7 @@ const AccessRequiredModal = ({ isOpen, onClose }) => {
             }}>
               <div style={{ fontWeight: 600, fontSize: '0.88rem', marginBottom: 4 }}>How it works</div>
               <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                Submit a request with a brief reason. All three office bearers must approve before your edit session is unlocked.
+                Submit a request with a brief reason. All three office bearers must approve before your edit session is unlocked. Once approved, your session is valid for <strong>24 hours</strong>.
               </div>
             </div>
           </>

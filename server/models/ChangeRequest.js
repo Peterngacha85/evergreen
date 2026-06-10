@@ -19,7 +19,7 @@ const changeRequestSchema = new mongoose.Schema(
     votes: [voteSchema],
     expiresAt: {
       type: Date,
-      default: () => new Date(Date.now() + parseInt(process.env.CHANGE_REQUEST_EXPIRY_MS || 1800000)),
+      default: () => new Date(Date.now() + parseInt(process.env.CHANGE_REQUEST_EXPIRY_MS || 86400000)),
     },
     sessionUsed: { type: Boolean, default: false },
   },
