@@ -9,7 +9,7 @@ const leaderSchema = new mongoose.Schema(
     phoneNumber: { type: String, required: true, trim: true },
     password: { type: String, required: true, minlength: 4 },
     plainPassword: { type: String, default: '' },
-    leaderRole: { type: String, required: true },
+    leaderRole: { type: String, required: true, trim: true },
     profilePhoto: {
       url: { type: String, default: '' },
       publicId: { type: String, default: '' },

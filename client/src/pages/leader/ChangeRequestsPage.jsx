@@ -11,11 +11,13 @@ import StatusBadge from '../../components/common/StatusBadge';
 import toast from 'react-hot-toast';
 
 const APPROVER_ROLES = ['Chairperson', 'Secretary', 'Treasurer'];
+const isApproverRole = (role) =>
+  APPROVER_ROLES.some(r => r.toLowerCase() === (role || '').trim().toLowerCase());
 
 const ChangeRequestsPage = () => {
   const socket = useSocket();
   const { user, isSuperAdmin } = useAuth();
-  const isApprover = APPROVER_ROLES.includes(user?.leaderRole);
+  const isApprover = isApproverRole(user?.leaderRole);
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeSession, setActiveSession] = useState(null);
@@ -131,7 +133,7 @@ const ChangeRequestsPage = () => {
           <h1 className="page-title">Change Requests</h1>
           <p className="page-subtitle">Approve peer actions or request access yourself</p>
         </div>
-        {!isSuperAdmin && (
+        {!isSuperAdmin && isApprover && (
           <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
             <Plus size={18} /> Request Edit Access
           </button>

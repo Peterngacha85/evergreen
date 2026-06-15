@@ -3,6 +3,9 @@ const Leader = require('../models/Leader');
 
 const APPROVER_ROLES = ['Chairperson', 'Secretary', 'Treasurer'];
 
+const isApproverRole = (role) =>
+  APPROVER_ROLES.some(r => r.toLowerCase() === (role || '').trim().toLowerCase());
+
 // @desc  Create a change request (leader requests approval to make changes)
 // @route POST /api/change-requests
 // @access Leader only
@@ -10,6 +13,11 @@ const createChangeRequest = async (req, res) => {
   try {
     const { reason } = req.body;
     if (!reason) return res.status(400).json({ message: 'Reason is required' });
+
+    // Only Chairperson, Secretary, and Treasurer can submit change requests
+    if (!isApproverRole(req.user.leaderRole)) {
+      return res.status(403).json({ message: 'Only Chairperson, Secretary, and Treasurer can submit change requests' });
+    }
 
     // Check if this leader already has a pending/approved active request
     const existing = await ChangeRequest.findOne({
@@ -69,7 +77,7 @@ const voteOnChangeRequest = async (req, res) => {
       return res.status(400).json({ message: `Cannot vote on a ${changeRequest.status} request` });
 
     // Only Chairperson, Secretary, and Treasurer can vote
-    if (!APPROVER_ROLES.includes(req.user.leaderRole)) {
+    if (!isApproverRole(req.user.leaderRole)) {
       return res.status(403).json({ message: 'Only Chairperson, Secretary, and Treasurer can vote on change requests' });
     }
 
@@ -94,7 +102,7 @@ const voteOnChangeRequest = async (req, res) => {
     }
 
     // Check if fully approved — only Chairperson, Secretary, Treasurer count
-    const approvers = await Leader.find({ isActive: true, leaderRole: { $in: APPROVER_ROLES } }, '_id');
+    const approvers = await Leader.find({ isActive: true, leaderRole: { $in: APPROVER_ROLES.map(r => new RegExp(`^${r}$`, 'i')) } }, '_id');
     const approverIds = approvers.map((l) => l._id.toString());
     const requiredCount = approverIds.filter((id) => id !== changeRequest.requestedBy.toString()).length;
     const approvals = changeRequest.votes.filter(

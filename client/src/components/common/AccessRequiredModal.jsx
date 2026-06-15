@@ -6,6 +6,8 @@ import { getChangeRequests } from '../../api/changeRequests';
 import { useAuth } from '../../context/AuthContext';
 
 const APPROVER_ROLES = ['Chairperson', 'Secretary', 'Treasurer'];
+const matchesApproverRole = (role, target) =>
+  target.toLowerCase() === (role || '').trim().toLowerCase();
 
 const AccessRequiredModal = ({ isOpen, onClose }) => {
   const { user } = useAuth();
@@ -29,12 +31,12 @@ const AccessRequiredModal = ({ isOpen, onClose }) => {
 
   const approvedRoles = hasPending
     ? pendingRequest.votes
-        .filter(v => v.approved && APPROVER_ROLES.includes(v.leader?.leaderRole))
-        .map(v => v.leader.leaderRole)
+        .filter(v => v.approved && APPROVER_ROLES.some(r => matchesApproverRole(v.leader?.leaderRole, r)))
+        .map(v => (v.leader.leaderRole || '').trim())
     : [];
 
   const stillPending = APPROVER_ROLES.filter(
-    r => r !== requesterRole && !approvedRoles.includes(r)
+    r => !matchesApproverRole(requesterRole, r) && !approvedRoles.some(a => matchesApproverRole(a, r))
   );
 
   const waitingText =
@@ -75,8 +77,8 @@ const AccessRequiredModal = ({ isOpen, onClose }) => {
             {/* Per-role status cards */}
             <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
               {APPROVER_ROLES.map(role => {
-                const isRequester = role === requesterRole;
-                const didApprove = approvedRoles.includes(role);
+                const isRequester = matchesApproverRole(requesterRole, role);
+                const didApprove = approvedRoles.some(a => matchesApproverRole(a, role));
 
                 let bg, border, textColor, icon, label;
                 if (isRequester) {
