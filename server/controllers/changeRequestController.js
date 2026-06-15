@@ -25,7 +25,7 @@ const createChangeRequest = async (req, res) => {
       });
     }
 
-    const expiresAt = new Date(Date.now() + parseInt(process.env.CHANGE_REQUEST_EXPIRY_MS || 1800000));
+    const expiresAt = new Date(Date.now() + parseInt(process.env.CHANGE_REQUEST_EXPIRY_MS || 86400000));
 
     const changeRequest = await ChangeRequest.create({
       requestedBy: req.user._id,
