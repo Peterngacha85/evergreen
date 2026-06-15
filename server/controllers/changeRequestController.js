@@ -101,9 +101,13 @@ const voteOnChangeRequest = async (req, res) => {
       return res.json({ message: 'Request rejected', changeRequest });
     }
 
-    // Check if fully approved — only Chairperson, Secretary, Treasurer count
-    const approvers = await Leader.find({ isActive: true, leaderRole: { $in: APPROVER_ROLES.map(r => new RegExp(`^${r}$`, 'i')) } }, '_id');
-    const approverIds = approvers.map((l) => l._id.toString());
+    // Check if fully approved — only Chairperson, Secretary, Treasurer count.
+    // Fetch all active leaders and filter in JS so the trim+case-insensitive
+    // isApproverRole helper handles any whitespace/casing in stored roles.
+    const allActive = await Leader.find({ isActive: true }, '_id leaderRole');
+    const approverIds = allActive
+      .filter((l) => isApproverRole(l.leaderRole))
+      .map((l) => l._id.toString());
     const requiredCount = approverIds.filter((id) => id !== changeRequest.requestedBy.toString()).length;
     const approvals = changeRequest.votes.filter(
       (v) => v.approved && approverIds.includes(v.leader.toString())
