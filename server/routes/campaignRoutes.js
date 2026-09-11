@@ -3,7 +3,7 @@ const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
 const {
   createCampaign,
-  getActiveCampaign,
+  getActiveCampaigns,
   completeCampaign,
   getCampaignHistory,
   getAllCampaigns,
@@ -12,8 +12,8 @@ const {
 // All routes require authentication
 router.use(protect);
 
-// Get active campaign (accessible to all logged-in users)
-router.get('/active', getActiveCampaign);
+// Get all active campaigns (accessible to all logged-in users)
+router.get('/active', getActiveCampaigns);
 
 // Get campaign history (accessible to all logged-in users)
 router.get('/history', getCampaignHistory);

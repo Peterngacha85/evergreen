@@ -6,19 +6,24 @@ const Contribution = require('../models/Contribution');
 // @access Leader + SuperAdmin
 const createCampaign = async (req, res) => {
   try {
-    // Enforce only one active campaign at a time
-    const existing = await ContributionCampaign.findOne({ status: 'active' });
-    if (existing) {
-      return res.status(400).json({
-        message: 'There is already an active campaign. Please complete it before starting a new one.',
-        activeCampaign: existing,
-      });
-    }
-
     const { title, category, description, targetAmount, targetMember, claim } = req.body;
 
     if (!title || !category) {
       return res.status(400).json({ message: 'Title and category are required.' });
+    }
+
+    // Multiple campaigns can run at once (e.g. two different families' demise
+    // drives), but avoid accidentally starting two active campaigns for the
+    // same member.
+    if (targetMember) {
+      const duplicate = await ContributionCampaign.findOne({ status: 'active', targetMember })
+        .populate('targetMember', 'name idNumber');
+      if (duplicate) {
+        return res.status(400).json({
+          message: `${duplicate.targetMember?.name || 'This member'} already has an active campaign: "${duplicate.title}". Complete it before starting another one for the same member.`,
+          activeCampaign: duplicate,
+        });
+      }
     }
 
     const campaign = await ContributionCampaign.create({
@@ -42,29 +47,31 @@ const createCampaign = async (req, res) => {
   }
 };
 
-// @desc  Get the currently active campaign (with total raised)
+// @desc  Get all currently active campaigns (each with its total raised)
 // @route GET /api/campaigns/active
 // @access Leader + Member + SuperAdmin
-const getActiveCampaign = async (req, res) => {
+const getActiveCampaigns = async (req, res) => {
   try {
-    const campaign = await ContributionCampaign.findOne({ status: 'active' })
+    const campaigns = await ContributionCampaign.find({ status: 'active' })
       .populate('recordedBy', 'name leaderRole')
-      .populate('targetMember', 'name idNumber');
+      .populate('targetMember', 'name idNumber')
+      .sort({ createdAt: -1 });
 
-    if (!campaign) {
-      return res.json(null); // No active campaign
-    }
+    if (campaigns.length === 0) return res.json([]);
 
-    // Aggregate total contributions linked to this campaign
+    // Aggregate total contributions linked to each campaign
     const agg = await Contribution.aggregate([
-      { $match: { campaign: campaign._id } },
-      { $group: { _id: null, total: { $sum: '$amount' }, count: { $sum: 1 } } },
+      { $match: { campaign: { $in: campaigns.map((c) => c._id) } } },
+      { $group: { _id: '$campaign', total: { $sum: '$amount' }, count: { $sum: 1 } } },
     ]);
+    const totalsById = new Map(agg.map((a) => [String(a._id), a]));
 
-    const totalRaised = agg[0]?.total || 0;
-    const contributionCount = agg[0]?.count || 0;
+    const result = campaigns.map((c) => {
+      const totals = totalsById.get(String(c._id));
+      return { ...c.toObject(), totalRaised: totals?.total || 0, contributionCount: totals?.count || 0 };
+    });
 
-    res.json({ ...campaign.toObject(), totalRaised, contributionCount });
+    res.json(result);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -148,7 +155,7 @@ const getAllCampaigns = async (req, res) => {
 
 module.exports = {
   createCampaign,
-  getActiveCampaign,
+  getActiveCampaigns,
   completeCampaign,
   getCampaignHistory,
   getAllCampaigns,

@@ -70,17 +70,35 @@ const addContribution = async (req, res) => {
     let campaignId = null;
     let finalCategory = normalizedCategory;
 
-    // For non-emergency-kit categories, require an active campaign and lock category to it
+    // For non-emergency-kit categories, the leader must pick which active
+    // campaign this contribution belongs to (several can run at once), and
+    // the category is locked to that campaign's category.
     if (!emergencyKit) {
-      const activeCampaign = await ContributionCampaign.findOne({ status: 'active' });
-      if (!activeCampaign) {
+      if (!req.body.campaignId) {
+        const activeCampaigns = await ContributionCampaign.find({ status: 'active' })
+          .select('title category targetMember').populate('targetMember', 'name').lean();
+        if (activeCampaigns.length === 0) {
+          return res.status(400).json({
+            message: 'No active contribution campaign. A leader must start a campaign before recording event contributions.',
+            requiresCampaign: true,
+          });
+        }
         return res.status(400).json({
-          message: 'No active contribution campaign. A leader must start a campaign before recording event contributions.',
+          message: 'Select which active campaign this contribution belongs to.',
+          requiresCampaignSelection: true,
+          campaigns: activeCampaigns,
+        });
+      }
+
+      const campaign = await ContributionCampaign.findById(req.body.campaignId);
+      if (!campaign || campaign.status !== 'active') {
+        return res.status(400).json({
+          message: 'The selected campaign is no longer active. Choose another or start a new one.',
           requiresCampaign: true,
         });
       }
-      campaignId = activeCampaign._id;
-      finalCategory = normalizeCategory(activeCampaign.category);
+      campaignId = campaign._id;
+      finalCategory = normalizeCategory(campaign.category);
     }
 
     const finalDatePaid = datePaid || Date.now();
@@ -211,15 +229,36 @@ const updateContribution = async (req, res) => {
         contribution.category = normalizedCategory;
         contribution.campaign = null;
       } else {
-        const activeCampaign = currentCampaign || await ContributionCampaign.findOne({ status: 'active' });
-        if (!activeCampaign) {
+        // Default to whatever campaign this contribution is already linked to;
+        // otherwise the caller must pick one (several may be active at once).
+        const requestedCampaignId = req.body.campaignId || (currentCampaign ? String(currentCampaign._id) : null);
+        if (!requestedCampaignId) {
+          const activeCampaigns = await ContributionCampaign.find({ status: 'active' })
+            .select('title category targetMember').populate('targetMember', 'name').lean();
+          if (activeCampaigns.length === 0) {
+            return res.status(400).json({
+              message: 'No active contribution campaign. A leader must start a campaign before recording event contributions.',
+              requiresCampaign: true,
+            });
+          }
           return res.status(400).json({
-            message: 'No active contribution campaign. A leader must start a campaign before recording event contributions.',
+            message: 'Select which active campaign this contribution belongs to.',
+            requiresCampaignSelection: true,
+            campaigns: activeCampaigns,
+          });
+        }
+
+        const campaign = (currentCampaign && requestedCampaignId === String(currentCampaign._id))
+          ? currentCampaign
+          : await ContributionCampaign.findById(requestedCampaignId);
+        if (!campaign || campaign.status !== 'active') {
+          return res.status(400).json({
+            message: 'The selected campaign is no longer active. Choose another or start a new one.',
             requiresCampaign: true,
           });
         }
-        contribution.category = normalizeCategory(activeCampaign.category);
-        contribution.campaign = activeCampaign._id;
+        contribution.category = normalizeCategory(campaign.category);
+        contribution.campaign = campaign._id;
       }
     } else if (currentCampaign) {
       contribution.category = normalizeCategory(currentCampaign.category);

@@ -3,7 +3,7 @@ import { getContributions, addContribution, updateContribution, deleteContributi
 import { getMembers } from '../../api/members';
 import { getCategories, createCategory } from '../../api/categories';
 import { validateSession } from '../../api/changeRequests';
-import { getActiveCampaign, getCampaignHistory, createCampaign, completeCampaign } from '../../api/campaigns';
+import { getActiveCampaigns, getCampaignHistory, createCampaign, completeCampaign } from '../../api/campaigns';
 import { useSocket } from '../../context/SocketContext';
 import Modal from '../../components/common/Modal';
 import AccessRequiredModal from '../../components/common/AccessRequiredModal';
@@ -23,7 +23,7 @@ const LeaderContributionsPage = () => {
   const [contributions, setContributions] = useState([]);
   const [members, setMembers] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [activeCampaign, setActiveCampaign] = useState(null);
+  const [activeCampaigns, setActiveCampaigns] = useState([]);
   const [campaignHistory, setCampaignHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hasAccess, setHasAccess] = useState(false);
@@ -31,13 +31,13 @@ const LeaderContributionsPage = () => {
   // Contribution modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [formData, setFormData] = useState({ id: '', memberId: '', amount: '', category: '', description: '', datePaid: '' });
+  const [formData, setFormData] = useState({ id: '', memberId: '', amount: '', category: '', campaignId: '', description: '', datePaid: '' });
   const [submitting, setSubmitting] = useState(false);
   const [duplicateWarning, setDuplicateWarning] = useState(null);
 
   // Campaign modals
   const [isStartCampaignOpen, setIsStartCampaignOpen] = useState(false);
-  const [isCompleteCampaignOpen, setIsCompleteCampaignOpen] = useState(false);
+  const [completingCampaign, setCompletingCampaign] = useState(null);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isAccessModalOpen, setIsAccessModalOpen] = useState(false);
@@ -62,14 +62,14 @@ const LeaderContributionsPage = () => {
         getMembers(),
         !isSuperAdmin ? validateSession().catch(() => ({ data: { hasSession: false } })) : Promise.resolve({ data: { hasSession: true } }),
         getCategories(),
-        getActiveCampaign(),
+        getActiveCampaigns(),
         getCampaignHistory(),
       ]);
       setContributions(c.data);
       setMembers(m.data);
       setHasAccess(s.data.hasSession);
       setCategories(cat.data);
-      setActiveCampaign(ac.data);
+      setActiveCampaigns(ac.data);
       setCampaignHistory(hist.data);
     } catch (err) {
       console.error(err);
@@ -99,14 +99,12 @@ const LeaderContributionsPage = () => {
     setDuplicateWarning(null);
     if (contrib) {
       setIsEditMode(true);
-      setFormData({ id: contrib._id, memberId: contrib.member._id, amount: contrib.amount, category: contrib.category, description: contrib.description || '', datePaid: new Date(contrib.datePaid).toISOString().split('T')[0] });
+      setFormData({ id: contrib._id, memberId: contrib.member._id, amount: contrib.amount, category: contrib.category, campaignId: contrib.campaign?._id || '', description: contrib.description || '', datePaid: new Date(contrib.datePaid).toISOString().split('T')[0] });
     } else {
       setIsEditMode(false);
       const emergencyCategories = categories.filter(c => isEmergencyKitCat(c.name));
-      const defaultCategory = activeCampaign
-        ? activeCampaign.category
-        : (emergencyCategories.length > 0 ? emergencyCategories[0].name : (categories.length > 0 ? categories[0].name : ''));
-      setFormData({ id: '', memberId: '', amount: '', category: defaultCategory, description: '', datePaid: new Date().toISOString().split('T')[0] });
+      const defaultCategory = emergencyCategories.length > 0 ? emergencyCategories[0].name : (categories.length > 0 ? categories[0].name : '');
+      setFormData({ id: '', memberId: '', amount: '', category: defaultCategory, campaignId: '', description: '', datePaid: new Date().toISOString().split('T')[0] });
     }
     setIsModalOpen(true);
   };
@@ -152,6 +150,21 @@ const LeaderContributionsPage = () => {
     setDuplicateWarning(null);
     setFormData(prev => ({ ...prev, ...patch }));
   };
+
+  // The category select mixes plain Emergency Kit categories with specific
+  // active campaigns (several may share the same category name, e.g. two
+  // "Demise" drives for different families), so each campaign option is
+  // encoded as "campaign:<id>" to tell them apart.
+  const selectedCategoryValue = formData.campaignId ? `campaign:${formData.campaignId}` : formData.category;
+  const handleCategorySelect = (value) => {
+    if (value.startsWith('campaign:')) {
+      const campaign = activeCampaigns.find(c => c._id === value.slice('campaign:'.length));
+      if (campaign) updateField({ category: campaign.category, campaignId: campaign._id });
+    } else {
+      updateField({ category: value, campaignId: '' });
+    }
+  };
+  const selectedCampaign = formData.campaignId ? activeCampaigns.find(c => c._id === formData.campaignId) : null;
 
   const renderDuplicateDetail = () => {
     const dup = duplicateWarning?.duplicate;
@@ -199,9 +212,9 @@ const LeaderContributionsPage = () => {
     if (!hasAccess && !isSuperAdmin) { setIsAccessModalOpen(true); return; }
     setCampaignSubmitting(true);
     try {
-      await completeCampaign(activeCampaign._id, completeForm);
+      await completeCampaign(completingCampaign._id, completeForm);
       toast.success('Campaign completed & funds marked as paid out!');
-      setIsCompleteCampaignOpen(false);
+      setCompletingCampaign(null);
       setCompleteForm({ payoutNotes: '', markClaimPaid: false });
       fetchData();
     } catch (err) {
@@ -254,8 +267,8 @@ const LeaderContributionsPage = () => {
 
   if (loading) return <div className="flex justify-center" style={{ paddingTop: 80 }}><div className="spinner" /></div>;
 
-  const campaignProgress = activeCampaign?.targetAmount
-    ? Math.min(100, ((activeCampaign.totalRaised || 0) / activeCampaign.targetAmount) * 100)
+  const campaignProgress = (campaign) => campaign?.targetAmount
+    ? Math.min(100, ((campaign.totalRaised || 0) / campaign.targetAmount) * 100)
     : null;
 
   return (
@@ -269,66 +282,78 @@ const LeaderContributionsPage = () => {
           <button className="btn btn-ghost" onClick={() => setIsHistoryOpen(true)} style={{ gap: 6 }}>
             <History size={17} /> Campaign History
           </button>
+          <button
+            className="btn btn-ghost"
+            onClick={() => { if (!hasAccess && !isSuperAdmin) { setIsAccessModalOpen(true); return; } setIsStartCampaignOpen(true); }}
+          >
+            <Plus size={17} /> Start Campaign
+          </button>
           <button className="btn btn-primary" onClick={() => handleOpenModal()}>
             <Plus size={18} /> Record Contribution
           </button>
         </div>
       </div>
 
-      {/* ── Active Campaign Banner ────────────────────────────────────── */}
-      {activeCampaign ? (
-        <div style={{
-          background: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 60%, #3b82f6 100%)',
-          borderRadius: 'var(--radius-xl)', padding: '22px 28px', marginBottom: 24,
-          color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          gap: 16, flexWrap: 'wrap', boxShadow: '0 4px 24px rgba(37,99,235,0.22)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 18, flex: 1 }}>
-            <div style={{ width: 52, height: 52, borderRadius: 16, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Flag size={26} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '0.75rem', opacity: 0.8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 3 }}>
-                🟢 Active Contribution Campaign
-              </div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: 6 }}>{activeCampaign.title}</div>
-              <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-                <span style={{ background: 'rgba(255,255,255,0.18)', padding: '2px 10px', borderRadius: 20, fontSize: '0.78rem', fontWeight: 700 }}>
-                  {activeCampaign.category}
-                </span>
-                {activeCampaign.targetMember && (
-                  <span style={{ opacity: 0.85, fontSize: '0.82rem' }}>
-                    For: <strong>{activeCampaign.targetMember.name}</strong>
-                  </span>
-                )}
-                <span style={{ opacity: 0.8, fontSize: '0.82rem' }}>
-                  Started {format(new Date(activeCampaign.createdAt), 'dd MMM yyyy')}
-                </span>
-              </div>
-              {campaignProgress !== null && (
-                <div style={{ marginTop: 10 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem', opacity: 0.85, marginBottom: 5 }}>
-                    <span>₪ {(activeCampaign.totalRaised || 0).toLocaleString()} raised</span>
-                    <span>Target: ₪ {activeCampaign.targetAmount.toLocaleString()}</span>
+      {/* ── Active Campaign Banners ───────────────────────────────────── */}
+      {activeCampaigns.length > 0 ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 24 }}>
+          {activeCampaigns.map(campaign => {
+            const progress = campaignProgress(campaign);
+            return (
+              <div key={campaign._id} style={{
+                background: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 60%, #3b82f6 100%)',
+                borderRadius: 'var(--radius-xl)', padding: '22px 28px',
+                color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                gap: 16, flexWrap: 'wrap', boxShadow: '0 4px 24px rgba(37,99,235,0.22)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 18, flex: 1 }}>
+                  <div style={{ width: 52, height: 52, borderRadius: 16, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Flag size={26} />
                   </div>
-                  <div style={{ height: 8, background: 'rgba(255,255,255,0.2)', borderRadius: 4, overflow: 'hidden' }}>
-                    <div style={{ width: `${campaignProgress}%`, height: '100%', background: '#86efac', borderRadius: 4, transition: 'width 0.5s ease' }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '0.75rem', opacity: 0.8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 3 }}>
+                      🟢 Active Contribution Campaign
+                    </div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: 6 }}>{campaign.title}</div>
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                      <span style={{ background: 'rgba(255,255,255,0.18)', padding: '2px 10px', borderRadius: 20, fontSize: '0.78rem', fontWeight: 700 }}>
+                        {campaign.category}
+                      </span>
+                      {campaign.targetMember && (
+                        <span style={{ opacity: 0.85, fontSize: '0.82rem' }}>
+                          For: <strong>{campaign.targetMember.name}</strong>
+                        </span>
+                      )}
+                      <span style={{ opacity: 0.8, fontSize: '0.82rem' }}>
+                        Started {format(new Date(campaign.createdAt), 'dd MMM yyyy')}
+                      </span>
+                    </div>
+                    {progress !== null ? (
+                      <div style={{ marginTop: 10 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem', opacity: 0.85, marginBottom: 5 }}>
+                          <span>₪ {(campaign.totalRaised || 0).toLocaleString()} raised</span>
+                          <span>Target: ₪ {campaign.targetAmount.toLocaleString()}</span>
+                        </div>
+                        <div style={{ height: 8, background: 'rgba(255,255,255,0.2)', borderRadius: 4, overflow: 'hidden' }}>
+                          <div style={{ width: `${progress}%`, height: '100%', background: '#86efac', borderRadius: 4, transition: 'width 0.5s ease' }} />
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ marginTop: 8, opacity: 0.85, fontSize: '0.82rem' }}>
+                        ₪ {(campaign.totalRaised || 0).toLocaleString()} raised · {campaign.contributionCount || 0} contributions
+                      </div>
+                    )}
                   </div>
                 </div>
-              )}
-              {campaignProgress === null && (
-                <div style={{ marginTop: 8, opacity: 0.85, fontSize: '0.82rem' }}>
-                  ₪ {(activeCampaign.totalRaised || 0).toLocaleString()} raised · {activeCampaign.contributionCount || 0} contributions
-                </div>
-              )}
-            </div>
-          </div>
-          <button
-            onClick={() => { if (!hasAccess && !isSuperAdmin) { setIsAccessModalOpen(true); return; } setIsCompleteCampaignOpen(true); }}
-            style={{ background: 'rgba(255,255,255,0.15)', border: '1.5px solid rgba(255,255,255,0.3)', borderRadius: 12, padding: '10px 18px', color: '#fff', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, backdropFilter: 'blur(4px)' }}
-          >
-            <CheckCircle size={18} /> Close & Pay Out
-          </button>
+                <button
+                  onClick={() => { if (!hasAccess && !isSuperAdmin) { setIsAccessModalOpen(true); return; } setCompleteForm({ payoutNotes: '', markClaimPaid: false }); setCompletingCampaign(campaign); }}
+                  style={{ background: 'rgba(255,255,255,0.15)', border: '1.5px solid rgba(255,255,255,0.3)', borderRadius: 12, padding: '10px 18px', color: '#fff', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, backdropFilter: 'blur(4px)' }}
+                >
+                  <CheckCircle size={18} /> Close & Pay Out
+                </button>
+              </div>
+            );
+          })}
         </div>
       ) : (
         <div style={{
@@ -342,7 +367,7 @@ const LeaderContributionsPage = () => {
             <div>
               <div style={{ fontWeight: 700, color: 'var(--gray-700)', fontSize: '1rem' }}>No Active Contribution Campaign</div>
               <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: 2 }}>
-                Start a campaign to allow recording event-based contributions (Demise, Sickness, Farewell, etc.)
+                Start a campaign to allow recording event-based contributions (Demise, Sickness, Farewell, etc.) — you can run more than one at once for different members.
               </div>
             </div>
           </div>
@@ -433,7 +458,7 @@ const LeaderContributionsPage = () => {
 
       {/* ── Record/Edit Contribution Modal ────────────────────────────── */}
       <Modal isOpen={isModalOpen} onClose={closeContributionModal} title={isEditMode ? 'Edit Contribution' : 'Record Contribution'}>
-        {!isEditMode && !activeCampaign && (
+        {!isEditMode && activeCampaigns.length === 0 && (
           <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, padding: '12px 16px', marginBottom: 16, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
             <Clock size={18} style={{ color: '#b45309', flexShrink: 0, marginTop: 1 }} />
             <div>
@@ -444,13 +469,13 @@ const LeaderContributionsPage = () => {
             </div>
           </div>
         )}
-        {!isEditMode && activeCampaign && !isEmergencyKitCat(formData.category) && (
+        {!isEditMode && selectedCampaign && (
           <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 10, padding: '12px 16px', marginBottom: 16, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
             <Flag size={18} style={{ color: '#2563eb', flexShrink: 0, marginTop: 1 }} />
             <div>
-              <div style={{ fontWeight: 700, color: '#1e40af', fontSize: '0.85rem' }}>Linked to: {activeCampaign.title}</div>
+              <div style={{ fontWeight: 700, color: '#1e40af', fontSize: '0.85rem' }}>Linked to: {selectedCampaign.title}</div>
               <div style={{ fontSize: '0.8rem', color: '#3b82f6', marginTop: 2 }}>
-                This contribution will be credited to the active campaign.
+                This contribution will be credited to this campaign{selectedCampaign.targetMember && <> (for {selectedCampaign.targetMember.name})</>}.
               </div>
             </div>
           </div>
@@ -467,19 +492,23 @@ const LeaderContributionsPage = () => {
           )}
           <div className="form-group">
             <div className="flex items-center justify-between">
-              <label className="form-label">Category</label>
+              <label className="form-label">Category / Campaign</label>
               <button type="button" onClick={() => setIsCategoryModalOpen(true)} style={{ fontSize: '0.75rem', color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>+ Add New</button>
             </div>
-            <select className="form-select" required value={formData.category} onChange={e => updateField({ category: e.target.value })}>
+            <select className="form-select" required value={selectedCategoryValue} onChange={e => handleCategorySelect(e.target.value)}>
               <option value="">-- Choose Category --</option>
               <optgroup label="Emergency Kit Categories">
                 {categories.filter(c => isEmergencyKitCat(c.name)).map(c => (
                   <option key={c._id} value={c.name}>{c.name}</option>
                 ))}
               </optgroup>
-              {activeCampaign && !isEmergencyKitCat(activeCampaign.category) && (
-                <optgroup label="Active Campaign">
-                  <option key="active-campaign" value={activeCampaign.category}>{activeCampaign.category}</option>
+              {activeCampaigns.length > 0 && (
+                <optgroup label="Active Campaigns">
+                  {activeCampaigns.map(c => (
+                    <option key={c._id} value={`campaign:${c._id}`}>
+                      {c.title} ({c.category}{c.targetMember ? ` — ${c.targetMember.name}` : ''})
+                    </option>
+                  ))}
                 </optgroup>
               )}
             </select>
@@ -547,12 +576,12 @@ const LeaderContributionsPage = () => {
       </Modal>
 
       {/* ── Complete Campaign Modal ───────────────────────────────────── */}
-      <Modal isOpen={isCompleteCampaignOpen} onClose={() => setIsCompleteCampaignOpen(false)} title="Close & Pay Out Campaign">
-        {activeCampaign && (
+      <Modal isOpen={!!completingCampaign} onClose={() => setCompletingCampaign(null)} title="Close & Pay Out Campaign">
+        {completingCampaign && (
           <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: '16px 20px', marginBottom: 20 }}>
-            <div style={{ fontWeight: 700, color: 'var(--green-700)', fontSize: '1rem', marginBottom: 4 }}>{activeCampaign.title}</div>
+            <div style={{ fontWeight: 700, color: 'var(--green-700)', fontSize: '1rem', marginBottom: 4 }}>{completingCampaign.title}</div>
             <div style={{ fontSize: '0.9rem', color: 'var(--green-600)' }}>
-              Total raised: <strong>₪ {(activeCampaign.totalRaised || 0).toLocaleString()}</strong> · {activeCampaign.contributionCount || 0} contributions
+              Total raised: <strong>₪ {(completingCampaign.totalRaised || 0).toLocaleString()}</strong> · {completingCampaign.contributionCount || 0} contributions
             </div>
           </div>
         )}
@@ -563,7 +592,7 @@ const LeaderContributionsPage = () => {
               placeholder="e.g. Amount of ₪ 45,000 handed to Jane Mwangi on 23rd May 2026."
               value={completeForm.payoutNotes} onChange={e => setCompleteForm({ ...completeForm, payoutNotes: e.target.value })} />
           </div>
-          {activeCampaign?.claim && (
+          {completingCampaign?.claim && (
             <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', padding: '10px 14px', background: 'var(--gray-50)', borderRadius: 10, border: '1px solid var(--border)' }}>
               <input type="checkbox" checked={completeForm.markClaimPaid} onChange={e => setCompleteForm({ ...completeForm, markClaimPaid: e.target.checked })} />
               <span style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--gray-700)' }}>Also mark the linked welfare claim as "Paid"</span>
@@ -573,7 +602,7 @@ const LeaderContributionsPage = () => {
             ⚠️ This action is permanent. The campaign will be archived and no further contributions can be added to it.
           </div>
           <div className="flex justify-between" style={{ marginTop: 8 }}>
-            <button type="button" className="btn btn-ghost" onClick={() => setIsCompleteCampaignOpen(false)}>Cancel</button>
+            <button type="button" className="btn btn-ghost" onClick={() => setCompletingCampaign(null)}>Cancel</button>
             <button type="submit" className="btn btn-primary" disabled={campaignSubmitting}
               style={{ background: '#16a34a' }}>
               {campaignSubmitting ? 'Completing...' : '✅ Complete & Archive'}

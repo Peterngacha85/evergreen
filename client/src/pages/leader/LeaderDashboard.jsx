@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { getContributionSummary } from '../../api/contributions';
 import { getChangeRequests } from '../../api/changeRequests';
 import { getMembers } from '../../api/members';
-import { getActiveCampaign } from '../../api/campaigns';
+import { getActiveCampaigns } from '../../api/campaigns';
 import { useAuth } from '../../context/AuthContext';
 import { Users, TrendingUp, AlertCircle, ShieldCheck, Flag } from 'lucide-react';
 import StatusBadge from '../../components/common/StatusBadge';
@@ -13,7 +13,7 @@ const LeaderDashboard = () => {
   const [summary, setSummary] = useState(null);
   const [pendingReqs, setPendingReqs] = useState([]);
   const [memberCount, setMemberCount] = useState(0);
-  const [activeCampaign, setActiveCampaign] = useState(null);
+  const [activeCampaigns, setActiveCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,12 +23,12 @@ const LeaderDashboard = () => {
           getContributionSummary(),
           getMembers(),
           getChangeRequests({ status: 'pending' }),
-          getActiveCampaign(),
+          getActiveCampaigns(),
         ]);
         setSummary(s.data);
         setMemberCount(m.data.length);
         setPendingReqs(r.data);
-        setActiveCampaign(ac.data);
+        setActiveCampaigns(ac.data);
       } catch (err) {
         // Handle error quietly
       } finally {
@@ -77,26 +77,30 @@ const LeaderDashboard = () => {
         </div>
       </div>
 
-      {/* Active Campaign Banner */}
-      {activeCampaign ? (
-        <div style={{
-          background: 'linear-gradient(135deg, #1d4ed8, #3b82f6)',
-          borderRadius: 'var(--radius-xl)', padding: '18px 24px', marginBottom: 24,
-          color: '#fff', boxShadow: '0 4px 20px rgba(37,99,235,0.2)', display: 'flex', alignItems: 'center', gap: 14
-        }}>
-          <div style={{ width: 46, height: 46, borderRadius: 14, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <Flag size={22} />
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '0.7rem', opacity: 0.8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>🟢 Active Campaign</div>
-            <div style={{ fontWeight: 800, fontSize: '1.05rem' }}>{activeCampaign.title}</div>
-            <div style={{ fontSize: '0.8rem', opacity: 0.85, marginTop: 3 }}>
-              ₪ {(activeCampaign.totalRaised || 0).toLocaleString()} raised · {activeCampaign.contributionCount || 0} contributions
+      {/* Active Campaign Banners */}
+      {activeCampaigns.length > 0 ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
+          {activeCampaigns.map(campaign => (
+            <div key={campaign._id} style={{
+              background: 'linear-gradient(135deg, #1d4ed8, #3b82f6)',
+              borderRadius: 'var(--radius-xl)', padding: '18px 24px',
+              color: '#fff', boxShadow: '0 4px 20px rgba(37,99,235,0.2)', display: 'flex', alignItems: 'center', gap: 14
+            }}>
+              <div style={{ width: 46, height: 46, borderRadius: 14, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Flag size={22} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '0.7rem', opacity: 0.8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>🟢 Active Campaign</div>
+                <div style={{ fontWeight: 800, fontSize: '1.05rem' }}>{campaign.title}</div>
+                <div style={{ fontSize: '0.8rem', opacity: 0.85, marginTop: 3 }}>
+                  ₪ {(campaign.totalRaised || 0).toLocaleString()} raised · {campaign.contributionCount || 0} contributions
+                </div>
+              </div>
+              <Link to="/leader/contributions" style={{ background: 'rgba(255,255,255,0.18)', border: '1.5px solid rgba(255,255,255,0.3)', borderRadius: 10, padding: '8px 16px', color: '#fff', fontWeight: 700, textDecoration: 'none', fontSize: '0.85rem', flexShrink: 0 }}>
+                Manage →
+              </Link>
             </div>
-          </div>
-          <Link to="/leader/contributions" style={{ background: 'rgba(255,255,255,0.18)', border: '1.5px solid rgba(255,255,255,0.3)', borderRadius: 10, padding: '8px 16px', color: '#fff', fontWeight: 700, textDecoration: 'none', fontSize: '0.85rem', flexShrink: 0 }}>
-            Manage →
-          </Link>
+          ))}
         </div>
       ) : (
         <div style={{

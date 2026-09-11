@@ -9,7 +9,7 @@ const ContributionCampaign = require('../models/ContributionCampaign');
 // @access  Private/Leader
 exports.getFundsOverview = async (req, res) => {
   try {
-    const [totalExpenses, emergencyContributions, activeCampaign] = await Promise.all([
+    const [totalExpenses, emergencyContributions, activeCampaigns] = await Promise.all([
       Expense.aggregate([
         { $group: { _id: null, total: { $sum: '$amount' } } }
       ]),
@@ -25,8 +25,9 @@ exports.getFundsOverview = async (req, res) => {
         },
         { $group: { _id: null, total: { $sum: '$amount' } } }
       ]),
-      ContributionCampaign.findOne({ status: 'active' })
+      ContributionCampaign.find({ status: 'active' })
         .populate('targetMember', 'name idNumber')
+        .sort({ createdAt: -1 })
     ]);
 
     // Emergency Kit: fees collected minus all expenses
@@ -34,18 +35,22 @@ exports.getFundsOverview = async (req, res) => {
     const totalOutExpenses = totalExpenses[0]?.total || 0;
     const emergencyBalance = emergencyIn - totalOutExpenses;
 
-    // Campaign contributions (for the active campaign, if any)
-    let campaignStats = null;
-    if (activeCampaign) {
+    // Contributions per active campaign (several may be running at once)
+    let campaignStatsList = [];
+    if (activeCampaigns.length > 0) {
       const campaignAgg = await Contribution.aggregate([
-        { $match: { campaign: activeCampaign._id } },
-        { $group: { _id: null, total: { $sum: '$amount' }, count: { $sum: 1 } } }
+        { $match: { campaign: { $in: activeCampaigns.map((c) => c._id) } } },
+        { $group: { _id: '$campaign', total: { $sum: '$amount' }, count: { $sum: 1 } } }
       ]);
-      campaignStats = {
-        campaign: activeCampaign,
-        totalRaised: campaignAgg[0]?.total || 0,
-        contributionCount: campaignAgg[0]?.count || 0,
-      };
+      const totalsById = new Map(campaignAgg.map((a) => [String(a._id), a]));
+      campaignStatsList = activeCampaigns.map((campaign) => {
+        const totals = totalsById.get(String(campaign._id));
+        return {
+          campaign,
+          totalRaised: totals?.total || 0,
+          contributionCount: totals?.count || 0,
+        };
+      });
     }
 
     // Also get counts
@@ -63,8 +68,10 @@ exports.getFundsOverview = async (req, res) => {
       // Alias for legacy frontend compatibility
       balance: emergencyBalance,
 
-      // Active campaign snapshot (if any)
-      campaignStats,
+      // Snapshot of every active campaign (empty array if none)
+      campaignStatsList,
+      // Legacy alias: first active campaign, for older frontend code still reading the singular field
+      campaignStats: campaignStatsList[0] || null,
 
       // Global stats
       memberCount,

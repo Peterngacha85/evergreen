@@ -17,8 +17,8 @@ const LeaderFundsPage = () => {
     day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
   });
 
-  const campaign = stats.campaignStats;
-  const campaignProgress = campaign?.campaign?.targetAmount
+  const campaignsList = stats.campaignStatsList || [];
+  const campaignProgress = (campaign) => campaign?.campaign?.targetAmount
     ? Math.min(100, (campaign.totalRaised / campaign.campaign.targetAmount) * 100)
     : null;
 
@@ -35,46 +35,53 @@ const LeaderFundsPage = () => {
         </div>
       </div>
 
-      {/* Active Campaign (if any) */}
-      {campaign ? (
-        <div style={{
-          background: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 60%, #3b82f6 100%)',
-          borderRadius: 'var(--radius-xl)', padding: '28px 32px', marginBottom: 32,
-          color: '#fff', boxShadow: '0 6px 28px rgba(37,99,235,0.25)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20, flexWrap: 'wrap' }}>
-            <div style={{ width: 56, height: 56, borderRadius: 18, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Flag size={28} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '0.72rem', opacity: 0.8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 4 }}>🟢 Active Contribution Campaign</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: 6 }}>{campaign.campaign.title}</div>
-              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', marginBottom: 12 }}>
-                <span style={{ background: 'rgba(255,255,255,0.18)', padding: '3px 12px', borderRadius: 20, fontSize: '0.8rem', fontWeight: 700 }}>{campaign.campaign.category}</span>
-                {campaign.campaign.targetMember && (
-                  <span style={{ opacity: 0.85, fontSize: '0.85rem' }}>For: <strong>{campaign.campaign.targetMember.name}</strong></span>
-                )}
-                <span style={{ opacity: 0.75, fontSize: '0.82rem' }}>{campaign.contributionCount} contributions</span>
+      {/* Active Campaigns (if any) */}
+      {campaignsList.length > 0 ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginBottom: 32 }}>
+          {campaignsList.map(campaign => {
+            const progress = campaignProgress(campaign);
+            return (
+              <div key={campaign.campaign._id} style={{
+                background: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 60%, #3b82f6 100%)',
+                borderRadius: 'var(--radius-xl)', padding: '28px 32px',
+                color: '#fff', boxShadow: '0 6px 28px rgba(37,99,235,0.25)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20, flexWrap: 'wrap' }}>
+                  <div style={{ width: 56, height: 56, borderRadius: 18, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Flag size={28} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '0.72rem', opacity: 0.8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 4 }}>🟢 Active Contribution Campaign</div>
+                    <div style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: 6 }}>{campaign.campaign.title}</div>
+                    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', marginBottom: 12 }}>
+                      <span style={{ background: 'rgba(255,255,255,0.18)', padding: '3px 12px', borderRadius: 20, fontSize: '0.8rem', fontWeight: 700 }}>{campaign.campaign.category}</span>
+                      {campaign.campaign.targetMember && (
+                        <span style={{ opacity: 0.85, fontSize: '0.85rem' }}>For: <strong>{campaign.campaign.targetMember.name}</strong></span>
+                      )}
+                      <span style={{ opacity: 0.75, fontSize: '0.82rem' }}>{campaign.contributionCount} contributions</span>
+                    </div>
+                    {progress !== null ? (
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', opacity: 0.85, marginBottom: 6 }}>
+                          <span>₪ {campaign.totalRaised.toLocaleString()} raised</span>
+                          <span>Target: ₪ {campaign.campaign.targetAmount.toLocaleString()}</span>
+                        </div>
+                        <div style={{ height: 10, background: 'rgba(255,255,255,0.2)', borderRadius: 5, overflow: 'hidden' }}>
+                          <div style={{ width: `${progress}%`, height: '100%', background: '#86efac', borderRadius: 5, transition: 'width 0.5s ease' }} />
+                        </div>
+                        <div style={{ fontSize: '0.75rem', opacity: 0.75, marginTop: 5 }}>{progress.toFixed(0)}% of target reached</div>
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#86efac' }}>
+                        ₪ {campaign.totalRaised.toLocaleString()}
+                        <span style={{ fontSize: '0.85rem', opacity: 0.75, fontWeight: 500, marginLeft: 8 }}>raised so far</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-              {campaignProgress !== null ? (
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', opacity: 0.85, marginBottom: 6 }}>
-                    <span>₪ {campaign.totalRaised.toLocaleString()} raised</span>
-                    <span>Target: ₪ {campaign.campaign.targetAmount.toLocaleString()}</span>
-                  </div>
-                  <div style={{ height: 10, background: 'rgba(255,255,255,0.2)', borderRadius: 5, overflow: 'hidden' }}>
-                    <div style={{ width: `${campaignProgress}%`, height: '100%', background: '#86efac', borderRadius: 5, transition: 'width 0.5s ease' }} />
-                  </div>
-                  <div style={{ fontSize: '0.75rem', opacity: 0.75, marginTop: 5 }}>{campaignProgress.toFixed(0)}% of target reached</div>
-                </div>
-              ) : (
-                <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#86efac' }}>
-                  ₪ {campaign.totalRaised.toLocaleString()}
-                  <span style={{ fontSize: '0.85rem', opacity: 0.75, fontWeight: 500, marginLeft: 8 }}>raised so far</span>
-                </div>
-              )}
-            </div>
-          </div>
+            );
+          })}
         </div>
       ) : (
         <div style={{

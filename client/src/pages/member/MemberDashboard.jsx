@@ -3,7 +3,7 @@ import { TrendingUp, Calendar, FileText, Wallet, Flag } from 'lucide-react';
 import { getMyContributions } from '../../api/contributions';
 import { getEvents } from '../../api/events';
 import { getMyClaims } from '../../api/claims';
-import { getActiveCampaign } from '../../api/campaigns';
+import { getActiveCampaigns } from '../../api/campaigns';
 import { useAuth } from '../../context/AuthContext';
 import { format } from 'date-fns';
 import StatusBadge from '../../components/common/StatusBadge';
@@ -13,7 +13,7 @@ const MemberDashboard = () => {
   const [contribs, setContribs] = useState([]);
   const [events, setEvents]     = useState([]);
   const [claims, setClaims]     = useState([]);
-  const [activeCampaign, setActiveCampaign] = useState(null);
+  const [activeCampaigns, setActiveCampaigns] = useState([]);
   const [loading, setLoading]   = useState(true);
 
   useEffect(() => {
@@ -23,12 +23,12 @@ const MemberDashboard = () => {
           getMyContributions(),
           getEvents({ upcoming: 'true' }),
           getMyClaims(),
-          getActiveCampaign(),
+          getActiveCampaigns(),
         ]);
         setContribs(c.data.slice(0, 5));
         setEvents(e.data.slice(0, 3));
         setClaims(cl.data.slice(0, 3));
-        setActiveCampaign(ac.data);
+        setActiveCampaigns(ac.data);
       } catch {/* silent */} finally { setLoading(false); }
     };
     fetchAll();
@@ -41,8 +41,8 @@ const MemberDashboard = () => {
   );
 
   const myTotal = contribs.reduce((a, c) => a + c.amount, 0);
-  const campaignProgress = activeCampaign?.targetAmount
-    ? Math.min(100, ((activeCampaign.totalRaised || 0) / activeCampaign.targetAmount) * 100)
+  const campaignProgress = (campaign) => campaign?.targetAmount
+    ? Math.min(100, ((campaign.totalRaised || 0) / campaign.targetAmount) * 100)
     : null;
 
   return (
@@ -67,33 +67,40 @@ const MemberDashboard = () => {
         </div>
       </div>
 
-      {/* Active Campaign Card */}
-      {activeCampaign ? (
-        <div style={{
-          background: 'linear-gradient(135deg, #1d4ed8, #3b82f6)',
-          borderRadius: 'var(--radius-xl)', padding: '18px 24px', marginBottom: 24,
-          color: '#fff', boxShadow: '0 4px 20px rgba(37,99,235,0.22)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 14, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Flag size={22} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '0.7rem', opacity: 0.8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 3 }}>🟢 Active Campaign</div>
-              <div style={{ fontWeight: 800, fontSize: '1.05rem', marginBottom: 4 }}>{activeCampaign.title}</div>
-              <div style={{ fontSize: '0.8rem', opacity: 0.85 }}>
-                ₪ {(activeCampaign.totalRaised || 0).toLocaleString()} raised · {activeCampaign.contributionCount || 0} contributions
-              </div>
-              {campaignProgress !== null && (
-                <div style={{ marginTop: 10 }}>
-                  <div style={{ height: 7, background: 'rgba(255,255,255,0.2)', borderRadius: 4, overflow: 'hidden' }}>
-                    <div style={{ width: `${campaignProgress}%`, height: '100%', background: '#86efac', borderRadius: 4 }} />
+      {/* Active Campaign Cards */}
+      {activeCampaigns.length > 0 ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
+          {activeCampaigns.map(campaign => {
+            const progress = campaignProgress(campaign);
+            return (
+              <div key={campaign._id} style={{
+                background: 'linear-gradient(135deg, #1d4ed8, #3b82f6)',
+                borderRadius: 'var(--radius-xl)', padding: '18px 24px',
+                color: '#fff', boxShadow: '0 4px 20px rgba(37,99,235,0.22)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 14, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Flag size={22} />
                   </div>
-                  <div style={{ fontSize: '0.72rem', opacity: 0.75, marginTop: 4 }}>{campaignProgress.toFixed(0)}% of ₪ {activeCampaign.targetAmount.toLocaleString()} target</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '0.7rem', opacity: 0.8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 3 }}>🟢 Active Campaign</div>
+                    <div style={{ fontWeight: 800, fontSize: '1.05rem', marginBottom: 4 }}>{campaign.title}</div>
+                    <div style={{ fontSize: '0.8rem', opacity: 0.85 }}>
+                      ₪ {(campaign.totalRaised || 0).toLocaleString()} raised · {campaign.contributionCount || 0} contributions
+                    </div>
+                    {progress !== null && (
+                      <div style={{ marginTop: 10 }}>
+                        <div style={{ height: 7, background: 'rgba(255,255,255,0.2)', borderRadius: 4, overflow: 'hidden' }}>
+                          <div style={{ width: `${progress}%`, height: '100%', background: '#86efac', borderRadius: 4 }} />
+                        </div>
+                        <div style={{ fontSize: '0.72rem', opacity: 0.75, marginTop: 4 }}>{progress.toFixed(0)}% of ₪ {campaign.targetAmount.toLocaleString()} target</div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
-            </div>
-          </div>
+              </div>
+            );
+          })}
         </div>
       ) : (
         <div style={{
