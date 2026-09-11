@@ -12,6 +12,49 @@ const isEmergencyKitCategory = (category) => EMERGENCY_KIT_CATEGORIES.some(
   (ec) => ec.toLowerCase() === normalizeCategory(category).toLowerCase()
 );
 
+const startOfDay = (date) => { const d = new Date(date); d.setHours(0, 0, 0, 0); return d; };
+const endOfDay = (date) => { const d = new Date(date); d.setHours(23, 59, 59, 999); return d; };
+
+// Campaigns are a one-time collection for a single event (e.g. a demise) —
+// a member may only be recorded once against a given campaign, regardless
+// of amount/date. Outside a campaign (Emergency Kit categories), a
+// duplicate is a same member + category + amount recorded on the same day.
+const findDuplicateContribution = async ({ member, category, amount, datePaid, campaign, excludeId }) => {
+  if (campaign) {
+    const query = { member, campaign };
+    if (excludeId) query._id = { $ne: excludeId };
+    return Contribution.findOne(query)
+      .populate('member', 'name idNumber')
+      .populate('recordedBy', 'name leaderRole')
+      .populate('campaign', 'title category');
+  }
+
+  const day = datePaid ? new Date(datePaid) : new Date();
+  const query = {
+    member,
+    category,
+    amount,
+    campaign: null,
+    datePaid: { $gte: startOfDay(day), $lte: endOfDay(day) },
+  };
+  if (excludeId) query._id = { $ne: excludeId };
+  return Contribution.findOne(query)
+    .populate('member', 'name idNumber')
+    .populate('recordedBy', 'name leaderRole');
+};
+
+const duplicateMessage = (duplicate) => {
+  const name = duplicate.member?.name || 'This member';
+  const amountStr = `₪${Number(duplicate.amount).toLocaleString()}`;
+  const dateStr = new Date(duplicate.datePaid).toLocaleDateString();
+  const recordedBy = duplicate.recordedBy?.name || 'a leader';
+
+  if (duplicate.campaign) {
+    return `${name} has already been recorded for the "${duplicate.campaign.title}" campaign — ${amountStr} on ${dateStr} (recorded by ${recordedBy}). Each member can only be recorded once per campaign; edit the existing record instead of adding a new one.`;
+  }
+  return `Duplicate contribution: ${name} already has ${amountStr} recorded for "${duplicate.category}" on ${dateStr} (recorded by ${recordedBy}). To prevent double entry, this was not saved.`;
+};
+
 // @desc  Add a contribution
 // @route POST /api/contributions
 // @access Leader + SuperAdmin
@@ -40,12 +83,24 @@ const addContribution = async (req, res) => {
       finalCategory = normalizeCategory(activeCampaign.category);
     }
 
+    const finalDatePaid = datePaid || Date.now();
+    const duplicate = await findDuplicateContribution({
+      member: memberId, category: finalCategory, amount, datePaid: finalDatePaid, campaign: campaignId,
+    });
+    if (duplicate) {
+      return res.status(400).json({
+        message: duplicateMessage(duplicate),
+        isDuplicate: true,
+        duplicate,
+      });
+    }
+
     const contribution = await Contribution.create({
       member: memberId,
       amount,
       category: finalCategory,
       description,
-      datePaid: datePaid || Date.now(),
+      datePaid: finalDatePaid,
       recordedBy: req.user._id,
       changeRequest: req.body.changeRequestId || null,
       campaign: campaignId,
@@ -59,6 +114,12 @@ const addContribution = async (req, res) => {
 
     res.status(201).json(populated);
   } catch (err) {
+    if (err.code === 11000) {
+      return res.status(400).json({
+        message: 'Duplicate contribution: this member already has a matching contribution recorded (same campaign, or same category/amount/date). To prevent double entry, this was not saved.',
+        isDuplicate: true,
+      });
+    }
     res.status(500).json({ message: err.message });
   }
 };
@@ -164,9 +225,31 @@ const updateContribution = async (req, res) => {
       contribution.category = normalizeCategory(currentCampaign.category);
     }
 
+    const duplicate = await findDuplicateContribution({
+      member: contribution.member,
+      category: contribution.category,
+      amount: contribution.amount,
+      datePaid: contribution.datePaid,
+      campaign: contribution.campaign,
+      excludeId: contribution._id,
+    });
+    if (duplicate) {
+      return res.status(400).json({
+        message: duplicateMessage(duplicate),
+        isDuplicate: true,
+        duplicate,
+      });
+    }
+
     const updated = await contribution.save();
     res.json(updated);
   } catch (err) {
+    if (err.code === 11000) {
+      return res.status(400).json({
+        message: 'Duplicate contribution: this member already has a matching contribution recorded (same campaign, or same category/amount/date). To prevent double entry, this was not saved.',
+        isDuplicate: true,
+      });
+    }
     res.status(500).json({ message: err.message });
   }
 };

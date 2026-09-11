@@ -7,7 +7,8 @@ import { getActiveCampaign, getCampaignHistory, createCampaign, completeCampaign
 import { useSocket } from '../../context/SocketContext';
 import Modal from '../../components/common/Modal';
 import AccessRequiredModal from '../../components/common/AccessRequiredModal';
-import { Plus, Edit2, Trash2, Search, Flag, CheckCircle, Clock, History, ChevronRight, X } from 'lucide-react';
+import ConfirmModal from '../../components/common/ConfirmModal';
+import { Plus, Edit2, Trash2, Search, Flag, CheckCircle, Clock, History, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { useAuth } from '../../context/AuthContext';
@@ -32,6 +33,7 @@ const LeaderContributionsPage = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState({ id: '', memberId: '', amount: '', category: '', description: '', datePaid: '' });
   const [submitting, setSubmitting] = useState(false);
+  const [duplicateWarning, setDuplicateWarning] = useState(null);
 
   // Campaign modals
   const [isStartCampaignOpen, setIsStartCampaignOpen] = useState(false);
@@ -40,6 +42,8 @@ const LeaderContributionsPage = () => {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isAccessModalOpen, setIsAccessModalOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
+  const [deleting, setDeleting] = useState(false);
 
   const [campaignForm, setCampaignForm] = useState({ title: '', category: '', description: '', targetAmount: '', targetMember: '' });
   const [completeForm, setCompleteForm] = useState({ payoutNotes: '', markClaimPaid: false });
@@ -92,6 +96,7 @@ const LeaderContributionsPage = () => {
 
   const handleOpenModal = (contrib = null) => {
     if (!hasAccess && !isSuperAdmin) { setIsAccessModalOpen(true); return; }
+    setDuplicateWarning(null);
     if (contrib) {
       setIsEditMode(true);
       setFormData({ id: contrib._id, memberId: contrib.member._id, amount: contrib.amount, category: contrib.category, description: contrib.description || '', datePaid: new Date(contrib.datePaid).toISOString().split('T')[0] });
@@ -109,6 +114,7 @@ const LeaderContributionsPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
+    setDuplicateWarning(null);
     try {
       const payload = { ...formData, amount: Number(formData.amount) };
       if (isEditMode) {
@@ -126,12 +132,49 @@ const LeaderContributionsPage = () => {
         toast.error(msg, { duration: 5000 });
         setIsModalOpen(false);
         setIsStartCampaignOpen(true);
+      } else if (err.response?.data?.isDuplicate) {
+        toast.error('This looks like a duplicate — not saved.', { duration: 6000 });
+        setDuplicateWarning(err.response.data);
       } else {
         toast.error(msg);
       }
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const closeContributionModal = () => {
+    setIsModalOpen(false);
+    setDuplicateWarning(null);
+  };
+
+  const updateField = (patch) => {
+    setDuplicateWarning(null);
+    setFormData(prev => ({ ...prev, ...patch }));
+  };
+
+  const renderDuplicateDetail = () => {
+    const dup = duplicateWarning?.duplicate;
+    if (!dup) return duplicateWarning?.message;
+    const amountStr = `₪ ${Number(dup.amount).toLocaleString()}`;
+    const dateStr = format(new Date(dup.datePaid), 'dd MMM yyyy');
+    const by = dup.recordedBy?.name && ` (recorded by ${dup.recordedBy.name})`;
+    if (dup.campaign) {
+      return (
+        <>
+          <strong>{dup.member?.name}</strong> has already been recorded for the{' '}
+          <strong>{dup.campaign.title}</strong> campaign — {amountStr} on {dateStr}{by}.
+          Each member can only be recorded once per campaign — edit that record instead.
+        </>
+      );
+    }
+    return (
+      <>
+        <strong>{dup.member?.name}</strong> already has <strong>{amountStr}</strong> recorded for{' '}
+        <strong>{dup.category}</strong> on <strong>{dateStr}</strong>{by}.
+        Change the member, amount, category or date if this is a different contribution.
+      </>
+    );
   };
 
   const handleStartCampaign = async (e) => {
@@ -181,15 +224,22 @@ const LeaderContributionsPage = () => {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDeleteClick = (id) => {
     if (!hasAccess && !isSuperAdmin) { setIsAccessModalOpen(true); return; }
-    if (!window.confirm('Delete this contribution record?')) return;
+    setConfirmDelete({ open: true, id });
+  };
+
+  const handleConfirmDelete = async () => {
+    setDeleting(true);
     try {
-      await deleteContribution(id);
+      await deleteContribution(confirmDelete.id);
       toast.success('Record deleted');
+      setConfirmDelete({ open: false, id: null });
       fetchData();
     } catch (err) {
-      toast.error('Deletion failed');
+      toast.error(err.response?.data?.message || 'Deletion failed');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -371,7 +421,7 @@ const LeaderContributionsPage = () => {
                   <td>
                     <div className="flex gap-2">
                       <button onClick={() => handleOpenModal(c)} className="btn btn-sm btn-ghost btn-icon"><Edit2 size={16} /></button>
-                      <button onClick={() => handleDelete(c._id)} className="btn btn-sm btn-ghost btn-icon" style={{ color: '#dc2626' }}><Trash2 size={16} /></button>
+                      <button onClick={() => handleDeleteClick(c._id)} className="btn btn-sm btn-ghost btn-icon" style={{ color: '#dc2626' }}><Trash2 size={16} /></button>
                     </div>
                   </td>
                 </tr>
@@ -382,7 +432,7 @@ const LeaderContributionsPage = () => {
       </div>
 
       {/* ── Record/Edit Contribution Modal ────────────────────────────── */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={isEditMode ? 'Edit Contribution' : 'Record Contribution'}>
+      <Modal isOpen={isModalOpen} onClose={closeContributionModal} title={isEditMode ? 'Edit Contribution' : 'Record Contribution'}>
         {!isEditMode && !activeCampaign && (
           <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, padding: '12px 16px', marginBottom: 16, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
             <Clock size={18} style={{ color: '#b45309', flexShrink: 0, marginTop: 1 }} />
@@ -409,7 +459,7 @@ const LeaderContributionsPage = () => {
           {!isEditMode && (
             <div className="form-group">
               <label className="form-label">Select Member</label>
-              <select className="form-select" required value={formData.memberId} onChange={e => setFormData({ ...formData, memberId: e.target.value })}>
+              <select className="form-select" required value={formData.memberId} onChange={e => updateField({ memberId: e.target.value })}>
                 <option value="">-- Choose Member --</option>
                 {members.map(m => <option key={m._id} value={m._id}>{m.name} ({m.idNumber})</option>)}
               </select>
@@ -420,7 +470,7 @@ const LeaderContributionsPage = () => {
               <label className="form-label">Category</label>
               <button type="button" onClick={() => setIsCategoryModalOpen(true)} style={{ fontSize: '0.75rem', color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>+ Add New</button>
             </div>
-            <select className="form-select" required value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })}>
+            <select className="form-select" required value={formData.category} onChange={e => updateField({ category: e.target.value })}>
               <option value="">-- Choose Category --</option>
               <optgroup label="Emergency Kit Categories">
                 {categories.filter(c => isEmergencyKitCat(c.name)).map(c => (
@@ -436,18 +486,18 @@ const LeaderContributionsPage = () => {
           </div>
           <div className="form-group">
             <label className="form-label">Amount (₪)</label>
-            <input type="number" className="form-input" required min="1" value={formData.amount} onChange={e => setFormData({ ...formData, amount: e.target.value })} />
+            <input type="number" className="form-input" required min="1" value={formData.amount} onChange={e => updateField({ amount: e.target.value })} />
           </div>
           <div className="form-group">
             <label className="form-label">Date Paid</label>
-            <input type="date" className="form-input" required value={formData.datePaid} onChange={e => setFormData({ ...formData, datePaid: e.target.value })} />
+            <input type="date" className="form-input" required value={formData.datePaid} onChange={e => updateField({ datePaid: e.target.value })} />
           </div>
           <div className="form-group">
             <label className="form-label">Description / Notes (Optional)</label>
             <textarea className="form-input" rows="3" style={{ resize: 'none', height: 'auto' }} value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
           </div>
           <div className="flex justify-between" style={{ marginTop: 24 }}>
-            <button type="button" className="btn btn-ghost" onClick={() => setIsModalOpen(false)}>Cancel</button>
+            <button type="button" className="btn btn-ghost" onClick={closeContributionModal}>Cancel</button>
             <button type="submit" className="btn btn-primary" disabled={submitting}>{submitting ? 'Saving...' : 'Save Record'}</button>
           </div>
         </form>
@@ -587,6 +637,30 @@ const LeaderContributionsPage = () => {
       </Modal>
 
       <AccessRequiredModal isOpen={isAccessModalOpen} onClose={() => setIsAccessModalOpen(false)} />
+
+      <ConfirmModal
+        isOpen={confirmDelete.open}
+        onClose={() => setConfirmDelete({ open: false, id: null })}
+        onConfirm={handleConfirmDelete}
+        title="Delete Contribution"
+        message="Are you sure you want to delete this contribution record? This cannot be undone and will affect the member's contribution totals."
+        confirmText="Delete"
+        loading={deleting}
+      />
+
+      <Modal isOpen={!!duplicateWarning} onClose={() => setDuplicateWarning(null)} title="Duplicate Contribution" maxWidth="440px">
+        <div className="flex-col gap-5 items-center text-center" style={{ padding: '10px 0' }}>
+          <div className="flex items-center justify-center" style={{ width: 56, height: 56, borderRadius: '50%', background: '#fee2e2', color: '#dc2626', marginBottom: 8 }}>
+            <AlertTriangle size={30} />
+          </div>
+          <p style={{ color: 'var(--gray-600)', lineHeight: 1.6, fontSize: '0.92rem', margin: 0 }}>
+            {renderDuplicateDetail()}
+          </p>
+          <button type="button" className="btn btn-primary w-full justify-center" onClick={() => setDuplicateWarning(null)} style={{ marginTop: 4 }}>
+            Got it, I'll fix it
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 };

@@ -19,4 +19,18 @@ const contributionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Backstop against race-condition double entry — the app-level check in
+// contributionController handles the friendly, user-facing message.
+contributionSchema.index(
+  { member: 1, category: 1, amount: 1, datePaid: 1, campaign: 1 },
+  { unique: true }
+);
+
+// A campaign is a one-time collection for a single event — a member may
+// only be recorded once against a given campaign, regardless of amount/date.
+contributionSchema.index(
+  { member: 1, campaign: 1 },
+  { unique: true, partialFilterExpression: { campaign: { $type: 'objectId' } } }
+);
+
 module.exports = mongoose.model('Contribution', contributionSchema);
