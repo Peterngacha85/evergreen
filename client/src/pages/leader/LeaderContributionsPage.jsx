@@ -34,6 +34,7 @@ const LeaderContributionsPage = () => {
   const [formData, setFormData] = useState({ id: '', memberId: '', amount: '', category: '', campaignId: '', description: '', datePaid: '' });
   const [submitting, setSubmitting] = useState(false);
   const [duplicateWarning, setDuplicateWarning] = useState(null);
+  const [lockedCampaign, setLockedCampaign] = useState(null);
 
   // Campaign modals
   const [isStartCampaignOpen, setIsStartCampaignOpen] = useState(false);
@@ -94,17 +95,26 @@ const LeaderContributionsPage = () => {
 
   const isEmergencyKitCat = (cat) => EMERGENCY_KIT_CATEGORIES.includes(cat?.toLowerCase());
 
-  const handleOpenModal = (contrib = null) => {
+  // presetCampaign: when opened from a specific campaign's own "Record
+  // Contribution" button, the campaign is locked in — no dropdown to
+  // mis-select from (this is what caused a Demise contribution to get
+  // recorded as Registration Fee before).
+  const handleOpenModal = (contrib = null, presetCampaign = null) => {
     if (!hasAccess && !isSuperAdmin) { setIsAccessModalOpen(true); return; }
     setDuplicateWarning(null);
+    setLockedCampaign(presetCampaign);
     if (contrib) {
       setIsEditMode(true);
       setFormData({ id: contrib._id, memberId: contrib.member._id, amount: contrib.amount, category: contrib.category, campaignId: contrib.campaign?._id || '', description: contrib.description || '', datePaid: new Date(contrib.datePaid).toISOString().split('T')[0] });
     } else {
       setIsEditMode(false);
-      const emergencyCategories = categories.filter(c => isEmergencyKitCat(c.name));
-      const defaultCategory = emergencyCategories.length > 0 ? emergencyCategories[0].name : (categories.length > 0 ? categories[0].name : '');
-      setFormData({ id: '', memberId: '', amount: '', category: defaultCategory, campaignId: '', description: '', datePaid: new Date().toISOString().split('T')[0] });
+      if (presetCampaign) {
+        setFormData({ id: '', memberId: '', amount: '', category: presetCampaign.category, campaignId: presetCampaign._id, description: '', datePaid: new Date().toISOString().split('T')[0] });
+      } else {
+        const emergencyCategories = categories.filter(c => isEmergencyKitCat(c.name));
+        const defaultCategory = emergencyCategories.length > 0 ? emergencyCategories[0].name : (categories.length > 0 ? categories[0].name : '');
+        setFormData({ id: '', memberId: '', amount: '', category: defaultCategory, campaignId: '', description: '', datePaid: new Date().toISOString().split('T')[0] });
+      }
     }
     setIsModalOpen(true);
   };
@@ -144,6 +154,7 @@ const LeaderContributionsPage = () => {
   const closeContributionModal = () => {
     setIsModalOpen(false);
     setDuplicateWarning(null);
+    setLockedCampaign(null);
   };
 
   const updateField = (patch) => {
@@ -345,12 +356,20 @@ const LeaderContributionsPage = () => {
                     )}
                   </div>
                 </div>
-                <button
-                  onClick={() => { if (!hasAccess && !isSuperAdmin) { setIsAccessModalOpen(true); return; } setCompleteForm({ payoutNotes: '', markClaimPaid: false }); setCompletingCampaign(campaign); }}
-                  style={{ background: 'rgba(255,255,255,0.15)', border: '1.5px solid rgba(255,255,255,0.3)', borderRadius: 12, padding: '10px 18px', color: '#fff', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, backdropFilter: 'blur(4px)' }}
-                >
-                  <CheckCircle size={18} /> Close & Pay Out
-                </button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
+                  <button
+                    onClick={() => handleOpenModal(null, campaign)}
+                    style={{ background: '#fff', border: 'none', borderRadius: 12, padding: '10px 18px', color: '#1d4ed8', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}
+                  >
+                    <Plus size={18} /> Record Contribution
+                  </button>
+                  <button
+                    onClick={() => { if (!hasAccess && !isSuperAdmin) { setIsAccessModalOpen(true); return; } setCompleteForm({ payoutNotes: '', markClaimPaid: false }); setCompletingCampaign(campaign); }}
+                    style={{ background: 'rgba(255,255,255,0.15)', border: '1.5px solid rgba(255,255,255,0.3)', borderRadius: 12, padding: '10px 18px', color: '#fff', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center', backdropFilter: 'blur(4px)' }}
+                  >
+                    <CheckCircle size={18} /> Close & Pay Out
+                  </button>
+                </div>
               </div>
             );
           })}
@@ -458,18 +477,28 @@ const LeaderContributionsPage = () => {
 
       {/* ── Record/Edit Contribution Modal ────────────────────────────── */}
       <Modal isOpen={isModalOpen} onClose={closeContributionModal} title={isEditMode ? 'Edit Contribution' : 'Record Contribution'}>
-        {!isEditMode && activeCampaigns.length === 0 && (
+        {!isEditMode && !lockedCampaign && activeCampaigns.length === 0 && (
           <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, padding: '12px 16px', marginBottom: 16, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
             <Clock size={18} style={{ color: '#b45309', flexShrink: 0, marginTop: 1 }} />
             <div>
               <div style={{ fontWeight: 700, color: '#92400e', fontSize: '0.85rem' }}>No Active Campaign</div>
               <div style={{ fontSize: '0.8rem', color: '#b45309', marginTop: 2 }}>
-                Only <strong>Registration Fee</strong> and <strong>Emergency Fee</strong> can be recorded without a campaign. For other categories, start a campaign first.
+                Only <strong>Registration Fee</strong> and <strong>Emergency Fee</strong> can be recorded without a campaign. To record for an event, open that campaign's banner and use its "Record Contribution" button, or start a new one.
               </div>
             </div>
           </div>
         )}
-        {!isEditMode && selectedCampaign && (
+        {lockedCampaign ? (
+          <div style={{ background: '#eff6ff', border: '1.5px solid #93c5fd', borderRadius: 10, padding: '12px 16px', marginBottom: 16, display: 'flex', gap: 10, alignItems: 'center' }}>
+            <Flag size={18} style={{ color: '#2563eb', flexShrink: 0 }} />
+            <div>
+              <div style={{ fontWeight: 700, color: '#1e40af', fontSize: '0.9rem' }}>{lockedCampaign.title}</div>
+              <div style={{ fontSize: '0.78rem', color: '#3b82f6', marginTop: 2 }}>
+                {lockedCampaign.category}{lockedCampaign.targetMember && <> · For {lockedCampaign.targetMember.name}</>} — this contribution will be credited here automatically.
+              </div>
+            </div>
+          </div>
+        ) : selectedCampaign && (
           <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 10, padding: '12px 16px', marginBottom: 16, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
             <Flag size={18} style={{ color: '#2563eb', flexShrink: 0, marginTop: 1 }} />
             <div>
@@ -490,29 +519,36 @@ const LeaderContributionsPage = () => {
               </select>
             </div>
           )}
-          <div className="form-group">
-            <div className="flex items-center justify-between">
-              <label className="form-label">Category / Campaign</label>
-              <button type="button" onClick={() => setIsCategoryModalOpen(true)} style={{ fontSize: '0.75rem', color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>+ Add New</button>
-            </div>
-            <select className="form-select" required value={selectedCategoryValue} onChange={e => handleCategorySelect(e.target.value)}>
-              <option value="">-- Choose Category --</option>
-              <optgroup label="Emergency Kit Categories">
-                {categories.filter(c => isEmergencyKitCat(c.name)).map(c => (
-                  <option key={c._id} value={c.name}>{c.name}</option>
-                ))}
-              </optgroup>
-              {activeCampaigns.length > 0 && (
-                <optgroup label="Active Campaigns">
-                  {activeCampaigns.map(c => (
-                    <option key={c._id} value={`campaign:${c._id}`}>
-                      {c.title} ({c.category}{c.targetMember ? ` — ${c.targetMember.name}` : ''})
-                    </option>
+          {!lockedCampaign && (
+            <div className="form-group">
+              <div className="flex items-center justify-between">
+                <label className="form-label">Category{isEditMode ? ' / Campaign' : ''}</label>
+                <button type="button" onClick={() => setIsCategoryModalOpen(true)} style={{ fontSize: '0.75rem', color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>+ Add New</button>
+              </div>
+              <select className="form-select" required value={selectedCategoryValue} onChange={e => handleCategorySelect(e.target.value)}>
+                <option value="">-- Choose Category --</option>
+                <optgroup label="Emergency Kit Categories">
+                  {categories.filter(c => isEmergencyKitCat(c.name)).map(c => (
+                    <option key={c._id} value={c.name}>{c.name}</option>
                   ))}
                 </optgroup>
+                {isEditMode && activeCampaigns.length > 0 && (
+                  <optgroup label="Active Campaigns">
+                    {activeCampaigns.map(c => (
+                      <option key={c._id} value={`campaign:${c._id}`}>
+                        {c.title} ({c.category}{c.targetMember ? ` — ${c.targetMember.name}` : ''})
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+              </select>
+              {!isEditMode && (
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                  Recording for an event campaign? Use that campaign's own "Record Contribution" button instead — it's listed above.
+                </div>
               )}
-            </select>
-          </div>
+            </div>
+          )}
           <div className="form-group">
             <label className="form-label">Amount (₪)</label>
             <input type="number" className="form-input" required min="1" value={formData.amount} onChange={e => updateField({ amount: e.target.value })} />
