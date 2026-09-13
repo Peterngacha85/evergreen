@@ -53,6 +53,7 @@ const LeaderContributionsPage = () => {
   // Search & Filter
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
+  const [filterCampaign, setFilterCampaign] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
@@ -267,13 +268,23 @@ const LeaderContributionsPage = () => {
     }
   };
 
+  // Campaigns actually present in the loaded contributions, so the filter
+  // covers completed campaigns too, not just the currently active ones —
+  // and lets two campaigns sharing a category (e.g. two "Demise" drives)
+  // be told apart, which category-only filtering can't do.
+  const campaignsInList = [...new Map(
+    contributions.filter(c => c.campaign).map(c => [c.campaign._id, c.campaign])
+  ).values()].sort((a, b) => a.title.localeCompare(b.title));
+
   const filteredContributions = contributions.filter(c => {
     const matchesSearch = c.member?.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.member?.idNumber.includes(searchTerm);
     const matchesCategory = filterCategory === '' || c.category === filterCategory;
+    const matchesCampaign = filterCampaign === '' ||
+      (filterCampaign === 'none' ? !c.campaign : c.campaign?._id === filterCampaign);
     const cDate = new Date(c.datePaid).toISOString().split('T')[0];
     const matchesDateFrom = !dateFrom || cDate >= dateFrom;
     const matchesDateTo = !dateTo || cDate <= dateTo;
-    return matchesSearch && matchesCategory && matchesDateFrom && matchesDateTo;
+    return matchesSearch && matchesCategory && matchesCampaign && matchesDateFrom && matchesDateTo;
   });
 
   if (loading) return <div className="flex justify-center" style={{ paddingTop: 80 }}><div className="spinner" /></div>;
@@ -413,13 +424,19 @@ const LeaderContributionsPage = () => {
             <option value="">All Categories</option>
             {categories.map(cat => <option key={cat._id} value={cat.name}>{cat.name}</option>)}
           </select>
+          <select className="form-select" style={{ width: 'auto', minWidth: 190, height: 46, borderRadius: 12 }}
+            value={filterCampaign} onChange={e => setFilterCampaign(e.target.value)}>
+            <option value="">All Campaigns</option>
+            <option value="none">Emergency Kit (no campaign)</option>
+            {campaignsInList.map(camp => <option key={camp._id} value={camp._id}>{camp.title}</option>)}
+          </select>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--gray-50)', padding: '4px 12px', borderRadius: 12, border: '1px solid var(--border)', height: 46 }}>
             <input type="date" className="form-input" style={{ border: 'none', background: 'transparent', width: 130, padding: 0 }} value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
             <span style={{ color: 'var(--gray-400)', fontWeight: 600 }}>→</span>
             <input type="date" className="form-input" style={{ border: 'none', background: 'transparent', width: 130, padding: 0 }} value={dateTo} onChange={e => setDateTo(e.target.value)} />
           </div>
-          {(dateFrom || dateTo || filterCategory || searchTerm) && (
-            <button className="btn btn-ghost" onClick={() => { setSearchTerm(''); setFilterCategory(''); setDateFrom(''); setDateTo(''); }}
+          {(dateFrom || dateTo || filterCategory || filterCampaign || searchTerm) && (
+            <button className="btn btn-ghost" onClick={() => { setSearchTerm(''); setFilterCategory(''); setFilterCampaign(''); setDateFrom(''); setDateTo(''); }}
               style={{ color: '#dc2626', fontWeight: 600, height: 46 }}>Clear</button>
           )}
         </div>
@@ -452,9 +469,14 @@ const LeaderContributionsPage = () => {
                   <td><span className="badge badge-green">{c.category}</span></td>
                   <td>
                     {c.campaign ? (
-                      <span style={{ fontSize: '0.78rem', color: '#2563eb', fontWeight: 600, background: '#eff6ff', padding: '2px 8px', borderRadius: 6, display: 'inline-block', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <button
+                        type="button"
+                        onClick={() => setFilterCampaign(c.campaign._id)}
+                        title="Show only this campaign"
+                        style={{ fontSize: '0.78rem', color: '#2563eb', fontWeight: 600, background: '#eff6ff', padding: '2px 8px', borderRadius: 6, display: 'inline-block', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', border: 'none', cursor: 'pointer' }}
+                      >
                         {c.campaign?.title || 'Campaign'}
-                      </span>
+                      </button>
                     ) : (
                       <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Emergency Kit</span>
                     )}
