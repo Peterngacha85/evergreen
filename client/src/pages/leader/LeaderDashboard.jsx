@@ -93,11 +93,11 @@ const LeaderDashboard = () => {
                 <div style={{ fontSize: '0.7rem', opacity: 0.8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>🟢 Active Campaign</div>
                 <div style={{ fontWeight: 800, fontSize: '1.05rem' }}>{campaign.title}</div>
                 <div style={{ fontSize: '0.8rem', opacity: 0.85, marginTop: 3 }}>
-                  ₪ {(campaign.totalRaised || 0).toLocaleString()} raised · {campaign.contributionCount || 0} contributions
+                  ₪ {(campaign.totalRaised || 0).toLocaleString()} raised · {campaign.paidCount || 0} paid · {campaign.partialCount || 0} partial · {campaign.unpaidCount || 0} unpaid
                 </div>
               </div>
-              <Link to="/leader/contributions" style={{ background: 'rgba(255,255,255,0.18)', border: '1.5px solid rgba(255,255,255,0.3)', borderRadius: 10, padding: '8px 16px', color: '#fff', fontWeight: 700, textDecoration: 'none', fontSize: '0.85rem', flexShrink: 0 }}>
-                Manage →
+              <Link to={`/leader/campaigns/${campaign._id}`} style={{ background: 'rgba(255,255,255,0.18)', border: '1.5px solid rgba(255,255,255,0.3)', borderRadius: 10, padding: '8px 16px', color: '#fff', fontWeight: 700, textDecoration: 'none', fontSize: '0.85rem', flexShrink: 0 }}>
+                View →
               </Link>
             </div>
           ))}

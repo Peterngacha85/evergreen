@@ -90,15 +90,21 @@ exports.getUnpaidMembers = async (req, res) => {
     const thirtyOneDaysAgo = new Date();
     thirtyOneDaysAgo.setDate(thirtyOneDaysAgo.getDate() - 31);
 
-    // 1. Get all active members
-    const members = await Member.find({ isActive: true }).select('name idNumber phoneNumber createdAt');
+    // One query for members and one aggregation for every member's latest
+    // contribution, instead of a query per member.
+    const [members, latest] = await Promise.all([
+      Member.find({ isActive: true }).select('name idNumber phoneNumber profilePhoto createdAt').lean(),
+      Contribution.aggregate([
+        { $sort: { member: 1, datePaid: -1 } },
+        { $group: { _id: '$member', datePaid: { $first: '$datePaid' }, amount: { $first: '$amount' } } },
+      ]),
+    ]);
+    const latestByMember = new Map(latest.map((l) => [String(l._id), l]));
 
-    // 2. Get last contribution date for each member
     const unpaidMembers = [];
 
     for (const member of members) {
-      const lastContrib = await Contribution.findOne({ member: member._id })
-        .sort({ datePaid: -1 });
+      const lastContrib = latestByMember.get(String(member._id));
 
       if (!lastContrib) {
         // Never contributed - check if they joined more than 31 days ago

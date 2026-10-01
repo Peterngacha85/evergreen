@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { TrendingUp, Calendar, FileText, Wallet, Flag } from 'lucide-react';
 import { getMyContributions } from '../../api/contributions';
 import { getEvents } from '../../api/events';
@@ -73,7 +74,8 @@ const MemberDashboard = () => {
           {activeCampaigns.map(campaign => {
             const progress = campaignProgress(campaign);
             return (
-              <div key={campaign._id} style={{
+              <Link key={campaign._id} to={`/campaigns/${campaign._id}`} style={{
+                display: 'block', textDecoration: 'none',
                 background: 'linear-gradient(135deg, #1d4ed8, #3b82f6)',
                 borderRadius: 'var(--radius-xl)', padding: '18px 24px',
                 color: '#fff', boxShadow: '0 4px 20px rgba(37,99,235,0.22)'
@@ -86,8 +88,9 @@ const MemberDashboard = () => {
                     <div style={{ fontSize: '0.7rem', opacity: 0.8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 3 }}>🟢 Active Campaign</div>
                     <div style={{ fontWeight: 800, fontSize: '1.05rem', marginBottom: 4 }}>{campaign.title}</div>
                     <div style={{ fontSize: '0.8rem', opacity: 0.85 }}>
-                      ₪ {(campaign.totalRaised || 0).toLocaleString()} raised · {campaign.contributionCount || 0} contributions
+                      ₪ {(campaign.totalRaised || 0).toLocaleString()} raised · Min ₪ {(campaign.effectiveMinContribution || 0).toLocaleString()} per member · {campaign.paidCount || 0} paid · {campaign.unpaidCount || 0} unpaid
                     </div>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 700, marginTop: 4, textDecoration: 'underline' }}>See who has paid →</div>
                     {progress !== null && (
                       <div style={{ marginTop: 10 }}>
                         <div style={{ height: 7, background: 'rgba(255,255,255,0.2)', borderRadius: 4, overflow: 'hidden' }}>
@@ -98,7 +101,7 @@ const MemberDashboard = () => {
                     )}
                   </div>
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>

@@ -33,4 +33,7 @@ contributionSchema.index(
   { unique: true, partialFilterExpression: { campaign: { $type: 'objectId' } } }
 );
 
+// Supports the "last contribution per member" lookup on the Unpaid page.
+contributionSchema.index({ member: 1, datePaid: -1 });
+
 module.exports = mongoose.model('Contribution', contributionSchema);

@@ -1,32 +1,58 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { getUnpaidMembers } from '../../api/stats';
+import { getActiveCampaigns } from '../../api/campaigns';
 import { addContribution } from '../../api/contributions';
 import { getCategories } from '../../api/categories';
 import Avatar from '../../components/common/Avatar';
 import Modal from '../../components/common/Modal';
-import { UserX, Phone, AlertCircle, RefreshCw, CheckCircle } from 'lucide-react';
+import { Phone, AlertCircle, RefreshCw, CheckCircle, Search, Flag } from 'lucide-react';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 
+const EMERGENCY_KIT_CATEGORIES = ['registration fee', 'emergency fee', 'registration', 'emergency'];
+const isEmergencyKitCat = (cat) => EMERGENCY_KIT_CATEGORIES.includes(cat?.toLowerCase());
+
+const DAY_RANGES = {
+  '':      { label: 'Any time overdue', test: () => true },
+  'never': { label: 'Never contributed', test: (d) => d.daysSince === 'Never' },
+  '31-60': { label: '31–60 days',        test: (d) => d.daysSince !== 'Never' && d.daysSince <= 60 },
+  '61-90': { label: '61–90 days',        test: (d) => d.daysSince !== 'Never' && d.daysSince > 60 && d.daysSince <= 90 },
+  '90+':   { label: 'Over 90 days',      test: (d) => d.daysSince !== 'Never' && d.daysSince > 90 },
+};
+
+// "Never" sorts as the most overdue
+const daysValue = (d) => (d.daysSince === 'Never' ? Infinity : d.daysSince);
+
 const LeaderUnpaidPage = () => {
   const { isMember } = useAuth();
+  const campaignPath = (id) => `${isMember ? '' : '/leader'}/campaigns/${id}`;
+
   const [unpaid, setUnpaid] = useState([]);
+  const [campaigns, setCampaigns] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [dayRange, setDayRange] = useState('');
+  const [sortBy, setSortBy] = useState('number');
+
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
-  const [payForm, setPayForm] = useState({ amount: '', category: '', description: '' });
+  const [payForm, setPayForm] = useState({ amount: '', target: '', description: '' });
   const [submitting, setSubmitting] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [res, catRes] = await Promise.all([
+      const [res, campRes, catRes] = await Promise.all([
         getUnpaidMembers(),
-        getCategories()
+        getActiveCampaigns(),
+        isMember ? Promise.resolve({ data: [] }) : getCategories(),
       ]);
       setUnpaid(res.data);
+      setCampaigns(campRes.data);
       setCategories(catRes.data);
     } catch (err) {
       console.error(err);
@@ -37,13 +63,22 @@ const LeaderUnpaidPage = () => {
 
   useEffect(() => { fetchData(); }, []);
 
+  // The payment target is either an Emergency Kit category name or an
+  // active campaign, encoded as "campaign:<id>" (campaign categories can't be
+  // recorded without picking the campaign).
+  const emergencyCategories = categories.filter(c => isEmergencyKitCat(c.name));
+  const targetCampaign = payForm.target.startsWith('campaign:')
+    ? campaigns.find(c => c._id === payForm.target.slice('campaign:'.length))
+    : null;
+
+  const handleTargetChange = (target) => {
+    const campaign = target.startsWith('campaign:') ? campaigns.find(c => c._id === target.slice('campaign:'.length)) : null;
+    setPayForm(prev => ({ ...prev, target, amount: campaign?.effectiveMinContribution || prev.amount }));
+  };
+
   const handleMarkPaid = (member) => {
     setSelectedMember(member);
-    setPayForm({ 
-      amount: '', 
-      category: categories.length > 0 ? categories[0].name : '', 
-      description: '' 
-    });
+    setPayForm({ amount: '', target: emergencyCategories[0]?.name || '', description: '' });
     setIsPayModalOpen(true);
   };
 
@@ -54,13 +89,14 @@ const LeaderUnpaidPage = () => {
       await addContribution({
         memberId: selectedMember._id,
         amount: Number(payForm.amount),
-        category: payForm.category,
-        description: payForm.description || `Marked paid from unpaid list`,
-        datePaid: new Date().toISOString().split('T')[0]
+        category: targetCampaign ? targetCampaign.category : payForm.target,
+        campaignId: targetCampaign?._id,
+        description: payForm.description || 'Marked paid from unpaid list',
+        datePaid: new Date().toISOString().split('T')[0],
       });
       toast.success(`${selectedMember.name} marked as paid`);
       setIsPayModalOpen(false);
-      fetchData(); // Refresh the list
+      fetchData();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to record payment');
     } finally {
@@ -70,23 +106,83 @@ const LeaderUnpaidPage = () => {
 
   if (loading) return <div className="flex justify-center" style={{ paddingTop: 80 }}><div className="spinner" /></div>;
 
+  const term = searchTerm.trim().toLowerCase();
+  const visible = unpaid
+    .filter(d => DAY_RANGES[dayRange].test(d))
+    .filter(d => !term || d.member.name.toLowerCase().includes(term) || d.member.idNumber.includes(term) || (d.member.phoneNumber || '').includes(term))
+    .sort((a, b) => sortBy === 'overdue'
+      ? daysValue(b) - daysValue(a)
+      : a.member.idNumber.localeCompare(b.member.idNumber));
+  const hasFilters = term || dayRange || sortBy !== 'number';
+
   return (
     <div className="animate-fadein">
-      <div className="page-header flex items-center justify-between">
+      <div className="page-header flex items-center justify-between" style={{ flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h1 className="page-title">Unpaid Members List</h1>
-          <p className="page-subtitle">Members who haven't contributed in the last 31 days</p>
+          <h1 className="page-title">Unpaid Members</h1>
+          <p className="page-subtitle">Who still owes on each active campaign, and who hasn't contributed in the last 31 days</p>
         </div>
         <button className="btn btn-outline" onClick={fetchData}><RefreshCw size={18} /> Refresh</button>
       </div>
 
-      <div className="card" style={{ background: 'var(--red-50)', border: '1px solid var(--red-200)', marginBottom: 24 }}>
-        <div className="flex items-center gap-3" style={{ color: 'var(--red-700)' }}>
-          <AlertCircle size={24} />
+      {/* ── Per-campaign summary ────────────────────────────────────── */}
+      {campaigns.length > 0 && (
+        <div style={{ marginBottom: 28 }}>
+          <h3 style={{ fontWeight: 700, marginBottom: 12 }}>Active Campaigns</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
+            {campaigns.map(c => (
+              <Link key={c._id} to={campaignPath(c._id)} className="card" style={{ textDecoration: 'none', color: 'inherit', padding: '16px 18px', display: 'block' }}>
+                <div className="flex items-center gap-2" style={{ marginBottom: 6 }}>
+                  <Flag size={16} style={{ color: '#2563eb' }} />
+                  <span style={{ fontWeight: 700 }}>{c.title}</span>
+                </div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 10 }}>
+                  Min ₪ {(c.effectiveMinContribution || 0).toLocaleString()} / member{c.targetMember && <> · For {c.targetMember.name}</>}
+                </div>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+                  <span className="badge badge-red">{c.unpaidCount || 0} unpaid</span>
+                  <span className="badge badge-yellow">{c.partialCount || 0} partial</span>
+                  <span className="badge badge-green">{c.paidCount || 0} paid</span>
+                </div>
+                <div style={{ fontSize: '0.8rem', display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#dc2626', fontWeight: 700 }}>₪ {(c.outstandingTotal || 0).toLocaleString()} outstanding</span>
+                  <span style={{ color: '#2563eb', fontWeight: 700 }}>View →</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── No contribution in 31+ days ─────────────────────────────── */}
+      <h3 style={{ fontWeight: 700, marginBottom: 12 }}>No Contribution in the Last 31 Days</h3>
+
+      <div className="card" style={{ background: '#fef2f2', border: '1px solid #fecaca', marginBottom: 16 }}>
+        <div className="flex items-center gap-3" style={{ color: '#b91c1c' }}>
+          <AlertCircle size={22} />
           <p style={{ fontWeight: 600, margin: 0 }}>
-            {unpaid.length} members are currently flagged as unpaid.
+            {unpaid.length} members are flagged{visible.length !== unpaid.length && ` · ${visible.length} shown`}.
           </p>
         </div>
+      </div>
+
+      <div className="card" style={{ padding: 16, marginBottom: 16, display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ position: 'relative', flex: 1, minWidth: 220 }}>
+          <Search size={18} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--gray-400)' }} />
+          <input type="text" className="form-input" placeholder="Search name, member no. or phone..."
+            value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{ paddingLeft: 42 }} />
+        </div>
+        <select className="form-select" style={{ width: 'auto', minWidth: 180 }} value={dayRange} onChange={e => setDayRange(e.target.value)}>
+          {Object.entries(DAY_RANGES).map(([key, r]) => <option key={key} value={key}>{r.label}</option>)}
+        </select>
+        <select className="form-select" style={{ width: 'auto', minWidth: 170 }} value={sortBy} onChange={e => setSortBy(e.target.value)}>
+          <option value="number">Sort: Member no.</option>
+          <option value="overdue">Sort: Longest overdue</option>
+        </select>
+        {hasFilters && (
+          <button className="btn btn-ghost" style={{ color: '#dc2626', fontWeight: 600 }}
+            onClick={() => { setSearchTerm(''); setDayRange(''); setSortBy('number'); }}>Clear</button>
+        )}
       </div>
 
       <div className="card" style={{ padding: 0 }}>
@@ -103,10 +199,12 @@ const LeaderUnpaidPage = () => {
               </tr>
             </thead>
             <tbody>
-              {unpaid.length === 0 ? (
-                <tr><td colSpan={6}><div className="empty-state">No unpaid members found. Everyone is up to date! 🎉</div></td></tr>
-              ) : unpaid.map((d, i) => (
-                <tr key={i}>
+              {visible.length === 0 ? (
+                <tr><td colSpan={6}><div className="empty-state">
+                  {unpaid.length === 0 ? 'No unpaid members found. Everyone is up to date! 🎉' : 'No members match these filters.'}
+                </div></td></tr>
+              ) : visible.map(d => (
+                <tr key={d.member._id}>
                   <td>
                     <div className="flex items-center gap-3">
                       <Avatar src={d.member.profilePhoto?.url} name={d.member.name} size="sm" />
@@ -117,13 +215,13 @@ const LeaderUnpaidPage = () => {
                     </div>
                   </td>
                   <td>
-                    {d.lastDate ? format(new Date(d.lastDate), 'dd MMM yyyy') : <span style={{ color: 'var(--red-500)', fontWeight: 600 }}>Never</span>}
+                    {d.lastDate ? format(new Date(d.lastDate), 'dd MMM yyyy') : <span style={{ color: '#dc2626', fontWeight: 600 }}>Never</span>}
                   </td>
                   <td style={{ fontWeight: 600 }}>
                     {d.amount ? `₪ ${d.amount.toLocaleString()}` : '—'}
                   </td>
                   <td>
-                    <span className="badge" style={{ background: d.daysSince === 'Never' ? 'var(--red-100)' : 'var(--orange-100)', color: d.daysSince === 'Never' ? 'var(--red-700)' : 'var(--orange-700)' }}>
+                    <span className={`badge ${d.daysSince === 'Never' || d.daysSince > 90 ? 'badge-red' : 'badge-yellow'}`}>
                       {d.daysSince} {d.daysSince === 'Never' ? '' : 'days'}
                     </span>
                   </td>
@@ -137,8 +235,8 @@ const LeaderUnpaidPage = () => {
                   )}
                   {!isMember && (
                     <td>
-                      <button 
-                        className="btn btn-sm btn-primary" 
+                      <button
+                        className="btn btn-sm btn-primary"
                         onClick={() => handleMarkPaid(d.member)}
                         style={{ display: 'flex', alignItems: 'center', gap: 4 }}
                       >
@@ -157,19 +255,33 @@ const LeaderUnpaidPage = () => {
       <Modal isOpen={isPayModalOpen} onClose={() => setIsPayModalOpen(false)} title={`Record Payment — ${selectedMember?.name || ''}`}>
         <form onSubmit={handlePaySubmit} className="flex-col gap-4">
           <div className="form-group">
-            <label className="form-label">Category</label>
-            <select className="form-select" required value={payForm.category} onChange={e => setPayForm({...payForm, category: e.target.value})}>
-              <option value="">-- Choose Category --</option>
-              {categories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
+            <label className="form-label">Pay Towards</label>
+            <select className="form-select" required value={payForm.target} onChange={e => handleTargetChange(e.target.value)}>
+              <option value="">-- Choose --</option>
+              {campaigns.length > 0 && (
+                <optgroup label="Active Campaigns">
+                  {campaigns.map(c => (
+                    <option key={c._id} value={`campaign:${c._id}`}>{c.title} ({c.category})</option>
+                  ))}
+                </optgroup>
+              )}
+              <optgroup label="Emergency Kit Categories">
+                {emergencyCategories.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
+              </optgroup>
             </select>
           </div>
           <div className="form-group">
             <label className="form-label">Amount (₪)</label>
-            <input type="number" className="form-input" required min="1" value={payForm.amount} onChange={e => setPayForm({...payForm, amount: e.target.value})} />
+            <input type="number" className="form-input" required min="1" value={payForm.amount} onChange={e => setPayForm({ ...payForm, amount: e.target.value })} />
+            {targetCampaign && (
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                Minimum for this campaign: ₪ {(targetCampaign.effectiveMinContribution || 0).toLocaleString()}
+              </div>
+            )}
           </div>
           <div className="form-group">
             <label className="form-label">Notes (Optional)</label>
-            <input type="text" className="form-input" value={payForm.description} onChange={e => setPayForm({...payForm, description: e.target.value})} placeholder="e.g. Bank Transfer or Bit" />
+            <input type="text" className="form-input" value={payForm.description} onChange={e => setPayForm({ ...payForm, description: e.target.value })} placeholder="e.g. M-Pesa code" />
           </div>
           <div className="flex justify-between" style={{ marginTop: 16 }}>
             <button type="button" className="btn btn-ghost" onClick={() => setIsPayModalOpen(false)}>Cancel</button>

@@ -1,9 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getContributions, addContribution, updateContribution, deleteContribution } from '../../api/contributions';
 import { getMembers } from '../../api/members';
 import { getCategories, createCategory } from '../../api/categories';
 import { validateSession } from '../../api/changeRequests';
 import { getActiveCampaigns, getCampaignHistory, createCampaign, completeCampaign } from '../../api/campaigns';
+import { getSettings } from '../../api/settings';
 import { useSocket } from '../../context/SocketContext';
 import Modal from '../../components/common/Modal';
 import AccessRequiredModal from '../../components/common/AccessRequiredModal';
@@ -17,6 +19,7 @@ const EMERGENCY_KIT_CATEGORIES = ['registration fee', 'emergency fee', 'registra
 
 const LeaderContributionsPage = () => {
   const socket = useSocket();
+  const navigate = useNavigate();
   const { isSuperAdmin } = useAuth();
 
   // Data state
@@ -46,7 +49,8 @@ const LeaderContributionsPage = () => {
   const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
   const [deleting, setDeleting] = useState(false);
 
-  const [campaignForm, setCampaignForm] = useState({ title: '', category: '', description: '', targetAmount: '', targetMember: '' });
+  const emptyCampaignForm = { title: '', category: '', description: '', targetAmount: '', targetMember: '', minContribution: '' };
+  const [campaignForm, setCampaignForm] = useState(emptyCampaignForm);
   const [completeForm, setCompleteForm] = useState({ payoutNotes: '', markClaimPaid: false });
   const [campaignSubmitting, setCampaignSubmitting] = useState(false);
 
@@ -202,15 +206,24 @@ const LeaderContributionsPage = () => {
     );
   };
 
+  // Pre-fill the campaign's minimum with the current global default
+  const openStartCampaign = async () => {
+    setIsStartCampaignOpen(true);
+    try {
+      const res = await getSettings();
+      setCampaignForm(prev => prev.minContribution === '' ? { ...prev, minContribution: res.data.minContribution ?? '' } : prev);
+    } catch { /* leave blank; server falls back to the default */ }
+  };
+
   const handleStartCampaign = async (e) => {
     e.preventDefault();
     if (!hasAccess && !isSuperAdmin) { setIsAccessModalOpen(true); return; }
     setCampaignSubmitting(true);
     try {
-      await createCampaign({ ...campaignForm, targetAmount: campaignForm.targetAmount ? Number(campaignForm.targetAmount) : undefined, targetMember: campaignForm.targetMember || undefined });
+      await createCampaign({ ...campaignForm, minContribution: campaignForm.minContribution === '' ? undefined : Number(campaignForm.minContribution), targetAmount: campaignForm.targetAmount ? Number(campaignForm.targetAmount) : undefined, targetMember: campaignForm.targetMember || undefined });
       toast.success('Campaign started! Members can now contribute.');
       setIsStartCampaignOpen(false);
-      setCampaignForm({ title: '', category: '', description: '', targetAmount: '', targetMember: '' });
+      setCampaignForm(emptyCampaignForm);
       fetchData();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to start campaign');
@@ -306,7 +319,7 @@ const LeaderContributionsPage = () => {
           </button>
           <button
             className="btn btn-ghost"
-            onClick={() => { if (!hasAccess && !isSuperAdmin) { setIsAccessModalOpen(true); return; } setIsStartCampaignOpen(true); }}
+            onClick={() => { if (!hasAccess && !isSuperAdmin) { setIsAccessModalOpen(true); return; } openStartCampaign(); }}
           >
             <Plus size={17} /> Start Campaign
           </button>
@@ -322,7 +335,8 @@ const LeaderContributionsPage = () => {
           {activeCampaigns.map(campaign => {
             const progress = campaignProgress(campaign);
             return (
-              <div key={campaign._id} style={{
+              <div key={campaign._id} onClick={() => navigate(`/leader/campaigns/${campaign._id}`)} title="View who has paid and who hasn't" style={{
+                cursor: 'pointer',
                 background: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 60%, #3b82f6 100%)',
                 borderRadius: 'var(--radius-xl)', padding: '22px 28px',
                 color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -350,6 +364,13 @@ const LeaderContributionsPage = () => {
                         Started {format(new Date(campaign.createdAt), 'dd MMM yyyy')}
                       </span>
                     </div>
+                    <div style={{ marginTop: 8, fontSize: '0.82rem', display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                      <span style={{ opacity: 0.9 }}>Min ₪ {(campaign.effectiveMinContribution || 0).toLocaleString()} / member</span>
+                      <span style={{ background: '#dcfce7', color: '#15803d', padding: '1px 8px', borderRadius: 10, fontWeight: 700 }}>{campaign.paidCount || 0} paid</span>
+                      {campaign.partialCount > 0 && <span style={{ background: '#fef9c3', color: '#b45309', padding: '1px 8px', borderRadius: 10, fontWeight: 700 }}>{campaign.partialCount} partial</span>}
+                      <span style={{ background: '#fee2e2', color: '#dc2626', padding: '1px 8px', borderRadius: 10, fontWeight: 700 }}>{campaign.unpaidCount || 0} unpaid</span>
+                      <span style={{ textDecoration: 'underline', fontWeight: 700 }}>View details →</span>
+                    </div>
                     {progress !== null ? (
                       <div style={{ marginTop: 10 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem', opacity: 0.85, marginBottom: 5 }}>
@@ -369,13 +390,13 @@ const LeaderContributionsPage = () => {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
                   <button
-                    onClick={() => handleOpenModal(null, campaign)}
+                    onClick={(e) => { e.stopPropagation(); handleOpenModal(null, campaign); }}
                     style={{ background: '#fff', border: 'none', borderRadius: 12, padding: '10px 18px', color: '#1d4ed8', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}
                   >
                     <Plus size={18} /> Record Contribution
                   </button>
                   <button
-                    onClick={() => { if (!hasAccess && !isSuperAdmin) { setIsAccessModalOpen(true); return; } setCompleteForm({ payoutNotes: '', markClaimPaid: false }); setCompletingCampaign(campaign); }}
+                    onClick={(e) => { e.stopPropagation(); if (!hasAccess && !isSuperAdmin) { setIsAccessModalOpen(true); return; } setCompleteForm({ payoutNotes: '', markClaimPaid: false }); setCompletingCampaign(campaign); }}
                     style={{ background: 'rgba(255,255,255,0.15)', border: '1.5px solid rgba(255,255,255,0.3)', borderRadius: 12, padding: '10px 18px', color: '#fff', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center', backdropFilter: 'blur(4px)' }}
                   >
                     <CheckCircle size={18} /> Close & Pay Out
@@ -403,7 +424,7 @@ const LeaderContributionsPage = () => {
           </div>
           <button
             className="btn btn-primary"
-            onClick={() => { if (!hasAccess && !isSuperAdmin) { setIsAccessModalOpen(true); return; } setIsStartCampaignOpen(true); }}
+            onClick={() => { if (!hasAccess && !isSuperAdmin) { setIsAccessModalOpen(true); return; } openStartCampaign(); }}
           >
             <Plus size={17} /> Start Campaign
           </button>
@@ -615,6 +636,14 @@ const LeaderContributionsPage = () => {
             </select>
           </div>
           <div className="form-group">
+            <label className="form-label">Minimum per Member (₪)</label>
+            <input type="number" className="form-input" min="0" placeholder="Uses the global default if blank"
+              value={campaignForm.minContribution} onChange={e => setCampaignForm({ ...campaignForm, minContribution: e.target.value })} />
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>
+              Every member (except the beneficiary and members who join later) must pay at least this. Can be changed later for this campaign only.
+            </div>
+          </div>
+          <div className="form-group">
             <label className="form-label">Target Amount (₪) — Optional</label>
             <input type="number" className="form-input" min="0" placeholder="Leave blank if open-ended"
               value={campaignForm.targetAmount} onChange={e => setCampaignForm({ ...campaignForm, targetAmount: e.target.value })} />
@@ -679,7 +708,7 @@ const LeaderContributionsPage = () => {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {campaignHistory.map(camp => (
-              <div key={camp._id} style={{ background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 18px' }}>
+              <div key={camp._id} onClick={() => navigate(`/leader/campaigns/${camp._id}`)} title="View who paid" style={{ cursor: 'pointer', background: 'var(--gray-50)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 18px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
                   <div>
                     <div style={{ fontWeight: 700, color: 'var(--gray-800)', marginBottom: 4 }}>{camp.title}</div>

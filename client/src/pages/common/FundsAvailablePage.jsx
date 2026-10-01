@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { getFundsOverview } from '../../api/stats';
 import { Landmark, ArrowUpCircle, ArrowDownCircle, Wallet, Clock, Flag, CheckCircle } from 'lucide-react';
 
 const LeaderFundsPage = () => {
+  const { isMember } = useAuth();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -41,7 +44,8 @@ const LeaderFundsPage = () => {
           {campaignsList.map(campaign => {
             const progress = campaignProgress(campaign);
             return (
-              <div key={campaign.campaign._id} style={{
+              <Link key={campaign.campaign._id} to={`${isMember ? '' : '/leader'}/campaigns/${campaign.campaign._id}`} style={{
+                display: 'block', textDecoration: 'none',
                 background: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 60%, #3b82f6 100%)',
                 borderRadius: 'var(--radius-xl)', padding: '28px 32px',
                 color: '#fff', boxShadow: '0 6px 28px rgba(37,99,235,0.25)'
@@ -59,6 +63,7 @@ const LeaderFundsPage = () => {
                         <span style={{ opacity: 0.85, fontSize: '0.85rem' }}>For: <strong>{campaign.campaign.targetMember.name}</strong></span>
                       )}
                       <span style={{ opacity: 0.75, fontSize: '0.82rem' }}>{campaign.contributionCount} contributions</span>
+                      <span style={{ fontSize: '0.82rem', fontWeight: 700, textDecoration: 'underline' }}>See who has paid →</span>
                     </div>
                     {progress !== null ? (
                       <div>
@@ -79,7 +84,7 @@ const LeaderFundsPage = () => {
                     )}
                   </div>
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>

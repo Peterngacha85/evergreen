@@ -22,6 +22,7 @@ const statsRoutes = require('./routes/statsRoutes');
 const missionVisionRoutes = require('./routes/missionVisionRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
 const campaignRoutes = require('./routes/campaignRoutes');
+const settingRoutes = require('./routes/settingRoutes');
 
 // Connect to MongoDB
 connectDB();
@@ -85,6 +86,7 @@ app.use('/api/stats', statsRoutes);
 app.use('/api/mission-vision', missionVisionRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/campaigns', campaignRoutes);
+app.use('/api/settings', settingRoutes);
 
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {

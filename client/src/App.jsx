@@ -37,6 +37,8 @@ import EmergencyKitPage from './pages/common/EmergencyKitPage';
 import ContributionArchivePage from './pages/common/ContributionArchivePage';
 import ExpensesPage from './pages/common/ExpensesPage';
 import SecurityPage from './pages/common/SecurityPage';
+import CampaignDetailPage from './pages/common/CampaignDetailPage';
+import SettingsPage from './pages/leader/SettingsPage';
 
 function App() {
   return (
@@ -67,6 +69,7 @@ function App() {
             <Route path="/expenses" element={<ExpensesPage />} />
             <Route path="/archive" element={<ContributionArchivePage />} />
             <Route path="/security" element={<SecurityPage />} />
+            <Route path="/campaigns/:id" element={<CampaignDetailPage />} />
           </Route>
 
           {/* Leader/SuperAdmin Protected Routes */}
@@ -89,7 +92,9 @@ function App() {
             <Route path="/leader/expenses" element={<ExpensesPage />} />
             <Route path="/leader/archive" element={<ContributionArchivePage />} />
             <Route path="/leader/security" element={<SecurityPage />} />
+            <Route path="/leader/campaigns/:id" element={<CampaignDetailPage />} />
             <Route path="/leader/manage-leaders" element={<SuperAdminRoute><ManageLeadersPage /></SuperAdminRoute>} />
+            <Route path="/leader/settings" element={<SuperAdminRoute><SettingsPage /></SuperAdminRoute>} />
           </Route>
           
           <Route path="*" element={<Navigate to="/login" replace />} />

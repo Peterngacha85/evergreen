@@ -20,6 +20,13 @@ const campaignSchema = new mongoose.Schema(
       type: Number,
       min: 0
     },
+    // Minimum each eligible member must pay toward this campaign. Copied from
+    // the global default when the campaign starts; editing it later only
+    // affects this campaign.
+    minContribution: {
+      type: Number,
+      min: 0
+    },
     status: {
       type: String,
       enum: ['active', 'completed'],

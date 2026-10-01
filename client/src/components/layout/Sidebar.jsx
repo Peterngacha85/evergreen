@@ -5,7 +5,7 @@ import { useSocket } from '../../context/SocketContext';
 import {
   LayoutDashboard, Users, TrendingUp, Calendar, Award,
   FileText, GitPullRequestDraft, LogOut, ChevronLeft, ChevronRight, Shield,
-  BookOpen, UserX, Landmark, Info, Receipt, Archive, Activity
+  BookOpen, UserX, Landmark, Info, Receipt, Archive, Activity, Settings
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import Avatar from '../common/Avatar';
@@ -63,6 +63,7 @@ const SUPERADMIN_NAV = [
   { to: '/leader/archive',         icon: Archive,             label: 'Archive'         },
   { to: '/leader/security',        icon: Shield,              label: 'Security'        },
   { to: '/leader/manage-leaders', icon: Shield,              label: 'Manage Leaders'   },
+  { to: '/leader/settings',       icon: Settings,            label: 'Settings'         },
 ];
 
 const Sidebar = ({ isOpen, onClose }) => {
