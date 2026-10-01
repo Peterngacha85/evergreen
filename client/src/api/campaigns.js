@@ -7,3 +7,4 @@ export const createCampaign = (data) => api.post('/campaigns', data);
 export const completeCampaign = (id, data) => api.post(`/campaigns/${id}/complete`, data);
 export const getCampaignStatus = (id) => api.get(`/campaigns/${id}/status`);
 export const updateCampaignMinimum = (id, minContribution) => api.patch(`/campaigns/${id}/minimum`, { minContribution });
+export const updateCampaignDeadline = (id, deadline) => api.patch(`/campaigns/${id}/deadline`, { deadline });

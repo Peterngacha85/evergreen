@@ -23,6 +23,7 @@ const missionVisionRoutes = require('./routes/missionVisionRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
 const campaignRoutes = require('./routes/campaignRoutes');
 const settingRoutes = require('./routes/settingRoutes');
+const { runDeadlineCheck } = require('./utils/campaignStatus');
 
 // Connect to MongoDB
 connectDB();
@@ -125,3 +126,7 @@ const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`🚀 Evergreen API running on http://localhost:${PORT}`);
 });
+
+// Deactivate members who missed a campaign deadline. Busy endpoints also run
+// this check, so it still happens if the host sleeps between requests.
+setInterval(() => runDeadlineCheck({ force: true }), 5 * 60 * 1000);

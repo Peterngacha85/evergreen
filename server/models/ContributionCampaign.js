@@ -27,6 +27,17 @@ const campaignSchema = new mongoose.Schema(
       type: Number,
       min: 0
     },
+    // When this passes, every expected member who hasn't paid the full
+    // minimum is deactivated (see utils/campaignStatus.runDeadlineCheck).
+    deadline: {
+      type: Date
+    },
+    deadlineProcessedAt: {
+      type: Date
+    },
+    deactivatedCount: {
+      type: Number
+    },
     status: {
       type: String,
       enum: ['active', 'completed'],

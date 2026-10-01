@@ -26,7 +26,7 @@ const LeaderDashboard = () => {
           getActiveCampaigns(),
         ]);
         setSummary(s.data);
-        setMemberCount(m.data.length);
+        setMemberCount(m.data.filter(x => !x.isDeactivated).length);
         setPendingReqs(r.data);
         setActiveCampaigns(ac.data);
       } catch (err) {

@@ -37,6 +37,7 @@ const memberLogin = async (req, res) => {
         role: userRole,
         leaderRole: leader?.leaderRole || null,
         joinDate: member.joinDate,
+        isDeactivated: !!member.isDeactivated,
       },
     });
   } catch (err) {

@@ -49,7 +49,7 @@ const LeaderContributionsPage = () => {
   const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
   const [deleting, setDeleting] = useState(false);
 
-  const emptyCampaignForm = { title: '', category: '', description: '', targetAmount: '', targetMember: '', minContribution: '' };
+  const emptyCampaignForm = { title: '', category: '', description: '', targetAmount: '', targetMember: '', minContribution: '', deadline: '' };
   const [campaignForm, setCampaignForm] = useState(emptyCampaignForm);
   const [completeForm, setCompleteForm] = useState({ payoutNotes: '', markClaimPaid: false });
   const [campaignSubmitting, setCampaignSubmitting] = useState(false);
@@ -220,7 +220,7 @@ const LeaderContributionsPage = () => {
     if (!hasAccess && !isSuperAdmin) { setIsAccessModalOpen(true); return; }
     setCampaignSubmitting(true);
     try {
-      await createCampaign({ ...campaignForm, minContribution: campaignForm.minContribution === '' ? undefined : Number(campaignForm.minContribution), targetAmount: campaignForm.targetAmount ? Number(campaignForm.targetAmount) : undefined, targetMember: campaignForm.targetMember || undefined });
+      await createCampaign({ ...campaignForm, deadline: campaignForm.deadline ? new Date(`${campaignForm.deadline}T23:59:59`).toISOString() : undefined, minContribution: campaignForm.minContribution === '' ? undefined : Number(campaignForm.minContribution), targetAmount: campaignForm.targetAmount ? Number(campaignForm.targetAmount) : undefined, targetMember: campaignForm.targetMember || undefined });
       toast.success('Campaign started! Members can now contribute.');
       setIsStartCampaignOpen(false);
       setCampaignForm(emptyCampaignForm);
@@ -369,6 +369,7 @@ const LeaderContributionsPage = () => {
                       <span style={{ background: '#dcfce7', color: '#15803d', padding: '1px 8px', borderRadius: 10, fontWeight: 700 }}>{campaign.paidCount || 0} paid</span>
                       {campaign.partialCount > 0 && <span style={{ background: '#fef9c3', color: '#b45309', padding: '1px 8px', borderRadius: 10, fontWeight: 700 }}>{campaign.partialCount} partial</span>}
                       <span style={{ background: '#fee2e2', color: '#dc2626', padding: '1px 8px', borderRadius: 10, fontWeight: 700 }}>{campaign.unpaidCount || 0} unpaid</span>
+                      {campaign.deadline && <span style={{ opacity: 0.9 }}>Deadline {format(new Date(campaign.deadline), 'dd MMM yyyy')}</span>}
                       <span style={{ textDecoration: 'underline', fontWeight: 700 }}>View details →</span>
                     </div>
                     {progress !== null ? (
@@ -641,6 +642,14 @@ const LeaderContributionsPage = () => {
               value={campaignForm.minContribution} onChange={e => setCampaignForm({ ...campaignForm, minContribution: e.target.value })} />
             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>
               Every member (except the beneficiary and members who join later) must pay at least this. Can be changed later for this campaign only.
+            </div>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Deadline (Last Day to Pay)</label>
+            <input type="date" className="form-input" min={new Date().toISOString().split('T')[0]}
+              value={campaignForm.deadline} onChange={e => setCampaignForm({ ...campaignForm, deadline: e.target.value })} />
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>
+              After this day, members who haven't paid the full minimum are deactivated (leaders can reactivate them). Leave blank for no deadline; you can set one later from the campaign page.
             </div>
           </div>
           <div className="form-group">

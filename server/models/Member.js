@@ -20,6 +20,18 @@ const memberSchema = new mongoose.Schema(
     },
     role: { type: String, default: 'member' },
     isActive: { type: Boolean, default: true },
+    // Deactivated for not paying a campaign by its deadline. Unlike isActive
+    // (removed from the group), the member can still log in and view, and a
+    // leader can reactivate them.
+    isDeactivated: { type: Boolean, default: false },
+    deactivationHistory: [{
+      deactivatedAt: { type: Date, required: true },
+      reason: { type: String, trim: true },
+      campaign: { type: mongoose.Schema.Types.ObjectId, ref: 'ContributionCampaign' },
+      amountOwed: { type: Number },
+      reactivatedAt: { type: Date },
+      reactivatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Leader' },
+    }],
     joinDate: { type: Date, default: Date.now },
     addedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Leader' },
   },

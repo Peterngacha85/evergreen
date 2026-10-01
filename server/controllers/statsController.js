@@ -3,12 +3,14 @@ const Claim = require('../models/Claim');
 const Member = require('../models/Member');
 const Expense = require('../models/Expense');
 const ContributionCampaign = require('../models/ContributionCampaign');
+const { runDeadlineCheck } = require('../utils/campaignStatus');
 
 // @desc    Get financial overview
 // @route   GET /api/stats/funds
 // @access  Private/Leader
 exports.getFundsOverview = async (req, res) => {
   try {
+    await runDeadlineCheck();
     const [totalExpenses, emergencyContributions, activeCampaigns] = await Promise.all([
       Expense.aggregate([
         { $group: { _id: null, total: { $sum: '$amount' } } }
@@ -55,7 +57,7 @@ exports.getFundsOverview = async (req, res) => {
 
     // Also get counts
     const [memberCount, pendingClaims] = await Promise.all([
-      Member.countDocuments({ isActive: true }),
+      Member.countDocuments({ isActive: true, isDeactivated: { $ne: true } }),
       Claim.countDocuments({ status: 'pending' })
     ]);
 
@@ -87,13 +89,15 @@ exports.getFundsOverview = async (req, res) => {
 // @access  Private/Leader
 exports.getUnpaidMembers = async (req, res) => {
   try {
+    await runDeadlineCheck();
     const thirtyOneDaysAgo = new Date();
     thirtyOneDaysAgo.setDate(thirtyOneDaysAgo.getDate() - 31);
 
     // One query for members and one aggregation for every member's latest
     // contribution, instead of a query per member.
     const [members, latest] = await Promise.all([
-      Member.find({ isActive: true }).select('name idNumber phoneNumber profilePhoto createdAt').lean(),
+      // Deactivated members are listed separately (see getDeactivatedMembers)
+      Member.find({ isActive: true, isDeactivated: { $ne: true } }).select('name idNumber phoneNumber profilePhoto createdAt').lean(),
       Contribution.aggregate([
         { $sort: { member: 1, datePaid: -1 } },
         { $group: { _id: '$member', datePaid: { $first: '$datePaid' }, amount: { $first: '$amount' } } },
@@ -125,6 +129,34 @@ exports.getUnpaidMembers = async (req, res) => {
     unpaidMembers.sort((a, b) => a.member.idNumber.localeCompare(b.member.idNumber));
 
     res.json(unpaidMembers);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// @desc    Members deactivated for not paying a campaign by its deadline
+// @route   GET /api/stats/deactivated
+// @access  Private
+exports.getDeactivatedMembers = async (req, res) => {
+  try {
+    await runDeadlineCheck();
+    const members = await Member.find({ isActive: true, isDeactivated: true })
+      .select('name idNumber phoneNumber profilePhoto deactivationHistory')
+      .populate('deactivationHistory.campaign', 'title category')
+      .sort({ idNumber: 1 })
+      .lean();
+
+    res.json(members.map((m) => {
+      const open = (m.deactivationHistory || []).filter((h) => !h.reactivatedAt);
+      const latest = open[open.length - 1] || {};
+      return {
+        member: { _id: m._id, name: m.name, idNumber: m.idNumber, phoneNumber: m.phoneNumber, profilePhoto: m.profilePhoto },
+        deactivatedAt: latest.deactivatedAt || null,
+        reason: latest.reason || '',
+        campaign: latest.campaign || null,
+        amountOwed: latest.amountOwed || 0,
+      };
+    }));
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { TrendingUp, Calendar, FileText, Wallet, Flag } from 'lucide-react';
+import { TrendingUp, Calendar, FileText, Wallet, Flag, UserX } from 'lucide-react';
 import { getMyContributions } from '../../api/contributions';
+import { getMyProfile } from '../../api/members';
 import { getEvents } from '../../api/events';
 import { getMyClaims } from '../../api/claims';
 import { getActiveCampaigns } from '../../api/campaigns';
@@ -15,11 +16,15 @@ const MemberDashboard = () => {
   const [events, setEvents]     = useState([]);
   const [claims, setClaims]     = useState([]);
   const [activeCampaigns, setActiveCampaigns] = useState([]);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading]   = useState(true);
 
   useEffect(() => {
     const fetchAll = async () => {
       try {
+        // Profile is fetched fresh (not from the login response) so a
+        // deactivation or reactivation shows without logging in again
+        getMyProfile().then(r => setProfile(r.data)).catch(() => {});
         const [c, e, cl, ac] = await Promise.all([
           getMyContributions(),
           getEvents({ upcoming: 'true' }),
@@ -67,6 +72,31 @@ const MemberDashboard = () => {
           <div style={{ fontSize: '2rem', fontWeight: 800 }}>₪ {myTotal.toLocaleString()}</div>
         </div>
       </div>
+
+      {/* Deactivated for non-payment */}
+      {profile?.isDeactivated && (() => {
+        const open = (profile.deactivationHistory || []).filter(h => !h.reactivatedAt);
+        return (
+          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 'var(--radius-xl)', padding: '16px 20px', marginBottom: 24, display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+            <UserX size={24} style={{ color: '#dc2626', flexShrink: 0, marginTop: 2 }} />
+            <div>
+              <div style={{ fontWeight: 800, color: '#991b1b', marginBottom: 4 }}>Your membership is currently deactivated</div>
+              <div style={{ fontSize: '0.88rem', color: '#7f1d1d', lineHeight: 1.6 }}>
+                This is because the following contribution{open.length === 1 ? ' was' : 's were'} not paid in full by the deadline:
+                <ul style={{ margin: '6px 0 6px 18px' }}>
+                  {open.map((h, i) => (
+                    <li key={i}>
+                      <strong>{h.campaign?.title || 'A campaign'}</strong>
+                      {h.amountOwed ? <> — ₪ {h.amountOwed.toLocaleString()} outstanding</> : null}
+                    </li>
+                  ))}
+                </ul>
+                Please pay the outstanding amount and contact a leader to have your membership reactivated.
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Active Campaign Cards */}
       {activeCampaigns.length > 0 ? (

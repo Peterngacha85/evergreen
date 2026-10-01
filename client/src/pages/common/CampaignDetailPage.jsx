@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { getCampaignStatus, updateCampaignMinimum } from '../../api/campaigns';
+import { getCampaignStatus, updateCampaignMinimum, updateCampaignDeadline } from '../../api/campaigns';
+import { reactivateMember } from '../../api/members';
 import { addContribution, updateContribution } from '../../api/contributions';
 import { validateSession } from '../../api/changeRequests';
 import Avatar from '../../components/common/Avatar';
 import Modal from '../../components/common/Modal';
 import AccessRequiredModal from '../../components/common/AccessRequiredModal';
-import { ArrowLeft, Flag, Search, Phone, Edit2, Plus, CheckCircle, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Flag, Search, Phone, Edit2, Plus, CheckCircle, RefreshCw, CalendarClock, UserCheck } from 'lucide-react';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
@@ -26,6 +27,9 @@ const STATUS_TABS = [
 
 const money = (n) => `₪ ${Number(n || 0).toLocaleString()}`;
 const today = () => new Date().toISOString().split('T')[0];
+// <input type="date"> works in local dates; a deadline covers the whole day it falls on
+const toDateInput = (d) => (d ? format(new Date(d), 'yyyy-MM-dd') : '');
+const endOfDayISO = (dateStr) => new Date(`${dateStr}T23:59:59`).toISOString();
 
 const CampaignDetailPage = () => {
   const { id } = useParams();
@@ -47,6 +51,10 @@ const CampaignDetailPage = () => {
 
   const [isMinModalOpen, setIsMinModalOpen] = useState(false);
   const [minValue, setMinValue] = useState('');
+
+  const [isDeadlineModalOpen, setIsDeadlineModalOpen] = useState(false);
+  const [deadlineValue, setDeadlineValue] = useState('');
+  const [reactivatingId, setReactivatingId] = useState(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -149,6 +157,40 @@ const CampaignDetailPage = () => {
     }
   };
 
+  const openDeadlineModal = () => {
+    if (!requireAccess()) return;
+    setDeadlineValue(toDateInput(data.campaign.deadline));
+    setIsDeadlineModalOpen(true);
+  };
+
+  const saveDeadline = async (value) => {
+    setSubmitting(true);
+    try {
+      await updateCampaignDeadline(id, value ? endOfDayISO(value) : null);
+      toast.success(value ? 'Deadline saved' : 'Deadline removed');
+      setIsDeadlineModalOpen(false);
+      fetchData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update deadline');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleReactivate = async (row) => {
+    if (!requireAccess()) return;
+    setReactivatingId(row.member._id);
+    try {
+      await reactivateMember(row.member._id);
+      toast.success(`${row.member.name} reactivated`);
+      fetchData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to reactivate member');
+    } finally {
+      setReactivatingId(null);
+    }
+  };
+
   if (loading) return <div className="flex justify-center" style={{ paddingTop: 80 }}><div className="spinner" /></div>;
 
   const backTo = isMember ? '/dashboard' : '/leader/contributions';
@@ -165,6 +207,9 @@ const CampaignDetailPage = () => {
   const { campaign, summary, rows, minContribution, usesDefaultMinimum } = data;
   const isActive = campaign.status === 'active';
   const canAct = !isMember && isActive;
+  const deadline = campaign.deadline ? new Date(campaign.deadline) : null;
+  const deadlinePassed = deadline && deadline <= new Date();
+  const daysLeft = deadline && !deadlinePassed ? Math.ceil((deadline - new Date()) / 86400000) : null;
   const counts = { '': rows.length, unpaid: summary.unpaidCount, partial: summary.partialCount, paid: summary.paidCount };
 
   const term = searchTerm.trim().toLowerCase();
@@ -220,6 +265,31 @@ const CampaignDetailPage = () => {
         </div>
       </div>
 
+      {/* ── Deadline ────────────────────────────────────────────────── */}
+      <div className="card" style={{
+        padding: '14px 18px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+        background: deadlinePassed ? '#fef2f2' : deadline ? '#fffbeb' : undefined,
+        border: deadlinePassed ? '1px solid #fecaca' : deadline ? '1px solid #fde68a' : undefined,
+      }}>
+        <CalendarClock size={22} style={{ color: deadlinePassed ? '#dc2626' : deadline ? '#b45309' : 'var(--gray-400)', flexShrink: 0 }} />
+        <div style={{ flex: 1, minWidth: 200, fontSize: '0.9rem' }}>
+          {!deadline && <><strong>No deadline set.</strong> <span style={{ color: 'var(--text-muted)' }}>Members who don&apos;t pay won&apos;t be deactivated automatically.</span></>}
+          {deadline && !deadlinePassed && (
+            <><strong>Deadline: {format(deadline, 'dd MMM yyyy')}</strong> ({daysLeft} day{daysLeft === 1 ? '' : 's'} left).{' '}
+              <span style={{ color: '#92400e' }}>Members who haven&apos;t paid the full minimum by then will be deactivated.</span></>
+          )}
+          {deadlinePassed && (
+            <><strong>Deadline passed on {format(deadline, 'dd MMM yyyy')}.</strong>{' '}
+              {campaign.deactivatedCount != null && <span style={{ color: '#991b1b' }}>{campaign.deactivatedCount} member{campaign.deactivatedCount === 1 ? ' was' : 's were'} deactivated for not paying in full.</span>}</>
+          )}
+        </div>
+        {canAct && (
+          <button className="btn btn-sm btn-outline" onClick={openDeadlineModal}>
+            <Edit2 size={14} /> {deadline ? 'Change deadline' : 'Set deadline'}
+          </button>
+        )}
+      </div>
+
       {/* ── Summary tiles ───────────────────────────────────────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 14, marginBottom: 20 }}>
         {[
@@ -267,7 +337,7 @@ const CampaignDetailPage = () => {
                 <th>Outstanding</th>
                 <th>Date Paid</th>
                 {!isMember && <th>Contact</th>}
-                {canAct && <th>Action</th>}
+                {!isMember && <th>Action</th>}
               </tr>
             </thead>
             <tbody>
@@ -283,6 +353,7 @@ const CampaignDetailPage = () => {
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                           M.No: {r.member.idNumber}{!r.eligible && ' · not required to pay'}
                         </div>
+                        {r.member.isDeactivated && <span className="badge badge-gray" style={{ marginTop: 2 }}>Deactivated</span>}
                       </div>
                     </div>
                   </td>
@@ -297,20 +368,26 @@ const CampaignDetailPage = () => {
                       )}
                     </td>
                   )}
-                  {canAct && (
+                  {!isMember && (
                     <td>
-                      <div className="flex gap-2">
-                        {r.status === 'unpaid' && (
+                      <div className="flex gap-2" style={{ flexWrap: 'wrap' }}>
+                        {r.member.isDeactivated && (
+                          <button className="btn btn-sm btn-outline" onClick={() => handleReactivate(r)} disabled={reactivatingId === r.member._id}
+                            style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <UserCheck size={14} /> {reactivatingId === r.member._id ? 'Reactivating...' : 'Reactivate'}
+                          </button>
+                        )}
+                        {canAct && r.status === 'unpaid' && (
                           <button className="btn btn-sm btn-primary" onClick={() => openPayment(r, 'add')} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                             <CheckCircle size={14} /> Mark Paid
                           </button>
                         )}
-                        {r.status === 'partial' && (
+                        {canAct && r.status === 'partial' && (
                           <button className="btn btn-sm btn-primary" onClick={() => openPayment(r, 'topup')} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                             <Plus size={14} /> Top Up
                           </button>
                         )}
-                        {r.contributionId && (
+                        {canAct && r.contributionId && (
                           <button className="btn btn-sm btn-ghost btn-icon" onClick={() => openPayment(r, 'edit')} title="Edit payment"><Edit2 size={16} /></button>
                         )}
                       </div>
@@ -372,6 +449,28 @@ const CampaignDetailPage = () => {
           <div className="flex justify-between" style={{ marginTop: 8 }}>
             <button type="button" className="btn btn-ghost" onClick={() => setIsMinModalOpen(false)}>Cancel</button>
             <button type="submit" className="btn btn-primary" disabled={submitting}>{submitting ? 'Saving...' : 'Update Minimum'}</button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ── Deadline modal ──────────────────────────────────────────── */}
+      <Modal isOpen={isDeadlineModalOpen} onClose={() => setIsDeadlineModalOpen(false)} title="Campaign Deadline" maxWidth="440px">
+        <form onSubmit={(e) => { e.preventDefault(); saveDeadline(deadlineValue); }} className="flex-col gap-4">
+          <div className="form-group">
+            <label className="form-label">Last day to pay</label>
+            <input type="date" className="form-input" required value={deadlineValue} onChange={e => setDeadlineValue(e.target.value)} />
+          </div>
+          <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, padding: '10px 14px', fontSize: '0.8rem', color: '#92400e' }}>
+            At the end of this day, every member expected to pay who hasn&apos;t paid the full minimum ({money(minContribution)}) will be
+            <strong> deactivated</strong>. Leaders can reactivate them at any time.
+            {deadlineValue && deadlineValue < today() && <><br /><strong>This date is in the past, so this will happen as soon as you save.</strong></>}
+          </div>
+          <div className="flex justify-between" style={{ marginTop: 8, gap: 8, flexWrap: 'wrap' }}>
+            <button type="button" className="btn btn-ghost" onClick={() => setIsDeadlineModalOpen(false)}>Cancel</button>
+            <div className="flex gap-2">
+              {deadline && <button type="button" className="btn btn-outline" disabled={submitting} onClick={() => saveDeadline(null)}>Remove deadline</button>}
+              <button type="submit" className="btn btn-primary" disabled={submitting}>{submitting ? 'Saving...' : 'Save Deadline'}</button>
+            </div>
           </div>
         </form>
       </Modal>

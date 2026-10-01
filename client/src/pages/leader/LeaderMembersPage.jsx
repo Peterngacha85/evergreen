@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { getMembers, createMember, updateMember, updateMemberPhoto, deleteMember } from '../../api/members';
+import { getMembers, createMember, updateMember, updateMemberPhoto, deleteMember, reactivateMember } from '../../api/members';
 import { validateSession } from '../../api/changeRequests';
 import Avatar from '../../components/common/Avatar';
 import Modal from '../../components/common/Modal';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import AccessRequiredModal from '../../components/common/AccessRequiredModal';
-import { Plus, Edit2, Trash2, Search, Eye, EyeOff } from 'lucide-react';
+import { Plus, Edit2, Trash2, Search, Eye, EyeOff, UserCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { useAuth } from '../../context/AuthContext';
@@ -15,6 +15,8 @@ const LeaderMembersPage = () => {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [reactivatingId, setReactivatingId] = useState(null);
   const [hasAccess, setHasAccess] = useState(false);
   const [isAccessModalOpen, setIsAccessModalOpen] = useState(false);
 
@@ -120,7 +122,7 @@ const LeaderMembersPage = () => {
     setDeleting(true);
     try {
       await deleteMember(confirmDelete.id);
-      toast.success('Member deactivated');
+      toast.success('Member removed');
       setConfirmDelete({ open: false, id: null });
       fetchMembers();
     } catch (err) {
@@ -130,11 +132,32 @@ const LeaderMembersPage = () => {
     }
   };
 
-  const filteredMembers = members.filter(m => 
+  const handleReactivate = async (member) => {
+    if (!hasAccess && !isSuperAdmin) {
+      setIsAccessModalOpen(true);
+      return;
+    }
+    setReactivatingId(member._id);
+    try {
+      await reactivateMember(member._id);
+      toast.success(`${member.name} reactivated`);
+      fetchMembers();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to reactivate member');
+    } finally {
+      setReactivatingId(null);
+    }
+  };
+
+  const activeCount = members.filter(m => !m.isDeactivated).length;
+  const deactivatedCount = members.length - activeCount;
+  const matchesStatus = (m) => statusFilter === '' || (statusFilter === 'deactivated') === !!m.isDeactivated;
+
+  const filteredMembers = members.filter(m => matchesStatus(m) && (
     m.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
     m.idNumber.includes(searchTerm) ||
     m.phoneNumber.includes(searchTerm)
-  );
+  ));
 
   if (loading) return <div className="flex justify-center" style={{ paddingTop: 80 }}><div className="spinner" style={{ width: 36, height: 36 }} /></div>;
 
@@ -143,7 +166,7 @@ const LeaderMembersPage = () => {
       <div className="page-header flex items-center justify-between">
         <div>
           <h1 className="page-title">Manage Members</h1>
-          <p className="page-subtitle">Register new members or update existing profiles</p>
+          <p className="page-subtitle">{activeCount} active{deactivatedCount > 0 && ` · ${deactivatedCount} deactivated for non-payment`}</p>
         </div>
         <button className="btn btn-primary" onClick={() => handleOpenModal()}>
           <Plus size={18} /> Add Member
@@ -160,10 +183,16 @@ const LeaderMembersPage = () => {
               style={{ paddingLeft: 48, height: 48, background: '#fff', borderRadius: 12, border: '1px solid var(--border)' }}
             />
           </div>
-          {searchTerm && (
-            <button 
-              className="btn btn-ghost" 
-              onClick={() => setSearchTerm('')}
+          <select className="form-select" style={{ width: 'auto', minWidth: 190, height: 48, borderRadius: 12 }}
+            value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+            <option value="">All members ({members.length})</option>
+            <option value="active">Active ({activeCount})</option>
+            <option value="deactivated">Deactivated ({deactivatedCount})</option>
+          </select>
+          {(searchTerm || statusFilter) && (
+            <button
+              className="btn btn-ghost"
+              onClick={() => { setSearchTerm(''); setStatusFilter(''); }}
               style={{ color: '#dc2626', fontWeight: 600, height: 48 }}
             >
               Clear
@@ -194,7 +223,10 @@ const LeaderMembersPage = () => {
                   <td>
                     <div className="flex items-center gap-3">
                       <Avatar src={m.profilePhoto?.url} name={m.name} size="sm" />
-                      <div style={{ fontWeight: 600, color: 'var(--gray-800)' }}>{m.name}</div>
+                      <div>
+                        <div style={{ fontWeight: 600, color: 'var(--gray-800)' }}>{m.name}</div>
+                        {m.isDeactivated && <span className="badge badge-red" title="Did not pay a campaign by its deadline">Deactivated</span>}
+                      </div>
                     </div>
                   </td>
                   <td style={{ fontFamily: 'monospace' }}>{m.idNumber}</td>
@@ -206,8 +238,14 @@ const LeaderMembersPage = () => {
                   <td style={{ fontWeight: 600, color: 'var(--red-600)' }}>{m.plainPassword || '—'}</td>
                   <td>
                     <div className="flex gap-2">
+                      {m.isDeactivated && (
+                        <button onClick={() => handleReactivate(m)} className="btn btn-sm btn-primary" disabled={reactivatingId === m._id}
+                          style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <UserCheck size={14} /> {reactivatingId === m._id ? 'Reactivating...' : 'Reactivate'}
+                        </button>
+                      )}
                       <button onClick={() => handleOpenModal(m)} className="btn btn-sm btn-ghost btn-icon" title="Edit"><Edit2 size={16} /></button>
-                      <button onClick={() => handleDeleteClick(m._id)} className="btn btn-sm btn-ghost btn-icon" style={{ color: '#dc2626' }} title="Deactivate"><Trash2 size={16} /></button>
+                      <button onClick={() => handleDeleteClick(m._id)} className="btn btn-sm btn-ghost btn-icon" style={{ color: '#dc2626' }} title="Remove member"><Trash2 size={16} /></button>
                     </div>
                   </td>
                 </tr>
@@ -296,9 +334,9 @@ const LeaderMembersPage = () => {
         isOpen={confirmDelete.open} 
         onClose={() => setConfirmDelete({ open: false, id: null })} 
         onConfirm={handleConfirmDelete}
-        title="Deactivate Member"
-        message="Are you sure you want to deactivate this member? They will no longer be able to log in or access their profile."
-        confirmText="Deactivate"
+        title="Remove Member"
+        message="Are you sure you want to remove this member? They will no longer be able to log in or access their profile. (For non-payment, use a campaign deadline instead — those members can be reactivated.)"
+        confirmText="Remove"
         loading={deleting}
       />
     </div>

@@ -11,6 +11,7 @@ const {
   getAllCampaigns,
   getCampaignStatus,
   updateCampaignMinimum,
+  updateCampaignDeadline,
 } = require('../controllers/campaignController');
 
 // All routes require authentication
@@ -33,6 +34,9 @@ router.get('/:id/status', getCampaignStatus);
 
 // Change this campaign's minimum contribution (leader with approved session / admin)
 router.patch('/:id/minimum', leaderOrSuperAdmin, requireApprovedSession, updateCampaignMinimum);
+
+// Set/change/remove this campaign's deadline (leader with approved session / admin)
+router.patch('/:id/deadline', leaderOrSuperAdmin, requireApprovedSession, updateCampaignDeadline);
 
 // Complete a campaign (leader/admin)
 router.post('/:id/complete', completeCampaign);

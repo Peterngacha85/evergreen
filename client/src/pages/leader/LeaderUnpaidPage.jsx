@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getUnpaidMembers } from '../../api/stats';
+import { getUnpaidMembers, getDeactivatedMembers } from '../../api/stats';
 import { getActiveCampaigns } from '../../api/campaigns';
 import { addContribution } from '../../api/contributions';
 import { getCategories } from '../../api/categories';
+import { reactivateMember } from '../../api/members';
+import { validateSession } from '../../api/changeRequests';
 import Avatar from '../../components/common/Avatar';
 import Modal from '../../components/common/Modal';
-import { Phone, AlertCircle, RefreshCw, CheckCircle, Search, Flag } from 'lucide-react';
+import AccessRequiredModal from '../../components/common/AccessRequiredModal';
+import { Phone, AlertCircle, RefreshCw, CheckCircle, Search, Flag, UserX, UserCheck } from 'lucide-react';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
@@ -26,10 +29,14 @@ const DAY_RANGES = {
 const daysValue = (d) => (d.daysSince === 'Never' ? Infinity : d.daysSince);
 
 const LeaderUnpaidPage = () => {
-  const { isMember } = useAuth();
+  const { isMember, isSuperAdmin } = useAuth();
   const campaignPath = (id) => `${isMember ? '' : '/leader'}/campaigns/${id}`;
 
   const [unpaid, setUnpaid] = useState([]);
+  const [deactivated, setDeactivated] = useState([]);
+  const [hasAccess, setHasAccess] = useState(false);
+  const [isAccessModalOpen, setIsAccessModalOpen] = useState(false);
+  const [reactivatingId, setReactivatingId] = useState(null);
   const [campaigns, setCampaigns] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -46,14 +53,20 @@ const LeaderUnpaidPage = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [res, campRes, catRes] = await Promise.all([
+      const [res, campRes, catRes, deactRes, session] = await Promise.all([
         getUnpaidMembers(),
         getActiveCampaigns(),
         isMember ? Promise.resolve({ data: [] }) : getCategories(),
+        getDeactivatedMembers(),
+        isMember || isSuperAdmin
+          ? Promise.resolve({ data: { hasSession: isSuperAdmin } })
+          : validateSession().catch(() => ({ data: { hasSession: false } })),
       ]);
       setUnpaid(res.data);
       setCampaigns(campRes.data);
       setCategories(catRes.data);
+      setDeactivated(deactRes.data);
+      setHasAccess(session.data.hasSession);
     } catch (err) {
       console.error(err);
     } finally {
@@ -101,6 +114,20 @@ const LeaderUnpaidPage = () => {
       toast.error(err.response?.data?.message || 'Failed to record payment');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleReactivate = async (member) => {
+    if (!hasAccess && !isSuperAdmin) { setIsAccessModalOpen(true); return; }
+    setReactivatingId(member._id);
+    try {
+      await reactivateMember(member._id);
+      toast.success(`${member.name} reactivated`);
+      fetchData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to reactivate member');
+    } finally {
+      setReactivatingId(null);
     }
   };
 
@@ -153,6 +180,63 @@ const LeaderUnpaidPage = () => {
           </div>
         </div>
       )}
+
+      {/* ── Deactivated for missing a campaign deadline ─────────────── */}
+      <div style={{ marginBottom: 28 }}>
+        <h3 style={{ fontWeight: 700, marginBottom: 4 }}>Deactivated Members ({deactivated.length})</h3>
+        <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 12 }}>
+          Members who hadn&apos;t paid the full minimum when a campaign&apos;s deadline passed. They are not counted as active members{!isMember && ' until reactivated'}.
+        </p>
+        <div className="card" style={{ padding: 0 }}>
+          <div className="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Member</th>
+                  <th>Reason</th>
+                  <th>Owed</th>
+                  <th>Deactivated On</th>
+                  {!isMember && <th>Action</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {deactivated.length === 0 ? (
+                  <tr><td colSpan={5}><div className="empty-state">No deactivated members.</div></td></tr>
+                ) : deactivated.map(d => (
+                  <tr key={d.member._id}>
+                    <td>
+                      <div className="flex items-center gap-3">
+                        <Avatar src={d.member.profilePhoto?.url} name={d.member.name} size="sm" />
+                        <div>
+                          <div style={{ fontWeight: 600 }}>{d.member.name}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>M.No: {d.member.idNumber}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ fontSize: '0.85rem' }}>
+                      <div className="flex items-center gap-2"><UserX size={14} style={{ color: '#dc2626', flexShrink: 0 }} />{d.reason || 'Missed a campaign deadline'}</div>
+                      {d.campaign && <Link to={campaignPath(d.campaign._id)} style={{ fontSize: '0.75rem', color: '#2563eb', fontWeight: 600 }}>View campaign →</Link>}
+                    </td>
+                    <td style={{ fontWeight: 700, color: '#dc2626' }}>{d.amountOwed ? `₪ ${d.amountOwed.toLocaleString()}` : '—'}</td>
+                    <td>{d.deactivatedAt ? format(new Date(d.deactivatedAt), 'dd MMM yyyy') : '—'}</td>
+                    {!isMember && (
+                      <td>
+                        <div className="flex gap-2">
+                          {d.member.phoneNumber && <a href={`tel:${d.member.phoneNumber}`} className="btn btn-sm btn-ghost btn-icon" title="Call Member"><Phone size={16} /></a>}
+                          <button className="btn btn-sm btn-primary" onClick={() => handleReactivate(d.member)} disabled={reactivatingId === d.member._id}
+                            style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <UserCheck size={14} /> {reactivatingId === d.member._id ? 'Reactivating...' : 'Reactivate'}
+                          </button>
+                        </div>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
 
       {/* ── No contribution in 31+ days ─────────────────────────────── */}
       <h3 style={{ fontWeight: 700, marginBottom: 12 }}>No Contribution in the Last 31 Days</h3>
@@ -289,6 +373,8 @@ const LeaderUnpaidPage = () => {
           </div>
         </form>
       </Modal>
+
+      <AccessRequiredModal isOpen={isAccessModalOpen} onClose={() => setIsAccessModalOpen(false)} />
     </div>
   );
 };

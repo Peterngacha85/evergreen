@@ -8,3 +8,4 @@ export const updateMember   = (id, data) => api.put(`/members/${id}`, data);
 export const updateMemberPhoto = (id, formData) =>
   api.patch(`/members/${id}/photo`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
 export const deleteMember   = (id)     => api.delete(`/members/${id}`);
+export const reactivateMember = (id) => api.post(`/members/${id}/reactivate`);

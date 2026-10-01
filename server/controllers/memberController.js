@@ -1,18 +1,20 @@
 const Member = require('../models/Member');
 const Leader = require('../models/Leader');
 const cloudinary = require('../config/cloudinary');
+const { runDeadlineCheck } = require('../utils/campaignStatus');
 
 // @desc  Get all members
 // @route GET /api/members
 // @access Leader + SuperAdmin
 const getAllMembers = async (req, res) => {
   try {
+    await runDeadlineCheck();
     const query = Member.find({ isActive: true })
       .populate('addedBy', 'name leaderRole')
       .sort({ idNumber: 1 });
     
     if (req.role === 'member') {
-      query.select('-password -plainPassword');
+      query.select('-password -plainPassword -deactivationHistory');
     }
     
     const members = await query;
@@ -182,16 +184,42 @@ const deleteMember = async (req, res) => {
   }
 };
 
+// @desc  Reactivate a member who was deactivated for not paying a campaign
+// @route POST /api/members/:id/reactivate
+// @access Leader (approved session) + SuperAdmin
+const reactivateMember = async (req, res) => {
+  try {
+    const member = await Member.findById(req.params.id);
+    if (!member) return res.status(404).json({ message: 'Member not found' });
+    if (!member.isDeactivated) return res.status(400).json({ message: `${member.name} is already active.` });
+
+    const now = new Date();
+    member.deactivationHistory.forEach((h) => {
+      if (!h.reactivatedAt) {
+        h.reactivatedAt = now;
+        h.reactivatedBy = req.user._id;
+      }
+    });
+    member.isDeactivated = false;
+    await member.save();
+
+    res.json({ message: `${member.name} has been reactivated`, _id: member._id });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 // @desc  Get member's own profile
 // @route GET /api/members/me
 // @access Member
 const getMyProfile = async (req, res) => {
   try {
-    const member = await Member.findById(req.user._id).select('-password');
+    const member = await Member.findById(req.user._id).select('-password')
+      .populate('deactivationHistory.campaign', 'title category');
     res.json(member);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-module.exports = { getAllMembers, getMemberById, createMember, updateMemberPhoto, updateMember, deleteMember, getMyProfile };
+module.exports = { getAllMembers, getMemberById, createMember, updateMemberPhoto, updateMember, deleteMember, reactivateMember, getMyProfile };

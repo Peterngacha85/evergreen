@@ -4,68 +4,18 @@ const Contribution = require('../models/Contribution');
 const Member = require('../models/Member');
 const Setting = require('../models/Setting');
 
-// Older campaigns were created before per-campaign minimums existed; they
-// fall back to the current global default until a leader sets their own.
-const effectiveMinimum = (campaign, defaultMin) =>
-  campaign.minContribution != null ? campaign.minContribution : (defaultMin || 0);
+const {
+  MEMBER_STATUS_FIELDS, effectiveMinimum, buildCampaignRows, summarizeRows, runDeadlineCheck,
+} = require('../utils/campaignStatus');
 
-const paymentStatus = (paid, minimum) => {
-  if (paid <= 0) return 'unpaid';
-  if (minimum > 0 && paid < minimum) return 'partial';
-  return 'paid';
-};
-
-// Who is expected to pay: active members who had joined by the time the
-// campaign started, excluding the member the campaign is supporting.
-const isEligible = (member, campaign) => {
-  if (!member.isActive) return false;
-  if (campaign.targetMember && String(campaign.targetMember._id || campaign.targetMember) === String(member._id)) return false;
-  const joined = new Date(member.joinDate || member.createdAt);
-  return joined <= new Date(campaign.createdAt);
-};
-
-// Builds one row per member who either owes or has paid toward the campaign.
-// `contribs` are this campaign's contributions (at most one per member).
-const buildCampaignRows = (campaign, members, contribs, minimum) => {
-  const contribByMember = new Map(contribs.map((c) => [String(c.member), c]));
-  const rows = [];
-
-  for (const member of members) {
-    const contrib = contribByMember.get(String(member._id));
-    const eligible = isEligible(member, campaign);
-    if (!eligible && !contrib) continue;
-
-    const paid = contrib?.amount || 0;
-    rows.push({
-      member: {
-        _id: member._id, name: member.name, idNumber: member.idNumber,
-        phoneNumber: member.phoneNumber, profilePhoto: member.profilePhoto,
-      },
-      eligible,
-      status: paymentStatus(paid, minimum),
-      paid,
-      outstanding: eligible ? Math.max(0, minimum - paid) : 0,
-      contributionId: contrib?._id || null,
-      datePaid: contrib?.datePaid || null,
-      description: contrib?.description || '',
-    });
-  }
-
-  rows.sort((a, b) => a.member.idNumber.localeCompare(b.member.idNumber));
-  return rows;
-};
-
-const summarizeRows = (rows, minimum) => {
-  const eligibleRows = rows.filter((r) => r.eligible);
-  return {
-    eligibleCount: eligibleRows.length,
-    paidCount: rows.filter((r) => r.status === 'paid').length,
-    partialCount: rows.filter((r) => r.status === 'partial').length,
-    unpaidCount: rows.filter((r) => r.status === 'unpaid').length,
-    totalCollected: rows.reduce((sum, r) => sum + r.paid, 0),
-    expectedTotal: eligibleRows.length * minimum,
-    outstandingTotal: rows.reduce((sum, r) => sum + r.outstanding, 0),
-  };
+// Accepts a date/datetime string, or ''/null to clear. Returns
+// { value } on success or { error } for an invalid date.
+const parseDeadline = (raw) => {
+  if (raw === undefined) return { value: undefined };
+  if (raw === '' || raw === null) return { value: null };
+  const d = new Date(raw);
+  if (Number.isNaN(d.getTime())) return { error: 'Deadline must be a valid date.' };
+  return { value: d };
 };
 
 // @desc  Create a new campaign (start an event contribution drive)
@@ -89,6 +39,9 @@ const createCampaign = async (req, res) => {
       minContribution = await Setting.getValue('minContribution');
     }
 
+    const deadline = parseDeadline(req.body.deadline);
+    if (deadline.error) return res.status(400).json({ message: deadline.error });
+
     // Multiple campaigns can run at once (e.g. two different families' demise
     // drives), but avoid accidentally starting two active campaigns for the
     // same member.
@@ -109,6 +62,7 @@ const createCampaign = async (req, res) => {
       description,
       targetAmount: targetAmount || undefined,
       minContribution,
+      deadline: deadline.value || undefined,
       targetMember: targetMember || undefined,
       claim: claim || undefined,
       recordedBy: req.user._id,
@@ -130,6 +84,7 @@ const createCampaign = async (req, res) => {
 // @access Leader + Member + SuperAdmin
 const getActiveCampaigns = async (req, res) => {
   try {
+    await runDeadlineCheck();
     const campaigns = await ContributionCampaign.find({ status: 'active' })
       .populate('recordedBy', 'name leaderRole')
       .populate('targetMember', 'name idNumber')
@@ -140,7 +95,7 @@ const getActiveCampaigns = async (req, res) => {
     const [contribs, members, defaultMin] = await Promise.all([
       Contribution.find({ campaign: { $in: campaigns.map((c) => c._id) } })
         .select('member campaign amount datePaid description').lean(),
-      Member.find().select('name idNumber isActive joinDate createdAt').lean(),
+      Member.find().select(MEMBER_STATUS_FIELDS).lean(),
       Setting.getValue('minContribution'),
     ]);
 
@@ -181,6 +136,7 @@ const getCampaignStatus = async (req, res) => {
       return res.status(404).json({ message: 'Campaign not found.' });
     }
 
+    await runDeadlineCheck();
     const campaign = await ContributionCampaign.findById(req.params.id)
       .populate('recordedBy', 'name leaderRole')
       .populate('completedBy', 'name leaderRole')
@@ -189,7 +145,7 @@ const getCampaignStatus = async (req, res) => {
 
     const [contribs, members, defaultMin] = await Promise.all([
       Contribution.find({ campaign: campaign._id }).select('member amount datePaid description').lean(),
-      Member.find().select('name idNumber phoneNumber profilePhoto isActive joinDate createdAt').lean(),
+      Member.find().select(MEMBER_STATUS_FIELDS).lean(),
       Setting.getValue('minContribution'),
     ]);
 
@@ -228,6 +184,33 @@ const updateCampaignMinimum = async (req, res) => {
     campaign.minContribution = value;
     await campaign.save();
     res.json(campaign);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// @desc  Set, change or remove a campaign's deadline. Moving it into the
+//        future lets it run again when the new date passes; members already
+//        deactivated stay deactivated until a leader reactivates them.
+// @route PATCH /api/campaigns/:id/deadline
+// @access Leader (approved session) + SuperAdmin
+const updateCampaignDeadline = async (req, res) => {
+  try {
+    const deadline = parseDeadline(req.body.deadline === undefined ? null : req.body.deadline);
+    if (deadline.error) return res.status(400).json({ message: deadline.error });
+
+    const campaign = await ContributionCampaign.findById(req.params.id);
+    if (!campaign) return res.status(404).json({ message: 'Campaign not found.' });
+
+    campaign.deadline = deadline.value || undefined;
+    if (!deadline.value || deadline.value > new Date()) {
+      campaign.deadlineProcessedAt = undefined;
+      campaign.deactivatedCount = undefined;
+    }
+    await campaign.save();
+
+    await runDeadlineCheck({ force: true });
+    res.json(await ContributionCampaign.findById(campaign._id));
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -317,4 +300,5 @@ module.exports = {
   getAllCampaigns,
   getCampaignStatus,
   updateCampaignMinimum,
+  updateCampaignDeadline,
 };
