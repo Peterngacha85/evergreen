@@ -1,7 +1,10 @@
 const Member = require('../models/Member');
 const Leader = require('../models/Leader');
 const cloudinary = require('../config/cloudinary');
-const { runDeadlineCheck } = require('../utils/campaignStatus');
+const ContributionCampaign = require('../models/ContributionCampaign');
+const Contribution = require('../models/Contribution');
+const Setting = require('../models/Setting');
+const { runDeadlineCheck, effectiveMinimum } = require('../utils/campaignStatus');
 
 // @desc  Get all members
 // @route GET /api/members
@@ -184,7 +187,48 @@ const deleteMember = async (req, res) => {
   }
 };
 
-// @desc  Reactivate a member who was deactivated for not paying a campaign
+// @desc  Deactivate a member for non-payment (they cannot log in until reactivated)
+// @route POST /api/members/:id/deactivate
+// @access Leader (approved session) + SuperAdmin
+const deactivateMember = async (req, res) => {
+  try {
+    const { reason, campaignId } = req.body || {};
+    const member = await Member.findById(req.params.id);
+    if (!member || !member.isActive) return res.status(404).json({ message: 'Member not found' });
+    if (member.isDeactivated) return res.status(400).json({ message: `${member.name} is already deactivated.` });
+
+    const entry = { deactivatedAt: new Date(), deactivatedBy: req.user._id, reason: (reason || '').trim() };
+
+    // Deactivated from a campaign page: record what they still owe on it
+    if (campaignId) {
+      const campaign = await ContributionCampaign.findById(campaignId);
+      if (!campaign) return res.status(404).json({ message: 'Campaign not found' });
+      const [contrib, defaultMin] = await Promise.all([
+        Contribution.findOne({ campaign: campaign._id, member: member._id }).select('amount').lean(),
+        Setting.getValue('minContribution'),
+      ]);
+      const paid = contrib?.amount || 0;
+      entry.campaign = campaign._id;
+      entry.amountOwed = Math.max(0, effectiveMinimum(campaign, defaultMin) - paid);
+      if (!entry.reason) {
+        entry.reason = paid > 0
+          ? `Paid only part of the minimum for "${campaign.title}"`
+          : `Did not contribute to "${campaign.title}"`;
+      }
+    }
+    if (!entry.reason) entry.reason = 'Deactivated by a leader for non-payment';
+
+    member.deactivationHistory.push(entry);
+    member.isDeactivated = true;
+    await member.save();
+
+    res.json({ message: `${member.name} has been deactivated`, _id: member._id });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// @desc  Reactivate a member who was deactivated for non-payment
 // @route POST /api/members/:id/reactivate
 // @access Leader (approved session) + SuperAdmin
 const reactivateMember = async (req, res) => {
@@ -222,4 +266,4 @@ const getMyProfile = async (req, res) => {
   }
 };
 
-module.exports = { getAllMembers, getMemberById, createMember, updateMemberPhoto, updateMember, deleteMember, reactivateMember, getMyProfile };
+module.exports = { getAllMembers, getMemberById, createMember, updateMemberPhoto, updateMember, deleteMember, deactivateMember, reactivateMember, getMyProfile };

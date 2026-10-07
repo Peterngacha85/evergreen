@@ -1,6 +1,7 @@
 const Member = require('../models/Member');
 const Leader = require('../models/Leader');
 const generateToken = require('../utils/generateToken');
+const { runDeadlineCheck, deactivationNotice } = require('../utils/campaignStatus');
 
 // @desc  Member login (ID Number + Password)
 // @route POST /api/auth/member/login
@@ -12,6 +13,9 @@ const memberLogin = async (req, res) => {
     if (!idNumber || !password)
       return res.status(400).json({ message: 'ID number and password are required' });
 
+    // Apply any campaign deadline that has just passed before deciding who may log in
+    await runDeadlineCheck();
+
     const member = await Member.findOne({ idNumber, isActive: true }).select('+password');
     if (!member) return res.status(401).json({ message: 'Invalid credentials' });
 
@@ -20,6 +24,11 @@ const memberLogin = async (req, res) => {
 
     // Check if this member is also a leader
     const leader = await Leader.findOne({ idNumber, isActive: true });
+
+    // Deactivated members are locked out until a leader reactivates them.
+    // Leaders are exempt, otherwise nobody might be left to reactivate anyone.
+    if (member.isDeactivated && !leader) return res.status(403).json(deactivationNotice(member));
+
     const userRole = leader ? 'leader' : 'member';
     
     // If they are a leader, we use the leader ID for the token so the leader middleware works

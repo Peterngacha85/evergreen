@@ -27,6 +27,15 @@ api.interceptors.response.use(
         window.location.href = '/login';
       }
     }
+
+    // A member deactivated while logged in is sent back to the login page,
+    // which explains why (the login request itself shows the dialog directly)
+    if (err.response?.status === 403 && err.response.data?.code === 'ACCOUNT_DEACTIVATED' && !err.config.url.includes('/login')) {
+      localStorage.removeItem('evergreen_token');
+      localStorage.removeItem('evergreen_user');
+      sessionStorage.setItem('evergreen_deactivated', JSON.stringify(err.response.data));
+      window.location.href = '/login';
+    }
     return Promise.reject(err);
   }
 );

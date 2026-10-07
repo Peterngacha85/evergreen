@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const Member = require('../models/Member');
 const Leader = require('../models/Leader');
+const { deactivationNotice } = require('../utils/campaignStatus');
 
 // Protect routes - verify JWT
 const protect = async (req, res, next) => {
@@ -23,6 +24,11 @@ const protect = async (req, res, next) => {
       }
 
       if (!req.user) return res.status(401).json({ message: 'User not found' });
+
+      // A member deactivated while logged in loses access straight away
+      if (req.role === 'member' && req.user.isDeactivated) {
+        return res.status(403).json(deactivationNotice(req.user));
+      }
 
       next();
     } catch (err) {

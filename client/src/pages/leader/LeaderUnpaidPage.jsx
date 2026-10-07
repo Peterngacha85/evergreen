@@ -9,6 +9,7 @@ import { validateSession } from '../../api/changeRequests';
 import Avatar from '../../components/common/Avatar';
 import Modal from '../../components/common/Modal';
 import AccessRequiredModal from '../../components/common/AccessRequiredModal';
+import DeactivateMemberModal from '../../components/common/DeactivateMemberModal';
 import { Phone, AlertCircle, RefreshCw, CheckCircle, Search, Flag, UserX, UserCheck } from 'lucide-react';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
@@ -37,6 +38,7 @@ const LeaderUnpaidPage = () => {
   const [hasAccess, setHasAccess] = useState(false);
   const [isAccessModalOpen, setIsAccessModalOpen] = useState(false);
   const [reactivatingId, setReactivatingId] = useState(null);
+  const [deactivating, setDeactivating] = useState(null);
   const [campaigns, setCampaigns] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -117,6 +119,11 @@ const LeaderUnpaidPage = () => {
     }
   };
 
+  const handleDeactivate = (member) => {
+    if (!hasAccess && !isSuperAdmin) { setIsAccessModalOpen(true); return; }
+    setDeactivating(member);
+  };
+
   const handleReactivate = async (member) => {
     if (!hasAccess && !isSuperAdmin) { setIsAccessModalOpen(true); return; }
     setReactivatingId(member._id);
@@ -185,7 +192,7 @@ const LeaderUnpaidPage = () => {
       <div style={{ marginBottom: 28 }}>
         <h3 style={{ fontWeight: 700, marginBottom: 4 }}>Deactivated Members ({deactivated.length})</h3>
         <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 12 }}>
-          Members who hadn&apos;t paid the full minimum when a campaign&apos;s deadline passed. They are not counted as active members{!isMember && ' until reactivated'}.
+          Members deactivated for non-payment, either automatically when a campaign&apos;s deadline passed or by a leader. They cannot log in and are not counted as active members{!isMember && ' until reactivated'}.
         </p>
         <div className="card" style={{ padding: 0 }}>
           <div className="table-wrapper">
@@ -319,13 +326,22 @@ const LeaderUnpaidPage = () => {
                   )}
                   {!isMember && (
                     <td>
-                      <button
-                        className="btn btn-sm btn-primary"
-                        onClick={() => handleMarkPaid(d.member)}
-                        style={{ display: 'flex', alignItems: 'center', gap: 4 }}
-                      >
-                        <CheckCircle size={14} /> Mark Paid
-                      </button>
+                      <div className="flex gap-2" style={{ flexWrap: 'wrap' }}>
+                        <button
+                          className="btn btn-sm btn-primary"
+                          onClick={() => handleMarkPaid(d.member)}
+                          style={{ display: 'flex', alignItems: 'center', gap: 4 }}
+                        >
+                          <CheckCircle size={14} /> Mark Paid
+                        </button>
+                        <button
+                          className="btn btn-sm btn-danger"
+                          onClick={() => handleDeactivate(d.member)}
+                          style={{ display: 'flex', alignItems: 'center', gap: 4 }}
+                        >
+                          <UserX size={14} /> Deactivate
+                        </button>
+                      </div>
                     </td>
                   )}
                 </tr>
@@ -373,6 +389,9 @@ const LeaderUnpaidPage = () => {
           </div>
         </form>
       </Modal>
+
+      <DeactivateMemberModal member={deactivating} onClose={() => setDeactivating(null)}
+        onDone={() => { setDeactivating(null); fetchData(); }} />
 
       <AccessRequiredModal isOpen={isAccessModalOpen} onClose={() => setIsAccessModalOpen(false)} />
     </div>

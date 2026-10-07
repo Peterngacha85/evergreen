@@ -7,7 +7,8 @@ import { validateSession } from '../../api/changeRequests';
 import Avatar from '../../components/common/Avatar';
 import Modal from '../../components/common/Modal';
 import AccessRequiredModal from '../../components/common/AccessRequiredModal';
-import { ArrowLeft, Flag, Search, Phone, Edit2, Plus, CheckCircle, RefreshCw, CalendarClock, UserCheck } from 'lucide-react';
+import DeactivateMemberModal from '../../components/common/DeactivateMemberModal';
+import { ArrowLeft, Flag, Search, Phone, Edit2, Plus, CheckCircle, RefreshCw, CalendarClock, UserCheck, UserX } from 'lucide-react';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
@@ -55,6 +56,7 @@ const CampaignDetailPage = () => {
   const [isDeadlineModalOpen, setIsDeadlineModalOpen] = useState(false);
   const [deadlineValue, setDeadlineValue] = useState('');
   const [reactivatingId, setReactivatingId] = useState(null);
+  const [deactivating, setDeactivating] = useState(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -377,6 +379,12 @@ const CampaignDetailPage = () => {
                             <UserCheck size={14} /> {reactivatingId === r.member._id ? 'Reactivating...' : 'Reactivate'}
                           </button>
                         )}
+                        {r.eligible && r.status !== 'paid' && !r.member.isDeactivated && (
+                          <button className="btn btn-sm btn-danger" onClick={() => requireAccess() && setDeactivating(r.member)}
+                            style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <UserX size={14} /> Deactivate
+                          </button>
+                        )}
                         {canAct && r.status === 'unpaid' && (
                           <button className="btn btn-sm btn-primary" onClick={() => openPayment(r, 'add')} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                             <CheckCircle size={14} /> Mark Paid
@@ -462,7 +470,7 @@ const CampaignDetailPage = () => {
           </div>
           <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, padding: '10px 14px', fontSize: '0.8rem', color: '#92400e' }}>
             At the end of this day, every member expected to pay who hasn&apos;t paid the full minimum ({money(minContribution)}) will be
-            <strong> deactivated</strong>. Leaders can reactivate them at any time.
+            <strong> deactivated</strong> and won&apos;t be able to log in. Leaders can reactivate them at any time.
             {deadlineValue && deadlineValue < today() && <><br /><strong>This date is in the past, so this will happen as soon as you save.</strong></>}
           </div>
           <div className="flex justify-between" style={{ marginTop: 8, gap: 8, flexWrap: 'wrap' }}>
@@ -474,6 +482,9 @@ const CampaignDetailPage = () => {
           </div>
         </form>
       </Modal>
+
+      <DeactivateMemberModal member={deactivating} campaign={campaign} onClose={() => setDeactivating(null)}
+        onDone={() => { setDeactivating(null); fetchData(); }} />
 
       <AccessRequiredModal isOpen={isAccessModalOpen} onClose={() => setIsAccessModalOpen(false)} />
     </div>

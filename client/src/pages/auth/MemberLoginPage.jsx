@@ -4,11 +4,27 @@ import { Eye, EyeOff, LogIn, Leaf } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { memberLogin } from '../../api/auth';
 import { useAuth } from '../../context/AuthContext';
+import AccountDeactivatedModal from '../../components/common/AccountDeactivatedModal';
+
+// Left by the API client when a logged-in member is deactivated and sent back here
+const storedDeactivationNotice = () => {
+  try {
+    return JSON.parse(sessionStorage.getItem('evergreen_deactivated'));
+  } catch {
+    return null;
+  }
+};
 
 const MemberLoginPage = () => {
   const [form, setForm]     = useState({ idNumber: '', password: '' });
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [deactivationNotice, setDeactivationNotice] = useState(storedDeactivationNotice);
+
+  const closeDeactivationNotice = () => {
+    sessionStorage.removeItem('evergreen_deactivated');
+    setDeactivationNotice(null);
+  };
   const { login }    = useAuth();
   const navigate     = useNavigate();
 
@@ -29,6 +45,10 @@ const MemberLoginPage = () => {
         navigate('/dashboard');
       }
     } catch (err) {
+      if (err.response?.data?.code === 'ACCOUNT_DEACTIVATED') {
+        setDeactivationNotice(err.response.data);
+        return;
+      }
       toast.error(err.response?.data?.message || 'Login failed');
     } finally {
       setLoading(false);
@@ -110,6 +130,8 @@ const MemberLoginPage = () => {
           </div>
         </div>
       </div>
+
+      <AccountDeactivatedModal notice={deactivationNotice} onClose={closeDeactivationNotice} />
     </div>
   );
 };

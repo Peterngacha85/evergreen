@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {
   getAllMembers, getMemberById, createMember,
-  updateMemberPhoto, updateMember, deleteMember, reactivateMember, getMyProfile,
+  updateMemberPhoto, updateMember, deleteMember, deactivateMember, reactivateMember, getMyProfile,
 } = require('../controllers/memberController');
 const { protect } = require('../middleware/authMiddleware');
 const { leaderOrSuperAdmin } = require('../middleware/roleMiddleware');
@@ -22,6 +22,7 @@ router.get('/:id', protect, getMemberById);
 router.post('/', protect, leaderOrSuperAdmin, requireApprovedSession, upload.single('profilePhoto'), createMember);
 router.put('/:id', protect, leaderOrSuperAdmin, requireApprovedSession, updateMember);
 router.delete('/:id', protect, leaderOrSuperAdmin, requireApprovedSession, deleteMember);
+router.post('/:id/deactivate', protect, leaderOrSuperAdmin, requireApprovedSession, deactivateMember);
 router.post('/:id/reactivate', protect, leaderOrSuperAdmin, requireApprovedSession, reactivateMember);
 
 module.exports = router;

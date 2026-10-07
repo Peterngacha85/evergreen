@@ -25,6 +25,19 @@ const wasDeactivatedAt = (member, date) => {
   );
 };
 
+// What a deactivated member is told when they are refused access: why they
+// were deactivated and what they owe.
+const deactivationNotice = (member) => ({
+  code: 'ACCOUNT_DEACTIVATED',
+  message: 'Your account has been deactivated. Please contact a leader to have it reactivated.',
+  deactivation: {
+    name: member.name,
+    reasons: (member.deactivationHistory || [])
+      .filter((h) => !h.reactivatedAt)
+      .map((h) => ({ reason: h.reason || '', amountOwed: h.amountOwed || 0, deactivatedAt: h.deactivatedAt })),
+  },
+});
+
 // Who is expected to pay: active members who had joined by the time the
 // campaign started and were not deactivated then, excluding the member the
 // campaign is supporting.
@@ -162,6 +175,7 @@ module.exports = {
   MEMBER_STATUS_FIELDS,
   effectiveMinimum,
   paymentStatus,
+  deactivationNotice,
   isEligible,
   buildCampaignRows,
   summarizeRows,
